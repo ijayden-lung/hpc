@@ -1,0 +1,15 @@
+#!/home/lisun/prog/R-3.3.3/bin/Rscript
+library(qvalue)
+
+pdf("Qobj_pvalue.pdf")
+#table <- read.csv("./Colon_Alt_Splicing.tsv",header=TRUE,sep="\t",check.names=FALSE)
+table <- read.csv("./Prostat_Alt_Splicing.tsv",header=TRUE,sep="\t",check.names=FALSE)
+qobj <- qvalue(p = table$pvalue)
+plot(qobj)
+qvalue <- qobj$qvalues
+table$qvalue<-as.numeric(qvalue)
+hist(table$qvalue, breaks=1000, col="skyblue", border="slateblue", main="qvalue")
+write.table(table,"./Prostate_Alt_Splicing_qvalue.tsv",quote = FALSE,row.names=FALSE,col.names=TRUE,sep="\t", qmethod = "escape")
+#write.csv(table,"./Alt_Splicing_qvalue.tsv")
+
+

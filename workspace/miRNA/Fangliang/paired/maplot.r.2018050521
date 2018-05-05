@@ -1,0 +1,13 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+args<-commandArgs(T)
+args[2] = '../Exp_miRNA.tsv';
+args[1] = 'MAPlot_miRNA_paired.pdf';
+
+pdf(args[1])
+data = read.table(args[2],header=TRUE,row.names=1)
+
+ggplot(data, aes(x=log10(SH1+SL1), y=log2(SH1/SL1)))+geom_point()+labs(x = "Log10 Mean ReadCount",y = "Log2(High1/Low1)")
+ggplot(data, aes(x=log10(SH2+SL2), y=log2(SH2/SL2)))+geom_point()+labs(x = "Log10 Mean ReadCount",y = "Log2(High2/Low2)")
+ggplot(data, aes(x=log2(SH1/SL1), y=log2(SH2/SL2)))+geom_point()+labs(x = "Log2(High1/Low1)",y = "Log2(High2/Low2)")+
+geom_abline(intercept=c(-1,1),slope=c(1,1))+geom_smooth(method="lm",se=FALSE)

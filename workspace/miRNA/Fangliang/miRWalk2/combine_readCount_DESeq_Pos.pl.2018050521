@@ -1,0 +1,72 @@
+#!/usr/bin/perl -w
+my %pos;
+open POS,'/home/bio-longyk/workspace/EMT/DESeq2/annotation.txt';
+<POS>;
+while(<POS>){
+	chomp;
+	my (undef,$id,$chr,$str,$end,$strand) = split /\t/;
+	my ($chr1) = split /;/,$chr;
+	my ($str1) = split /;/,$str;
+	my $end1 = (split /;/,$end)[-1];
+	my ($strand1) = split /;/,$strand;
+	$pos{$id} = "$chr1\t$str1\t$end1\t$strand1";
+}
+
+my %exp;
+open EXP,'table_ReadCount.tsv';
+<EXP>;
+while(<EXP>){
+	chomp;
+	my ($id,$high1,$high2,$low1,$low2) = split;
+	$exp{$id} = "$high1\t$high2\t$low1\t$low2";
+}
+
+my %wnt_neg;
+open FILE,'/home/bio-longyk/workspace/CRISPR/total_gfp-/hKO_enrich_negetive_SBR.txt';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($geneRank,$geneName,$score,$pval,undef,$gRNARank) = split /\t/;
+	my @gRNARank = split /\s+/,$gRNARank;
+	$gRNARank = join ";",@gRNARank;
+	$wnt_neg{$geneName} = "$geneRank\t$pval\t$gRNARank";
+}
+
+my %wnt_pos;
+open FILE,'/home/bio-longyk/workspace/CRISPR/total_gfp-/hKO_enrich_positive_SBR.txt';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($geneRank,$geneName,$score,$pval,undef,$gRNARank) = split /\t/;
+	my @gRNARank = split /\s+/,$gRNARank;
+	$gRNARank = join ";",@gRNARank;
+	$wnt_pos{$geneName} = "$geneRank\t$pval\t$gRNARank";
+}
+
+my %conventer;
+open CON,'/home/bio-longyk/cnda/ensembl/Ensembl_ID_2_Name';
+while(<CON>){
+	chomp;
+	my ($id,$name) = split;
+	$conventer{$id} = $name;
+}
+
+open DE,'DESeq2_mRNA.tsv';
+<DE>;
+open OUT,'>WNT_RNASeq_Pos_Exp_DE.tsv';
+print OUT "id\tname\tchr\tstart\tend\tstrand\thigh1\thigh2\tlow1\tlow2\tmean\tl2fc\tpval\tpadj\twnt-Rank\twnt-pval\twnt-gRNARank\twnt+Rank\twnt+pval\twnt+gRNARank\n";
+while(<DE>){
+	chomp;
+	my ($id,$mean,$l2fc,$stat,$pval,$padj) = split;
+	my $name = $conventer{$id};
+	my $positive = "NA\tNA\tNA";
+	my $negative = "NA\tNA\tNA";
+	if(exists $wnt_pos{$name}){
+		$positive = $wnt_pos{$name};
+	}
+	if(exists $wnt_neg{$name}){
+		$negative = $wnt_neg{$name};
+	}
+	print OUT "$id\t$name\t$pos{$id}\t$exp{$id}\t$mean\t$l2fc\t$pval\t$padj\t$negative\t$positive\n";
+}
+	

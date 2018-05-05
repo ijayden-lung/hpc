@@ -1,0 +1,35 @@
+#!/usr/bin/perl -w
+#
+use Translation;
+open GTF, "awk '(\$3 == \"exon\"){print}' top50_gene.gtf |"; 
+open OUT, '>tead1.rna';
+my %seq;
+while(<GTF>){
+	chomp;
+	my ($chr,$source,$feature,$str,$end,$score,$strand,$frame,$attribute) = split /\t/;
+	my %attr;
+	foreach (split /;/,$attribute){
+		my ($key,$val) = split;
+		$val =~ s/\;|\"//g;
+		$attr{$key} = $val;
+	}
+	next if $attr{'gene_name'} ne "TEAD1";
+	if($chr !~ /^chr/){
+		$chr = "chr$chr";
+	}
+	open FILE, "/home/lyk/data1/cnda/hg38/$chr.1fa";
+	my $ref = <FILE>;
+	my $query = substr($ref,$str,$end-$str+1);
+	if($strand eq "-"){
+		$query = reverse($query);
+		$query =~ tr/ATCG/TAGC/;
+	}
+	$seq{$attr{'transcript_id'}} .= $query;
+}
+
+print OUT $seq;
+
+while(my ($key,$val) = each %seq){
+	my ($cds) = best_cds($val);
+	print "$key\t$cds\n";
+}

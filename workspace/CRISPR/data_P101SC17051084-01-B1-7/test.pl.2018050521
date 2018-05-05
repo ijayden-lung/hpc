@@ -1,0 +1,16 @@
+#!/usr/bin/perl -w
+
+my $seq1 = "AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTNNNNNNtcttGTGGAAAGGACGAAACACCg";
+my $seq2 = "gttttagagctaGAAAtagcaagttaaaataaggctagtccgttatcaacttgaaaaagtggcaccgagtcggtgcTTTTTTaagcttggcgtaactagatcttgagacaaatggcagtattcatccacaattttaaaagaaaaggggggattgg";
+
+open FILE,'Mouse_broadgpp-brie-library-contents.csv';
+<FILE>;
+open OUT,'>mouse_genome.fa';
+while(<FILE>){
+	chomp;
+	my $grna = (split /,/)[6];
+	print OUT ">$grna\n$seq1";
+	print OUT "$grna";
+	print OUT "$seq2\n";
+}
+

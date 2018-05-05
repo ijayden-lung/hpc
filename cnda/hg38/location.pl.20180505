@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w
+while(){
+	print "Enter Chromosome:  ";
+	my $chr = <>;
+	chomp $chr;
+	open FILE, "/home/lyk/data1/cnda/hg38/$chr.1fa";
+	my $ref = <FILE>;
+	print "Enter Position(e.g. 0-4): ";
+	my $pos = <>;
+	chomp $pos;
+	my ($str,$end) = split /\-/,$pos;
+	my $seq = substr($ref,$str,$end-$str+1);
+	print "$seq\n";
+}

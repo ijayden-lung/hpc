@@ -1,0 +1,69 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+my $base_dir = $ARGV[0];
+my $mcl_res = $base_dir."/res.mcl";
+
+my $clusters_dir = $base_dir."/usearch_out";
+
+
+#print "mcl_res : $mcl_res\n";
+
+
+open(FH, $mcl_res);
+
+my $new_clusters_id = 0;
+my $new_cluster_name = '';
+
+while(<FH>){
+
+    chomp;
+    my @vals = split("\t", $_);
+    $new_cluster_name = "$clusters_dir/ref_alignm.$new_clusters_id";
+    
+    if($#vals > 0){
+
+
+        my $cl_to_merge = '';
+        foreach(@vals){
+            $cl_to_merge .= "$clusters_dir/alignm.$_ ";
+        }
+
+        #print "cat $cl_to_merge > $new_cluster_name\n";
+        `cat $cl_to_merge > $new_cluster_name`;
+
+        foreach(@vals){
+            `rm $clusters_dir/alignm.$_`;
+        }
+
+    } else{
+        #rename remaining singleton clusters
+
+        my $prev_clust_file = "$clusters_dir/alignm.$vals[0]";
+        
+        #print "prev_clust_file: $prev_clust_file\n";
+        `mv $prev_clust_file $new_cluster_name`;
+
+        `rm $prev_clust_file`;
+    }    
+
+    $new_clusters_id++;
+}
+
+
+
+#Rename the rest of .alignm files that were not included in the res.mcl file
+my @rem_alignm_files = glob("$clusters_dir/alignm.*");
+foreach(@rem_alignm_files){
+    #print STDERR "$_\n";
+
+    my $new_name = $_;
+    $new_name =~ s/alignm.*/ref_alignm\.$new_clusters_id/;
+    #print STDERR "new_name: $new_name\n";
+
+    `mv $_ $new_name`;
+
+    $new_clusters_id++;
+}

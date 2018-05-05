@@ -1,0 +1,29 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N SNPCalling
+#PBS -l nodes=1:ppn=1
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+#PBS -V
+
+sample=(high-1 high-2 low-1 low-2)
+for sam in ${sample[*]}
+do
+	cd /home/bio-longyk/STAR_TRIM/$sam
+	echo $sam
+	#samtools view Aligned.sortedByCoord.out.bam chr11:12,608,730-13,003,895 -bS -o tead1.bam 
+	#samtools index tead1.bam
+done
+
+
+cd /home/bio-longyk/STAR_TRIM/
+#samtools mpileup  -BQ 30 -f /home/biology/genome/hg38/hg38.fa high-1/tead1.bam high-2/tead1.bam | java -jar /home/bio-longyk/apps/VarScan.v2.4.3.jar  mpileup2cns --min-var-freq 0.003 --p-value 0.01 --min-coverage 20 --output-vcf 1 --variants >high.vcf 
+#samtools mpileup  -BQ 30 -f /home/biology/genome/hg38/hg38.fa low-1/tead1.bam low-2/tead1.bam | java -jar /home/bio-longyk/apps/VarScan.v2.4.3.jar  mpileup2cns --min-var-freq 0.003 --p-value 0.01 --min-coverage	20 --output-vcf 1 --variants >low.vcf 
+
+#samtools mpileup  -BQ 30 -f /home/biology/genome/hg38/hg38.fa low-1/tead1.bam high-1/tead1.bam >low1-high1.mpileup
+#java -jar /home/bio-longyk/apps/VarScan.v2.4.3.jar somatic low1-high1.mpileup low1-high1 -mpileup 1 --min-coverage 20
+
+convert2annovar.pl --format vcf4 high.vcf -outfile high.avinput
+table_annovar.pl  high.avinput /home/bio-longyk/apps/annovar/humandb/ -buildver hg38 -out high -remove -otherinfo -protocol refGene,avsnp150 -operation g,f -nastring . 
+convert2annovar.pl --format vcf4 low.vcf -outfile low.avinput
+table_annovar.pl  low.avinput /home/bio-longyk/apps/annovar/humandb/ -buildver hg38 -out low -remove -otherinfo -protocol refGene,avsnp150 -operation g,f -nastring . 

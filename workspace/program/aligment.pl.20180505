@@ -1,0 +1,130 @@
+#!/usr/bin/perl
+package Pairwise;
+require Exporter;
+
+our @ISA = qw/Exporter/;
+our @EXPORT = qw/Alignment/;
+
+
+## subroutine Alignment, find the identies of two sequences.
+sub Alignment {
+	my $sequenceA = $_[0];
+	my $length1   = length $sequenceA;
+
+	my $sequenceB = $_[1];
+	my $length2   = length $sequenceB;
+
+	my $i        = 0;
+	my $j        = 0;
+	my $gap      = 2;
+	my $match    = 2;
+	my $mismatch = -1;
+
+	#initial the first column.
+	while ( $i < $length1 ) {
+		$A[$i][0] = -$i * $gap;
+		$i = $i + 1;
+	}
+
+	#initial the second column.
+	while ( $j < $length2 ) {
+		$A[0][$j] = -$j * $gap;
+		$j = $j + 1;
+	}
+
+	#calculate the rest value of the matrix.
+	$i = 1;
+	while ( $i < $length1 ) {
+		$j = 1;
+		while ( $j < $length2 ) {
+
+			#determine the value of S(i,j).
+			$Si = substr( $sequenceA, $i, 1 );
+			$Sj = substr( $sequenceB, $j, 1 );
+
+			if ( $Si eq $Sj ) {
+				$Sij = $match;
+			}
+			else {
+				$Sij = $mismatch;
+			}
+
+			$horizontalGap = $A[ $i - 1 ][$j] - $gap;
+			$verticalGap   = $A[$i][ $j - 1 ] - $gap;
+			$noGap         = $A[ $i - 1 ][ $j - 1 ] + $Sij;
+			$A[$i][$j] = Maximun( $horizontalGap, $verticalGap, $noGap );
+			$j = $j + 1;
+		}
+		$i = $i + 1;
+	}
+
+##backtracking.
+	$i       = $length1 - 1;
+	$j       = $length2 - 1;
+	$newseq1 = substr( $sequenceA, $i, 1 );
+	$newseq2 = substr( $sequenceB, $j, 1 );
+
+	while ( $i > 0 && $j > 0 ) {
+
+		$maximun =
+		  Maximun( $A[ $i - 1 ][ $j - 1 ], $A[ $i - 1 ][$j], $A[$i][ $j - 1 ] );
+		if ( $A[ $i - 1 ][ $j - 1 ] == $maximun ) {
+			$newseq1 = substr( $sequenceA, $i - 1, 1 ) . $newseq1;
+			$newseq2 = substr( $sequenceB, $j - 1, 1 ) . $newseq2;
+			$i       = $i - 1;
+			$j       = $j - 1;
+		}
+		elsif ( $A[ $i - 1 ][$j] == $maximun ) {
+			$newseq2 = '_' . $newseq2;
+			$newseq1 = substr( $sequenceA, $i - 1, 1 ) . $newseq1;
+			$i       = $i - 1;
+		}
+		elsif ( $A[$i][ $j - 1 ] == $maximun ) {
+			$newseq2 = substr( $sequenceB, $j - 1, 1 ) . $newseq2;
+			$newseq1 = '_' . $newseq1;
+			$j       = $j - 1;
+		}
+	}
+
+##determine identities.
+	$i       = 0;
+	$MatchNo = 0;
+	$idenaa  = "";
+	while ( $i < length $newseq1 ) {
+		if ( substr( $newseq1, $i, 1 ) eq substr( $newseq2, $i, 1 ) ) {
+			$MatchNo += 1;
+			$idenaa = $idenaa . substr( $newseq1, $i, 1 );
+		}
+		else {
+			$idenaa = $idenaa . " ";
+		}
+		$i += 1;
+	}
+	$identities = $MatchNo / ( length $newseq1 ) * 100;
+
+	@comparison = (
+		$speciesA, $speciesB, $newseq1, $idenaa, $newseq2,
+		$length1,  $length2,  $MatchNo, $identities
+	);
+	@comparison;
+}
+##end of subroutine Alignment
+
+##return the sequcnce.
+sub getSequence {
+	$index1 = rindex( $_[0], "[" );
+	$index2 = rindex( $_[0], "]" );
+	$sequence = substr( $_[0], $index2 + 1 );
+	$sequence;
+}
+
+##subroutine: return the maximun value
+sub Maximun {
+	$max = $_[0];
+	foreach $item (@_) {
+		if ( $max < $item ) {
+			$max = $item;
+		}
+	}
+	return $max;
+}

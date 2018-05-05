@@ -1,0 +1,27 @@
+#!/usr/bin/perl -w
+open FILE,'/home/bio-longyk/workspace/miRNA/Fangliang/Deseq2Results.tsv';
+<FILE>;
+my %hash;
+while(<FILE>){
+	chomp;
+	my ($mirna,$exp) = split;
+	my ($mature,$precu) = split /\-\>/,$mirna;
+	$hash{$precu}->{$mature} = $exp;
+}
+
+
+open OUT1, ">effect_miRNA.txt";
+open OUT2, ">non-effect_miRNA.txt";
+while(my ($precu,$val) = each %hash){
+	my @mature = keys %$val;
+	if(@mature >= 2){
+		if($val->{$mature[0]} > $val->{$mature[1]}){
+			print OUT1 "$mature[0]\n";
+			print OUT2 "$mature[1]\n";
+		}
+		else{
+			print OUT1 "$mature[1]\n";
+			print OUT2 "$mature[0]\n";
+		 }
+	 }
+}

@@ -1,0 +1,25 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+pdf(args[2])
+
+
+
+data = read.table(args[1],header=TRUE)
+data2 = data[(data$Mouse_ES+data$Rat_ES)>20,]
+data3 = data[(data$Mouse_MEF+data$Rat_MEF)>20,]
+nrow(data2)
+nrow(data3)
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data2, aes(x=similar_base, y=ES_log2FC))+geom_point()
+b<-ggplot(data3, aes(x=similar_base, y=MEF_log2FC))+geom_point()
+c<-ggplot(data2, aes(x=similar_amino, y=ES_log2FC))+geom_point()
+d<-ggplot(data3, aes(x=similar_amino, y=MEF_log2FC))+geom_point()
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 1))
+print(d, vp = vplayout(2, 2))

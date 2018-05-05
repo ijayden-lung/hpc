@@ -1,0 +1,7 @@
+#!/bin/bash
+java -jar ~/apps/rigerj/target/rigerj-2.0.1-assembly.jar  -inputFile GeCKO_Enrich_Low.tsv -scoringMethod SecondBestRank -outputFile GeCKO_enrich_low_SBR.txt
+java -jar ~/apps/rigerj/target/rigerj-2.0.1-assembly.jar  -inputFile GeCKO_Enrich_Low.tsv -scoringMethod WtSum -outputFile GeCKO_enrich_low_WS.txt
+java -jar ~/apps/rigerj/target/rigerj-2.0.1-assembly.jar  -inputFile GeCKO_Enrich_Low.tsv -scoringMethod KSbyScore -outputFile GeCKO_enrich_low_KS.txt
+java -jar ~/apps/rigerj/target/rigerj-2.0.1-assembly.jar  -inputFile GeCKO_Enrich_High.tsv -scoringMethod SecondBestRank -outputFile GeCKO_enrich_high_SBR.txt
+java -jar ~/apps/rigerj/target/rigerj-2.0.1-assembly.jar  -inputFile GeCKO_Enrich_High.tsv -scoringMethod WtSum -outputFile GeCKO_enrich_high_WS.txt
+java -jar ~/apps/rigerj/target/rigerj-2.0.1-assembly.jar  -inputFile GeCKO_Enrich_High.tsv -scoringMethod KSbyScore -outputFile GeCKO_enrich_high_KS.txt

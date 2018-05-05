@@ -1,0 +1,45 @@
+#!/bin/bash
+
+atac1=runx2
+atac2=tcf7l1
+atac3=tead1
+
+:<<BL
+echo Barchart
+./peak_regulation_runx2.pl runx2
+./peak_regulation_runx2.pl tead1
+./peak_regulation_runx2.pl tcf7l1
+
+echo Boxplot
+./peak_regulation_runx2_mergbox.pl runx2
+./peak_regulation_runx2_mergbox.pl tead1
+./peak_regulation_runx2_mergbox.pl tcf7l1
+
+echo GO
+./peak_regulation_runx2_simplified.pl runx2
+./peak_regulation_runx2_simplified.pl tead1
+./peak_regulation_runx2_simplified.pl tcf7l1
+
+echo overlap Boxplot
+./overlap_peak_merge.pl runx2 tead1
+./overlap_peak_merge.pl runx2 tcf7l1
+./overlap_peak_merge.pl tcf7l1 tead1
+
+echo overlapb GOBP
+./overlap_peak_simplified.pl runx2 tead1
+./overlap_peak_simplified.pl runx2 tcf7l1
+./overlap_peak_simplified.pl tcf7l1 tead1
+
+BL
+
+###Overlap target genes
+ #./overlap_gene.pl runx2 tcf7l1 tead1
+ #./overlap_gene_enhance.pl runx1 tcf7l1 tead1
+
+./goseq.R Input_gobp_only_$atac1.txt$ hg38.txt
+./goseq.R Input_gobp_only_$atac2.txt$ hg38.txt
+./goseq.R Input_gobp_only_$atac3.txt$ hg38.txt
+./goseq.R Input_gobp_overlap_$atac1\_$atac2.txt$ hg38.txt
+./goseq.R Input_gobp_overlap_$atac1\_$atac3.txt$ hg38.txt
+./goseq.R Input_gobp_overlap_$atac2\_$atac3.txt$ hg38.txt
+./goseq.R Input_gobp_overlap_$atac1\_$atac2\_$atac3.txt$ hg38.txt

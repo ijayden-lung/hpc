@@ -1,0 +1,10 @@
+#!/bin/bash
+sample=(high-1 high-2 low-1 low-2)
+for i in ${sample[*]}
+do
+	file=~/STAR_TRIM/$i/Aligned.sortedByCoord.out.bam
+	out=bam/$i\_TMEM138.bam
+	samtools view -bS $file chr11:35139370-35186832 -o $out
+	samtools index $out
+	echo $file
+done

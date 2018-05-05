@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+#
+open FILE,"../TCF7L1/CSC_HighvsLow.deg.ATAC.txt";
+<FILE>;
+my %up;
+my %no;
+while(<FILE>){
+	chomp;
+	my ($chr,$str,$end,$l2fc,$qval) = (split)[1,2,3,-5,-1];
+	if($qval>0.05){
+		$no{"$chr\t$str\t$end"} = '';
+	}
+	elsif($l2fc>1){
+		$up{"$chr\t$str\t$end"} = '';
+	}
+}
+
+
+open FILE,"../TCF7L1/tcf7l1.targetgene.txt.DESeq2";
+open UP,">tcf7l1.targetgene.txt.DESeq2";
+open NO,">tcf7l1.NOTsig.targetgene.txt.DESeq2";
+while(<FILE>){
+	chomp;
+	my ($chr,$str,$end) = (split)[1,4,5];
+	if(exists $up{"$chr\t$str\t$end"}){
+		print UP "$_\n"
+	}
+	elsif(exists $no{"$chr\t$str\t$end"}){
+		print NO "$_\n";
+	}
+}
+open FILE,"../TCF7L1/tcf7l1.NOTsig.targetgene.txt.DESeq2";
+open UP,">>tcf7l1.targetgene.txt.DESeq2";
+open NO,">>tcf7l1.NOTsig.targetgene.txt.DESeq2";
+while(<FILE>){
+	chomp;
+	my ($chr,$str,$end) = (split)[1,4,5];
+	if(exists $up{"$chr\t$str\t$end"}){
+		print UP "$_\n"
+	}
+	elsif(exists $no{"$chr\t$str\t$end"}){
+		print NO "$_\n"
+	}
+}

@@ -1,0 +1,4 @@
+#!/usr/bin/perl -w
+my $mir = 'hsa-mir-125br';
+$mir =~ s/mir/miR/;
+print "$mir\n";

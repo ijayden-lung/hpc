@@ -1,0 +1,12 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+data = read.table(args[1],header=TRUE,sep="\t")
+pdf(args[2])
+
+#ggplot(data,aes(x=log2((Library+Total4+Total5)/3), y=log2((Total4+Total5)/2/Library)))+geom_point()+labs(x="log2(Mean Read Counts of gRNA)",y="log2(Baseline/Library)")+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))+geom_hline(yintercept = c(-1,1)) 
+
+#ggplot(data,aes(x=log2((GFPpos4+GFPpos5+Total4+Total5)/4), y=log2((GFPpos4+GFPpos5)/(Total4+Total5)),color=Tag	))+geom_point()+labs(x="log2(Mean Read Counts of gRNA)",y="log2(GFP+/Baseline)")+theme(axis.title=element_text(size =20),axis.text=element_text(size =15),legend.position=c(0.9,0.1),legend.title=element_blank())+geom_hline(yintercept = c(-1,1))
+
+ggplot(data,aes(x=log2((GFPneg4+GFPneg5+Total4+Total5)/4), y=log2((GFPneg4+GFPneg5)/(Total4+Total5)),color=Tag	))+geom_point()+labs(x="log2(Mean Read Counts of gRNA)",y="log2(GFP-/Baseline)")+theme(axis.title=element_text(size =20),axis.text=element_text(size =15),legend.position=c(0.9,0.1),legend.title=element_blank())+geom_hline(yintercept = c(-1,1))

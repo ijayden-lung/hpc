@@ -1,0 +1,30 @@
+#!/usr/bin/perl -w
+open FILE,'tabBP_total_deplete.txt';
+<FILE>;
+my %deplete;
+while(<FILE>){
+	chomp;
+	my ($go,$pval) = split /\t/;
+	$deplete{$go} = $pval;
+}
+
+open FILE,'tabBP_total_enrich.txt';
+<FILE>;
+open OVL,'>overlap_tabBP.txt';
+open ENR,'>enrich_tabBP.txt';
+while(<FILE>){
+	chomp;
+	my ($go,$pval) = split /\t/;
+	if(exists $deplete{$go}){
+		print OVL "$go\t$pval\t$deplete{$go}\n";
+		delete $deplete{$go};	
+	}
+	else{
+		print ENR "$go\t$pval\n";
+	}
+}
+
+open DEP,'>deplete_tabBP.txt';
+foreach my $go (sort{$deplete{$a}<=>$deplete{$b}} keys %deplete){
+	print DEP "$go\t$deplete{$go}\n";
+}

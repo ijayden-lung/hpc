@@ -1,0 +1,32 @@
+#!/usr/bin/perl -w
+#
+my %low;
+open FILE,'knownResults_motifs_LOW.txt';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($motif,$cons,$pval) = split /\t/;
+	$low{$motif} = $pval;
+}
+
+my %noSig;
+open FILE,'knownResults_motifs_NOTsignificant.txt';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($motif,$cons,$pval) = split /\t/;
+	$noSig{$motif} = $pval;
+}
+
+open FILE,'knownResults_motifs_HIGH.txt';
+<FILE>;
+open OUT,">knownResults_motifs_All_pval.txt";
+print OUT "Motif\tHigh_pval\tLow_pval\tNotSig_pval\n";
+while(<FILE>){
+	chomp;
+	my ($motif,$cons,$pval) = split /\t/;
+	$pval += 1e-200;
+	$low{$motif} += 1e-200;
+	$noSig{$motif} += 1e-200;
+	print OUT "$motif\t$pval\t$low{$motif}\t$noSig{$motif}\n";
+}

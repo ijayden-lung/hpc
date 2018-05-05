@@ -1,0 +1,223 @@
+#!/usr/bin/perl -w
+###All right reserved
+###Author: lyk
+###Update 2017/8/13
+#
+use List::Util qw(first max maxstr min minstr reduce shuffle sum);
+use Math::Round;
+use Statistics::R;
+
+#######R Commands
+my $Rcmds = <<EOF;
+
+EOF
+
+#open FILE, 'cd44.gtf';
+#open MERGE, '>cd44_merge.gtf';
+#open FILE, 'Homo_sapiens.GRCh38.89.gtf';
+#open MERGE, '>hg38_merge.gtf';
+open FILE, "awk '(\$1 !~ /^\#/ && \$2 != \"havana\"){print}' top_gene.gtf |";
+open MERGE, '>top_merge.gtf';
+open SPL,">Splicing.tsv";
+
+
+
+
+
+my $SJOverhangMin = 6;
+my $readCountMin  = 20;
+
+#######Read the sample information
+my $sample_list = 'sample_list';
+open SAMPLE,$sample_list;
+my %sample;
+my @sample;
+my %con_count;
+while(<SAMPLE>){
+	chomp;
+	my ($sample,$condition) = split;
+	$sample{$sample} = $condition;
+	$con_count{$condition}++;
+	push @sample,$sample;
+}
+print SPL "Junction\t",join( "\t",@sample),"\n";
+
+
+######Read the gene information
+my %gene;
+while(<FILE>){
+	chomp;
+	my ($chr,$source,$feature,$str,$end,$score,$strand,$frame,$attribute) = split /\t/;
+	my %attr;
+	foreach (split /;/,$attribute){
+		my ($key,$val) = split;
+		$val =~ s/\;|\"//g;
+		$attr{$key} = $val;
+	}
+	if($feature eq "exon"){
+		if(exists $gene{$attr{'gene_id'}}){
+			push @{$gene{$attr{'gene_id'}}{'merge'}}, ($str..$end);
+		}
+		else{
+			%{$gene{$attr{'gene_id'}}} = ('chr'=>$chr,'source'=>$source,'merge'=>[$str..$end],'strand'=>$strand,'gene_name'=>$attr{'gene_name'});
+		}
+	}
+}
+
+
+my @gene = keys %gene;
+for my $i (0..$#gene){
+	my $key = $gene[$i];
+	my $val = $gene{$key};
+	my @merge = @{$val->{'merge'}};
+	my %hash;
+	@merge = grep { ++$hash{$_} < 2 } @merge;
+	my ($chr,$source,$strand,$gene_name) = ($val->{'chr'},$val->{'source'},$val->{'strand'},$val->{'gene_name'});
+	if ($chr !~ /^chr/){
+		$chr = "chr$chr";
+	}
+	if ($chr eq "chrMT"){
+		$chr = "chrM";
+	}
+
+	my $junc_ref;
+	if($strand eq "+"){
+		@merge = sort{$a<=>$b} @merge;
+		my $exon_num = 1;
+		my @exon5p;
+		my @exon3p;
+		######Print the gene lines
+		push @exon5p,$merge[0];
+		print MERGE "$chr\t$source\_MERGE\tgene\t$merge[0]\t$merge[-1]\t.\t$strand\t.\tgene_id \"$key\"; gene_name \"$gene_name\";\n";
+		print MERGE "$chr\t$source\_MERGE\texon\t$merge[0]\t";
+		for(my $i=1;$i<@merge;$i++){
+			if($merge[$i]-$merge[$i-1]>1){
+				push @exon3p, $merge[$i-1];
+				print MERGE "$merge[$i-1]\t.\t$strand\t.\tgene_id \"$key\"; exon_number \"$exon_num\"; gene_name \"$gene_name\";\n";
+				push @exon5p, $merge[$i];
+				print MERGE "$chr\t$source\_MERGE\texon\t$merge[$i]\t";
+				$exon_num++;
+			}
+		}
+		push @exon3p, $merge[-1];
+		print MERGE "$merge[-1]\t.\t$strand\t.\tgene_id \"$key\"; exon_number \"$exon_num\"; gene_name \"$gene_name\";\n";
+		($junc_ref) = &junction($chr,$merge[0],$merge[-1],83,163,\@sample);
+		&annoExon($junc_ref,\@exon5p,\@exon3p);
+	}
+
+
+	else{
+		@merge = sort{$b<=>$a} @merge;
+		######Print the gene lines
+		print MERGE "$chr\t$source\_MERGE\tgene\t$merge[0]\t$merge[-1]\t.\t$strand\t.\tgene_id \"$key\"; gene_name \"$gene_name\";\n";
+		print MERGE "$chr\t$source\_MERGE\texon\t$merge[0]\t";
+		my $exon_num = 1;
+		for(my $i=1;$i<@merge;$i++){
+			if($merge[$i]-$merge[$i-1]<-1){
+				print MERGE "$merge[$i-1]\t.\t$strand\t.\tgene_id \"$key\"; exon_number \"$exon_num\"; gene_name \"$gene_name\";\n";
+				print MERGE "$chr\t$source\_MERGE\texon\t$merge[$i]\t";
+				$exon_num++;
+			}
+		}
+		print MERGE "$merge[-1]\t.\t$strand\t.\tgene_id \"$key\"; exon_number \"$exon_num\"; gene_name \"$gene_name\";\n";
+		($junc_ref) = &junction($chr,$merge[-1],$merge[0],99,147,\@sample);
+	}
+}
+
+
+sub annoExon{
+	my ($junc_ref,$exon5p,$exon3p) = @_;
+	foreach my $key (sort(keys %$junc_ref)){
+		my ($end3p,$str5p) = split /\-/,$key;
+		my ($junc3p,$junc5p,$exon_num3p,$exon_num5p);
+		for my $i (0..$#{$exon5p}){
+			if($end3p < $exon5p->[$i]){
+				$shift3p = $end3p - $exon3p->[$i-1];
+				$exon_num3p = $i;
+				last;
+			}
+		}
+		for my $i (($exon_num3p-1)..$#{$exon3p}){
+			if($str5p < $exon3p->[$i]){
+				$shift5p = $str5p - $exon5p->[$i];
+				$exon_num5p = $i+1;
+				last;
+			}
+		}
+		print "$key\texon$exon_num3p:$shift3p-exon$exon_num5p:$shift5p\n";
+	}
+}
+
+
+
+sub junction{
+	my ($chr,$str,$end,$flag1,$flag2,$sample_ref) = @_;
+	my @sample = @$sample_ref;
+	my %junc;
+	my %sum_sj;
+	for(my $i=0;$i<@sample;$i++){
+		open BAM, "samtools view -q 255 $sample[$i] $chr:$str-$end | awk '(\$6 ~ \"N\" && (\$2 == $flag1 || \$2 == $flag2) && \$6 !~ \"S\" && \$6 !~ \"D\" && \$6 !~ \"I\"){print \$4,\$6}' | ";
+		while(<BAM>){
+			my ($str,$CIGAR) = split;
+			my ($exon1,$exon2,$exon3,$str2,$str3,$end1,$end2,$end3);
+			my @info = split /N|M/,$CIGAR;
+			if(@info == 3){
+				if($info[0] >=$SJOverhangMin && $info[2] >=$SJOverhangMin){
+					$end1 = $str+$info[0]-1;  ####
+					$str2 = $end1+$info[1]+1;
+					$junc{"$end1-$str2"}->[$i]++;
+					$sum_sj[$i]++;
+				}
+			}
+			elsif(@info == 5){
+				if($info[0] >=$SJOverhangMin && $info[2] >=$SJOverhangMin && $info[4] >=$SJOverhangMin){
+					$end1 = $str+$info[0]-1;
+					$str2 = $end1+$info[1]+1;
+					$end2 = $str2+$info[2]-1;
+					$str3 = $end2+$info[3]+1;
+					$junc{"$end1-$str2"}->[$i]++;
+					$junc{"$end2-$str3"}->[$i]++;
+					$sum_sj[$i] +=2;
+				}
+			}
+
+		}
+
+	}
+
+	open SPL,">>Splicing.tsv";
+	
+	my @size_factor;
+	my $average = sum(@sum_sj)/@sum_sj;
+	for my $i (0..$#sample){
+		$size_factor[$i] = $average/$sum_sj[$i];
+	}
+	my %ave_junc;
+	foreach my $key (sort (keys %junc)){
+		my %sum;
+		my $zeroCount = 0;
+		my $total_sum = 0;
+		for my $i (0..$#sample){
+			if(!defined ($junc{$key}->[$i])){
+				$junc{$key}->[$i] = 0;
+				$zeroCount++;
+			}
+			else{
+				$junc{$key}->[$i] = $junc{$key}->[$i]*$size_factor[$i];
+			}
+			$sum{$sample{$sample[$i]}} += $junc{$key}->[$i];
+			$total_sum += $junc{$key}->[$i];
+		}
+		
+		next if ($total_sum < $readCountMin*@sample || $zeroCount > @sample/2);  ####Filtering
+		while(my ($k,$v) = each %sum){
+			$ave_junc{$key}->{$k} = round($v/$con_count{$k});
+		}
+		print SPL "$key\t";
+		for my $i (0..$#sample){
+			print SPL "$junc{$key}->[$i]\t";
+		}
+		print SPL "\n";
+	}
+	return (\%ave_junc);
+}

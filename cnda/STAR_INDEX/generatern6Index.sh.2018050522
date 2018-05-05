@@ -1,0 +1,19 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N genomeGenerate
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+
+
+dir='/home/bio-longyk/cnda/STAR_INDEX/rn6v92len149/'
+mkdir $dir
+STAR --runMode genomeGenerate --runThreadN 18 --genomeDir $dir --genomeFastaFiles /home/biology/genome/rn6/rn6.fa --sjdbGTFfile /home/bio-longyk/cnda/ensembl/rn6.ensemblv92.nopsuedo.gtf --sjdbOverhang 149
+
+
+dir='/home/bio-longyk/cnda/STAR_INDEX/rn6v92len100/'
+mkdir $dir
+STAR --runMode genomeGenerate --runThreadN 18 --genomeDir $dir --genomeFastaFiles /home/biology/genome/rn6/rn6.fa --sjdbGTFfile /home/bio-longyk/cnda/ensembl/rn6.ensemblv92.nopsuedo.gtf --sjdbOverhang 100
+
+
+

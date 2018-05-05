@@ -1,0 +1,67 @@
+#!/usr/bin/perl -w
+
+my %conventer;
+open FILE,'hg38_ID2name.txt';
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name) = split;
+	$conventer{$gene_name} = $gene_id;
+}
+
+
+open FILE,'hKO_293R_merge.tsv';
+<FILE>;
+my %baseEnrich;
+my %baseDeplete;
+my %posEnrich;
+my %negEnrich;
+
+while(<FILE>){
+	chomp;
+	my ($gRNA,$gene,$gfpp1,$gfpp2,$gfpn1,$gfpn2,$total1,$total2,$library) = split;
+	my $gfpp = ($gfpp1+$gfpp2)/2 + 1;
+	my $gfpn = ($gfpn1+$gfpn2)/2 + 1;
+	my $total = ($total1+$total2)/2 +1;
+	$library += 1;
+	if(($total+$library)/2 > 10){
+		if($total/$library>2){
+			$baseEnrich{$conventer{$gene}}++;
+		}
+		elsif($library/$total>2){
+			$baseDeplete{$conventer{$gene}}++;
+		}
+	}
+	if(($gfpn+$total)/2>10 && $gfpn/$total>4){
+		$negEnrich{$conventer{$gene}}++;
+	}
+	if(($gfpp+$total)/2>30 && $gfpp/$total>4){
+		$posEnrich{$conventer{$gene}}++;
+	}
+}
+
+open OUT1,'>Input_GO_BaselineEnrich.txt';		
+print OUT1 ">ensg\n";
+foreach my $id (keys %baseEnrich){
+	print OUT1 "$id\n" if $baseEnrich{$id} > 1;
+}
+
+
+open OUT1,'>Input_GO_BaselineDeplete.txt';		
+print OUT1 ">ensg\n";
+foreach my $id (keys %baseDeplete){
+	print OUT1 "$id\n" if $baseDeplete{$id} > 1;
+}
+
+
+open OUT1,'>Input_GO_GFPPosEnrich.txt';		
+print OUT1 ">ensg\n";
+foreach my $id (keys %posEnrich){
+	print OUT1 "$id\n" if $posEnrich{$id} >1;
+}
+
+
+open OUT1,'>Input_GO_GFPNegEnrich.txt';		
+print OUT1 ">ensg\n";
+foreach my $id (keys %negEnrich){
+	print OUT1 "$id\n" if $negEnrich{$id} > 1;
+}

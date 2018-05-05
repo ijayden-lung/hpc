@@ -1,0 +1,46 @@
+#!/usr/bin/perl -w
+
+my %hash;
+
+=pod
+open GENE, "top_gene_list";
+while(<GENE>){
+	chomp;
+	my ($chr,$source,$feature,$str,$end,$score,$strand,$frame,$attribute) = split /\t/;
+	my %attr;
+	foreach (split /;/,$attribute){
+		my ($key,$val) = split;
+		$val =~ s/\;|\"//g;
+		$attr{$key} = $val;
+	}
+	my $gene_name = $attr{'gene_name'};
+	$hash{$gene_name} = "";
+}
+=cut
+my $i =0;
+open GENE, "uniq";
+while(<GENE>){
+	chomp;
+	$i++;
+	last if $i >50;
+	$hash{$_} = "";
+}
+
+#open GTF, "/data1/lyk/cnda/ensembl/hg38.ensemblv89.nopsuedo.gtf";
+open GTF, "/data1/lyk/cnda/ensembl/Homo_sapiens.GRCh38.89.gtf";
+#open GTF, "/data1/lyk/cnda/refSeq/hg38_refGene.gtf";
+open FILE, ">top50_gene.gtf";
+while(<GTF>){
+	chomp;
+	my ($chr,$source,$feature,$str,$end,$score,$strand,$frame,$attribute) = split /\t/;
+	my %attr;
+	foreach (split /;/,$attribute){
+		my ($key,$val) = split;
+		$val =~ s/\;|\"//g;
+		$attr{$key} = $val;
+	}
+	my $gene_name =  $attr{'gene_name'};
+	print FILE "$_\n" if (exists $hash{$gene_name});
+}
+
+

@@ -1,0 +1,11 @@
+#!/home/biology/opt/R-3.4.1/bin/Rscript
+library("pheatmap")
+
+args<-commandArgs(T)
+
+
+
+###Repeat Class
+data <-as.matrix(read.table(args[1],header=TRUE,row.names=1))
+pheatmap(data, cellwidth = 15, cellheight = 10, fontsize=6, fontsize_row=6,main=args[3],clustering_distance_rows="manhattan",clustering_distance_cols="manhattan",filename=args[2])
+

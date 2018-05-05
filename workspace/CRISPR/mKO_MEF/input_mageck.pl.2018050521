@@ -1,0 +1,25 @@
+#!/usr/bin/perl -w
+
+my ($lib,$exp,$dir) = @ARGV;
+if(!defined $dir){
+	$dir = '.';
+}
+if(!defined $exp){
+	$exp = 'exp';
+}
+if(!defined $lib){
+	$lib = 'lib';
+}
+
+open FILE,"Merge_Rescue_$lib\_$exp.tsv";
+my $header = <FILE>;
+open OUT, ">Input_mageck_$lib\_$exp.tsv";
+#print OUT "sgRNA\tGene\tGFP+4\tGFP+5\tTotal4\tTotal5\n";
+print OUT $header;
+
+while(<FILE>){
+	chomp;
+	my @data = split;
+	print OUT "$data[0]\t$data[1]\t$data[2]\t$data[3]\t$total4\t$total5\n" if ($data[2]+$data[3]+$total4+$total5) > 20;
+}
+

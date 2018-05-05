@@ -1,0 +1,47 @@
+#!/bin/bash
+#PBS -q cal
+#PBS -N featureCounts
+#PBS -l nodes=1:ppn=12
+#PBS -j oe 
+#PBS -l walltime=10:00:00
+#PBS -V
+
+cd ~/workspace/rmsk/
+echo 'Counting...'
+
+GTF="/home/bio-longyk/cnda/refSeq/hg38.repeatMasker.gtf"
+mouCount="table_fc.tsv"
+STAT='stat_fc.txt'
+#./feature_count.r $GTF $mouCount $STAT
+
+
+echo 'Normlizing...'
+#####NORMALIZE THE READ COUNT
+mouNor="table_norm.tsv"
+mouNor2="table_name_norm.tsv"
+mouRef="/home/bio-longyk/cnda/refSeq/hg38.rmsk"
+READ='32720631,902718 31647383,917831 32597152,914627 30926621,961665'
+Header='Huh7CD133Pos PLC8024CD133Pos Huh7CD133Neg PLC8024CD133Neg'
+perl normlize_gene_count.pl $mouCount $mouNor $mouNor2 $mouRef "$Header" "$READ"
+
+
+########Class or Family
+echo 'Classifying...'
+mouFam="table_family_norm.tsv"
+perl categorize.pl $mouNor $mouFam 2
+mouCls="table_class_norm.tsv"
+perl categorize.pl $mouNor $mouCls 1
+
+
+echo 'HeatMaping ...'
+###HeatMap
+classPDF="hg38_class_enrich.pdf"
+classMain="hg38 repClass"
+familyPDF="hg38_family_enrich.pdf"
+familyMain="hg38 repFamily"
+namePDF="hg38_name.pdf"
+nameMain="hg38_repName"
+./heatmap.r "$mouCls" "$classPDF" "$classMain" "$mouFam" "$familyPDF" "$familyMain" "$mouNor2" "$namePDF" "$nameMain"
+
+
+

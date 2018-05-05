@@ -1,0 +1,9 @@
+#!/usr/bin/env Rscript
+
+library(ggplot2)
+args<-commandArgs(T)
+data = read.table(args[1],header=TRUE,sep="\t")
+pdf(args[2])
+ggplot(data, aes(x=distance, y=L2FC))+geom_boxplot()+labs(x="log10 distance")+theme_bw()+theme(axis.text.x = element_text(angle = 0, hjust = 0.5, vjust = 0.5))
+
+

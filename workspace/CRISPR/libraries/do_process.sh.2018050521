@@ -1,0 +1,7 @@
+#!/bin/bash
+
+perl process.pl hACTlib
+perl process.pl hREPlib
+perl process.pl hTFKOlib
+perl process.pl mREPlib
+perl process.pl mACTlib

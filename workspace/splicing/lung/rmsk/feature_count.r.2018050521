@@ -1,0 +1,18 @@
+#!/usr/bin/env Rscript
+#PBS -q batch
+#PBS -N featureCounts
+#PBS -l nodes=4:ppn=4
+#PBS -o /data1/lyk/clean_data/log_featureCounts
+#PBS -j oe 
+library(Rsubread)
+
+args<-commandArgs(T)
+
+files=c('/home/bio-longyk/workspace/EMT/STAR/SRR2966453/Aligned.sortedByCoord.out.bam','/home/bio-longyk/workspace/EMT/STAR/SRR2966454/Aligned.sortedByCoord.out.bam','/home/bio-longyk/workspace/EMT/STAR/SRR2966455/Aligned.sortedByCoord.out.bam','/home/bio-longyk/workspace/EMT/STAR/SRR2966474/Aligned.sortedByCoord.out.bam','/home/bio-longyk/workspace/EMT/STAR/SRR2966475/Aligned.sortedByCoord.out.bam','/home/bio-longyk/workspace/EMT/STAR/SRR2966476/Aligned.sortedByCoord.out.bam')
+
+fc_PE <- featureCounts(files,annot.ext=args[1],isGTFAnnotationFile=TRUE,GTF.featureType="exon",GTF.attrType="gene_id",useMetaFeatures=TRUE,isPairedEnd=TRUE, countMultiMappingReads=TRUE, fraction=TRUE, requireBothEndsMapped=TRUE,strandSpecific=2, nthreads=args[4])
+
+write.table(fc_PE$counts,args[2],quote=FALSE,sep="\t",row.names=TRUE,col.names=TRUE)
+write.table(fc_PE$stat,args[3],quote=FALSE,sep="\t")
+
+

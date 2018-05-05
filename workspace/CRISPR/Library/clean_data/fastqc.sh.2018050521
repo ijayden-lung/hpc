@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N FASTQC
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=08:00:00
+cd ~/workspace/CRISPR/hKO_LF10/clean_data/
+for i in *.fq.gz
+do
+	fastqc -t 18 -o FASTQC_OUT/  $i
+done
+
+
+

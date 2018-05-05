@@ -1,0 +1,22 @@
+#!/usr/bin/perl -w
+
+my %hash;
+open FILE,'onlytcf.txt';
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name) = split;
+	$hash{$gene_id} = '';
+}
+
+
+open FILE,'DESeq2_mRNA.tsv';
+my $header = <FILE>;
+open OUT,">Tcf_OnlyGene.txt";
+print OUT $header;
+while(<FILE>){
+	chomp;
+	my ($gene_name,$gene_id,$basemean,$l2fc) = split;
+	if(exists $hash{$gene_id}){
+		print OUT "$_\n";
+	}
+}

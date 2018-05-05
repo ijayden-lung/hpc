@@ -1,0 +1,77 @@
+#!/usr/bin/perl -w
+use List::Util qw(first max maxstr min minstr reduce shuffle sum);
+
+my ($mouCount,$mouNorm,$mouNorm2,$mouRef,$mouHeader,$read) = @ARGV;
+my @mouHeader = split /\s+/,$mouHeader;
+open FILE, $mouRef;
+my $field = <FILE>;
+my %class;
+my %famlily;
+while(<FILE>){
+	chomp;
+	my ($gene,$class,$family) = (split)[10,11,12];
+	$class{$gene} = $class;
+	$family{$gene} = $family;
+}
+
+open MOU, "$mouCount";
+<MOU>;
+my %mouse;
+my @mou_sum;
+my $total;
+while(<MOU>){
+	chomp;
+	my @data = split;
+	my $gene = shift @data;
+	for($j=0;$j<@data;$j++){
+		$mouse{$gene}->[$j] += $data[$j];
+		$mou_sum[$j] += $data[$j];
+		$total += $data[$j];
+	}
+}
+my $average = $total/@mou_sum;
+my @mou_sf;
+for(my $i=0;$i<@mou_sum;$i++){
+	$mou_sf[$i] = $average/$mou_sum[$i];
+}
+
+print "@mou_sf\n";
+
+############New Normalizing
+my $i=0;
+$total = 0;
+foreach my $ele (split /\s+/,$read){
+	my ($uniq,$mult) = split /,/,$ele;
+	$mou_sum[$i] = $uniq+$mult;
+	$total += $mou_sum[$i];
+	$i++;
+}
+$average = $total/@mou_sum;
+for(my $i=0;$i<@mou_sum;$i++){
+	$mou_sf[$i] = $average/$mou_sum[$i];
+}
+############New Normalizing
+print "@mou_sf\n";
+
+open OUT1, ">","$mouNorm";
+print OUT1 join "\t","repName\trepClass\trepFamily",@mouHeader,"\n";
+open OUT2, ">","$mouNorm2";
+print OUT2 join "\t","repName",@mouHeader,"\n";
+while(my($key,$val) = each %mouse){
+	my $sum = 0;
+	for(my$i=0;$i<@mou_sf;$i++){
+		$val->[$i] *= $mou_sf[$i];
+		$sum += $val->[$i];
+	}
+	if($sum >100){
+		print OUT1 "$key\t$class{$key}\t$family{$key}";
+		print OUT2 "$key";
+		for(my $i=0;$i<@mou_sf;$i++){
+			print OUT1 "\t$val->[$i]";
+			print OUT2 "\t$val->[$i]";
+		}
+		print OUT1 "\n";
+		print OUT2 "\n";
+	}
+}
+

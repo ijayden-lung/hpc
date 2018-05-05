@@ -1,0 +1,70 @@
+#!/usr/bin/perl 
+#
+my ($library) = @ARGV;
+
+my %lib;
+open LIB,"../$library.csv";
+<LIB>;
+while(<LIB>){
+	chomp;
+	my ($gene,$target) = split /,/;
+	push @{$lib{$target}},$gene;
+}
+
+open FILE,"OUT/$library/gRNA_sorted.txt";
+my @mapNum = (0,0,0);
+my @mapTar = (0,0,0);
+while(<FILE>){
+	chomp;
+	my ($target,$count) = split;
+	my $new = substr($target,1);
+	if($target =~ /^G/){
+		if(exists $lib{$target}){
+			$mapNum[0] += $count;
+			$mapTar[0]++;
+			$data{$target} = $count if $library eq 'mREPlib' || $library eq 'hREPlib' || $library eq 'hACTlib'; 
+		}
+		elsif(exists $lib{$new}){
+			$mapNum[1] += $count;
+			$mapTar[1]++;
+			$data{$new} = $count if $library eq 'mACTlib' || $library eq 'hTFKOlib'; 
+		}
+	}
+	else{
+		$mapTar[2]++;
+		$mapNum[2] += $count;
+	}
+}
+
+my $uniq = 0;
+my $multi = 0;
+my $total = 0;
+while(my($key,$val) = each %lib){
+	if(@$val == 1){
+		$uniq++;
+	}
+	else{
+		$multi++;
+	}
+	$total++;
+}
+
+
+my @readPerTar;
+$readPerTar[0] = $mapNum[0]/$mapTar[0];
+$readPerTar[1] = $mapNum[1]/$mapTar[1];
+$readPerTar[2] = $mapNum[2]/$mapTar[2];
+
+
+print "mACTlib\tTarget Num\tMapped Num (Uniq)\tReads/Target (Multi)\n";
+print "Library\t$total\t$uniq\t$multi\n";
+print "Len=20\t$mapTar[0]\t$mapNum[0]\t$readPerTar[0]\n";
+print "Len=21\t$mapTar[1]\t$mapNum[1]\t$readPerTar[1]\n";
+print "Offtar\t$mapTar[2]\t$mapNum[2]\t$readPerTar[2]\n\n\n\n\n\n\n\n\n\n\n";
+
+open OUT,">$library\_readCount.tsv";
+foreach my $target (sort{$data{$b}<=>$data{$a}} keys %data){
+	my $gene = $lib{$target};
+	my $string = join ',',@$gene;
+	print OUT "$target\t$data{$target}\t$string\n";
+}

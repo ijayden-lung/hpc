@@ -1,0 +1,68 @@
+#!/usr/bin/perl -w
+
+open FILE,'../GeCKO_G1.csv';
+<FILE>;
+my %highScore;
+my %lowScore1;
+my %pos;
+my $i = 1;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$control,$high,$low) = split /,/;
+	$highScore1{$sgrna} = $high/($control+1);
+	$lowScore1{$sgrna} = $low/($control+1);
+	$pos{$sgrna} = $i;
+	$i += 110;
+}
+
+open FILE,'../GeCKO_G2.csv';
+<FILE>;
+my %highScore2;
+my %lowScore2;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$control,$high,$low) = split /,/;
+	$highScore2{$sgrna} = $high/($control+1)+0.1;
+	$lowScore2{$sgrna} = $low/($control+1)+0.1;
+}
+
+open OUT1,'>GeCKO_high1.narrowPeak';
+$i = 0;
+foreach my $sgrna (sort{$highScore1{$a} <=> $highScore1{$b}} keys %highScore1){
+	$i++;
+	my $score = $highScore1{$sgrna};
+	my $pos1 = $pos{$sgrna};
+	my $pos2 = $pos1+100;
+	print OUT1 "chr1\t$pos1\t$pos2\t$sgrna\t$score\t.\t$score\t-1\t-1\t$i\n";
+}
+
+open OUT2,'>GeCKO_high2.narrowPeak';
+$i = 0;
+foreach my $sgrna (sort{$highScore2{$a} <=> $highScore2{$b}} keys %highScore2){
+	$i++;
+	my $score = $highScore2{$sgrna};
+	my $pos1 = $pos{$sgrna};
+	my $pos2 = $pos1+100;
+	print OUT2 "chr1\t$pos1\t$pos2\t$sgrna\t$score\t.\t$score\t-1\t-1\t$i\n";
+}
+
+
+open OUT1,'>GeCKO_low1.narrowPeak';
+$i = 0;
+foreach my $sgrna (sort{$lowScore1{$a} <=> $lowScore1{$b}} keys %lowScore1){
+	$i++;
+	my $score = $lowScore1{$sgrna};
+	my $pos1 = $pos{$sgrna};
+	my $pos2 = $pos1+100;
+	print OUT1 "chr1\t$pos1\t$pos2\t$sgrna\t$score\t.\t$score\t-1\t-1\t$i\n";
+}
+
+open OUT2,'>GeCKO_low2.narrowPeak';
+$i = 0;
+foreach my $sgrna (sort{$lowScore2{$a} <=> $lowScore2{$b}} keys %lowScore2){
+	$i++;
+	my $score = $lowScore2{$sgrna};
+	my $pos1 = $pos{$sgrna};
+	my $pos2 = $pos1+100;
+	print OUT2 "chr1\t$pos1\t$pos2\t$sgrna\t$score\t.\t$score\t-1\t-1\t$i\n";
+}

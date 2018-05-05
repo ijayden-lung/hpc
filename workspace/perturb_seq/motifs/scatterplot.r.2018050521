@@ -1,0 +1,37 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+pdf(args[2],height=10,width=12)
+
+
+data = read.table(args[1],header=TRUE)
+#data2 = data[(data$Mouse_ES+data$Rat_ES)>20,]
+#data3 = data[(data$Mouse_MEF+data$Rat_MEF)>20,]
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=similarity, y=log2(FPKM_Mouse_ES),colour=mm10_ES_g))+geom_point()+ylim(-4,11)
+b<-ggplot(data, aes(x=similarity, y=log2(FPKM_Mouse_ES),colour=mm10_ES_s))+geom_point()+ylim(-4,11)
+c<-ggplot(data, aes(x=similarity, y=log2(FPKM_Mouse_MEF),colour=mm10_MEF_g))+geom_point()+ylim(-4,11)
+d<-ggplot(data, aes(x=similarity, y=log2(FPKM_Mouse_MEF),colour=mm10_MEF_s))+geom_point()+ylim(-4,11)
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 1))
+print(d, vp = vplayout(2, 2))
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=similarity, y=log2(FPKM_Rat_ES),colour=rn6_ES_g))+geom_point()+ylim(-4,11)
+b<-ggplot(data, aes(x=similarity, y=log2(FPKM_Rat_ES),colour=rn6_ES_s))+geom_point()+ylim(-4,11)
+c<-ggplot(data, aes(x=similarity, y=log2(FPKM_Rat_MEF),colour=rn6_MEF_g))+geom_point()+ylim(-4,11)
+d<-ggplot(data, aes(x=similarity, y=log2(FPKM_Rat_MEF),colour=rn6_MEF_s))+geom_point()+ylim(-4,11)
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 1))
+print(d, vp = vplayout(2, 2))

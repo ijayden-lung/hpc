@@ -1,0 +1,68 @@
+#!/usr/bin/perl -w
+
+my %rmats;
+open RMAT,'Same_ASE_rmats.tsv';
+while(<RMAT>){
+	chomp;
+	my @data = split;
+	$rmats{"$data[2]\t$data[3]"} = '';
+}
+my %fast;
+open FAST,'Same_ASE.txt';
+while(<FAST>){
+	chomp;
+	my @data = split;
+	$fast{"$data[3]\t$data[4]"} = '';
+}
+
+my %hash;
+open FILE,'Same_ASE.txt';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my @data = split /\t/;
+	$hash{"$data[3]\t$data[4]"} = $data[2];
+}
+
+&Venn(\%fast,\%rmats);
+
+
+sub Venn{
+	my ($ref1,$ref2,$info) = @_;
+	my %enrich1 = %$ref1;
+	my %enrich2 = %$ref2;
+	my (%rmats,%fast,%both);
+
+	my @Venn = (0,0,0);
+	foreach my $key (keys %enrich1){
+		if(exists $enrich2{$key}){
+			$Venn[2]++;
+			$both{$key} = '';
+		}
+		else{
+			$Venn[0]++;
+			$fast{$key} = '';
+		}
+	}
+
+	foreach my $key (keys %enrich2){
+		if(!exists $enrich1{$key}){
+			$Venn[1]++;
+			$rmats{$key} = '';
+		}
+	}
+
+	print "$info\n";
+	print "plot(Venn(SetNames = c('myScript', 'rMATS'), Weight=c('10'=$Venn[0],'01'=$Venn[1],'11'=$Venn[2])),doWeights = TRUE)\n";
+
+	open OUT, '>Venn.txt';
+	foreach my $key (keys %fast){
+		print OUT "fastASEOnly\t$key\t$hash{$key}\n";
+	}
+	foreach my $key (keys %rmats){
+		print OUT "rMATSOnly\t$key\n";
+	}
+	foreach my $key (keys %both){
+		print OUT "Common\t$key\t$hash{$key}\n";
+	}
+}

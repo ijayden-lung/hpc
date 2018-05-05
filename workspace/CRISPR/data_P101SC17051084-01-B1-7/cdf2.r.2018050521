@@ -1,0 +1,15 @@
+#!/usr/bin/env Rscript
+library(grid)
+library(ggplot2)
+args<-commandArgs(T)
+data = read.table(args[1],header=TRUE,row.names=1)
+pdf(args[2],width=12,height=7)
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 1)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+df <- data.frame(x = c(data$mKO293RGFPNeg.1,data$mKO293RGFPNeg.2,data$mKO293Rtotal.1,data$mKO293Rtotal.2),g = gl(4,labels =c('mKO293RGFPNeg.1','mKO293RGFPNeg.2','mKO293Rtotal.1','mKO293Rtotal.2'), length(data$mKO293RGFPNeg.1)))
+a<-ggplot(df, aes(log10(x),colour = g))+stat_ecdf(geom = "step",pad=FALSE)+scale_x_continuous("log10 Number of reads per sgRNA",limits=c(0,3))+scale_y_continuous("Cumulative percentage of mKO library",breaks=0.1*(0:10),labels=scales::percent)
+
+print(a, vp = vplayout(1,1))
+

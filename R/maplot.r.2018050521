@@ -1,0 +1,7 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+args<-commandArgs(T)
+pdf(args[2])
+data = read.table(args[1],header=TRUE,row.names=1)
+
+ggplot(data, aes(x=log10(baseMean), y=log2FoldChange))+geom_point()+labs(x="Log10 Mean ReadCount", y="Log2(shRNA/Control)")+geom_hline(aes(yintercept=1), colour="#990000", linetype="dashed")+geom_hline(aes(yintercept=-1), colour="#990000", linetype="dashed")+geom_smooth(method = "loess", size = 1.5)

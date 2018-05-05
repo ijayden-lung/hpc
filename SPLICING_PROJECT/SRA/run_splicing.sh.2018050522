@@ -1,0 +1,19 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N SPLICING
+#PBS -l nodes=1:ppn=1
+#PBS -j oe 
+#PBS -l walltime=100:00:00
+#PBS -V
+export  OMP_NUM_THREADS=1
+
+echo `date`
+echo "staring"
+cd /home/bio-longyk/SPLICING_PROJECT/SRA
+sample_list="/home/bio-longyk/SPLICING_PROJECT/SRA/sample_list"
+gtf="/home/bio-longyk/cnda/ensembl/hg38.ensemblv90.nopsuedo.gtf"
+
+
+fastASE --sampleList "$sample_list" --gtf "$gtf"
+echo "finished"
+echo `date`

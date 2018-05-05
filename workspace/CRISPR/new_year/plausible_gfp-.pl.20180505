@@ -1,0 +1,27 @@
+#!/usr/bin/perl -w
+#
+open FILE,'hKO_293R.tsv';
+<FILE>;
+open OUT,'>hKO_293R_plausibleNeg.tsv';
+print OUT "sgRNA\tgene\tgfp-4\tgfp-5\tbase4\tbase5\tl2fc4\tl2fc5\n";
+my %gene;
+my %rank;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $pos4 = $data[4]+1;
+	my $pos5 = $data[5]+1;
+	next if ($pos4 < 10 || $pos5 < 10);
+	my $bas4 = ($data[6]+$data[8]+$data[10]+$data[12]+$data[14]+$data[16])/6+1;
+	my $bas5 = ($data[7]+$data[9]+$data[11]+$data[13]+$data[15]+$data[17])/6+1;
+	my $enr4 = log($pos4/$bas4)/log(2);
+	my $enr5 = log($pos5/$bas5)/log(2);
+	if($enr4 > 1.5 && $enr5 >1.5 && abs($enr4-$enr5) < 3){
+		$rank{$data[1]} = $enr4+$enr5;
+		$gene{$data[1]} .= sprintf ("%s\t%s\t%.0f\t%.0f\t%.0f\t%.0f\t%.1f\t%.1f\n",$data[0],$data[1],$pos4,$pos5,$bas4,$bas5,$enr4,$enr5);
+	}
+}
+
+foreach my $gene (sort{$rank{$b}<=>$rank{$a}} keys %rank){
+	print OUT $gene{$gene};
+}

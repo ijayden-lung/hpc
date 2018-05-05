@@ -1,0 +1,79 @@
+#!/usr/bin/perl -w
+#
+## Always good practice
+use strict;
+## The threads module allows us to implement threading in our script
+use threads qw/yield/;
+use threads::shared;
+
+## The number of threads used in the script
+my $num_of_threads = 2;
+
+# use the initThreads subroutine to create an array of threads.
+my @threads = initThreads();
+
+# Loop through the array:
+#
+my $args = 12;
+my @var:shared = (0,0,0,0);
+foreach(@threads){
+	# Tell each thread to perform our 'doOperation()' subroutine.
+	$args++;
+	$_ = threads->create(\&doOperation,$args);
+	#$_ = threads->create(\&abump);
+}
+
+# This tells the main program to keep running until all threads have finished.
+foreach(@threads){
+	my @results = $_->join();
+	print "@{$results[0]}\n";
+}
+
+print "var is @var\n";
+print "Program Done!\n";
+
+sub abump{
+	
+	#lock $var;
+	# Get the thread id. Allows each thread to be identified.
+	my $id = threads->tid();
+	#$var++;
+	#print "Thread $id done, var = $var\n";
+}
+
+
+
+sub doOperation{
+	# Get the thread id. Allows each thread to be identified.
+	{
+		my @var;
+		my $id = threads->tid();
+		my $args = $_[0];
+		#######################  This is the start of my code
+		my $i = 0;
+		while($i < 100000){
+			for  my $j (0..3){
+				$var[$j] += 1+$j;
+			}
+			$i++;
+		}
+		######################   This is the end of my code
+		 # Inform us that the thread is done and exit the thread.
+		print "Thread $id done, var = @var\n";
+		#print "args = $args\tThread $id done!\n";
+		return \@var;
+	}
+}
+
+
+
+sub initThreads{
+	#An array to place our threads in
+	my @initThreads;
+	for(my $i = 1;$i<=$num_of_threads;$i++){
+		push(@initThreads,$i);
+	}
+	return @initThreads;
+}
+
+

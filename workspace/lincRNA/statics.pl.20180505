@@ -1,0 +1,40 @@
+#!/usr/bin/perl -w
+
+open FILE,'DE_lincRNA_vicinityGene.tsv';
+<FILE>;
+my @stat;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $tag1 = $data[4];
+	my $tag2 = $data[13];
+	if($tag1 eq "High" && $tag2 eq "High"){
+		$stat[0]++;
+	}
+	elsif($tag1 eq "High" && $tag2 eq "Low"){
+		$stat[1]++;
+	}
+	elsif($tag1 eq "High" && $tag2 eq "No"){
+		$stat[2]++;
+	}
+	elsif($tag1 eq "Low" && $tag2 eq "High"){
+		$stat[3]++;
+	}
+	elsif($tag1 eq "Low" && $tag2 eq "Low"){
+		$stat[4]++;
+	}
+	elsif($tag1 eq "Low" && $tag2 eq "No"){
+		$stat[5]++;
+	}
+	elsif($tag1 eq "No" && $tag2 eq "High"){
+		$stat[6]++;
+	}
+	elsif($tag1 eq "No" && $tag2 eq "Low"){
+		$stat[7]++;
+	}
+	elsif($tag1 eq "No" && $tag2 eq "No"){
+		$stat[8]++;
+	}
+}
+
+print "@stat\n";

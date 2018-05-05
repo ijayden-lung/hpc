@@ -1,0 +1,26 @@
+#!/usr/bin/env Rscript
+library(grid)
+library(ggplot2)
+args<-commandArgs(T)
+data = read.table(args[1],header=TRUE,row.names=1)
+pdf(args[2],width=12,height=21)
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(3, 1)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+df <- data.frame(x = c(data$mKO293RGFPPos.1,data$mKO293RGFPNeg.1,data$mKO293Rtotal.1),g = gl(3,labels =c('mKO293RGFPPos.1','mKO293RGFPNeg.1','mKO293Rtotal.1'), length(data$mKO293RGFPPos.1)))
+a<-ggplot(df, aes(log10(x),colour = g))+stat_ecdf(geom = "step",pad=FALSE)+scale_x_continuous("log10 Number of reads per sgRNA",limits=c(0,4))+scale_y_continuous("Cumulative percentage of mKO library",breaks=0.1*(0:10),labels=scales::percent)
+
+
+df <- data.frame(x = c(data$mKO293RGFPPos.2,data$mKO293RGFPNeg.2,data$mKO293Rtotal.2),g = gl(3,labels =c('mKO293RGFPPos.2','mKO293RGFPNeg.2','mKO293Rtotal.2'), length(data$mKO293RGFPPos.1)))
+b<-ggplot(df, aes(log10(x),colour = g))+stat_ecdf(geom = "step",pad=FALSE)+scale_x_continuous("log10 Number of reads per sgRNA",limits=c(0,4))+scale_y_continuous("Cumulative percentage of mKO library",breaks=0.1*(0:10),labels=scales::percent)
+
+
+df <- data.frame(x = c(data$mKO293RGFPPos.3,data$mKO293RGFPNeg.3,data$mKO293Rtotal.3),g = gl(3,labels =c('mKO293RGFPPos.3','mKO293RGFPNeg.3','mKO293Rtotal.3'), length(data$mKO293RGFPPos.1)))
+c<-ggplot(df, aes(log10(x),colour = g))+stat_ecdf(geom = "step",pad=FALSE)+scale_x_continuous("log10 Number of reads per sgRNA",limits=c(0,4))+scale_y_continuous("Cumulative percentage of mKO library",breaks=0.1*(0:10),labels=scales::percent)
+
+
+print(a, vp = vplayout(1,1))
+print(b, vp = vplayout(2,1))
+print(c, vp = vplayout(3,1))
+

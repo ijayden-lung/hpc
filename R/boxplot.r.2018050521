@@ -1,0 +1,8 @@
+#!/usr/bin/env Rscript
+
+library(ggplot2)
+pdf("BoxPlot_perdiff.pdf")
+data = read.table("Distribution",header=TRUE,sep="\t")
+ggplot(data, aes(x=Program, y=abs(PerDiff)))+geom_boxplot()
+ggplot(data, aes(x=Program, y=log2(JuncCount)))+geom_boxplot()
+ggplot(data,aes(x=abs(PerDiff),y=log2(JuncCount),color=Program))+geom_point()

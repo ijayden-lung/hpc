@@ -1,0 +1,11 @@
+#!/usr/bin/perl -w
+#
+#
+open GENE, "Venn.txt";
+open FILE, ">Sig_gene_exon.gtf";
+while(<GENE>){
+	chomp;
+	my(undef,$gene_id) = split /\t/;
+	#open GTF, "awk '(\$3 == \"gene\" && \$10 ~ /\"$gene_id\"/){print}' /home/bio-longyk/cnda/ensembl/hg38.ensemblv90.nopsuedo.gtf |";
+	system("awk '(\$10 ~ /\"$gene_id\"/){print}' /home/bio-longyk/cnda/ensembl/hg38.ensemblv92.nopsuedo.gtf >>Sig_gene_exon.gtf");
+}

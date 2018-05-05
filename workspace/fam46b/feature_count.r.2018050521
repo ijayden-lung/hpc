@@ -1,0 +1,20 @@
+#!/usr/bin/env Rscript
+#PBS -q fat
+#PBS -N featureCounts
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=08:00:00
+#PBS -V
+library(Rsubread)
+
+args<-c('/home/bio-longyk/cnda/ensembl/hg38.ensemblv90.nopsuedo.gtf','/home/bio-longyk/workspace/fam46b/DESeq2/table_ReadCount.tsv','/home/bio-longyk/workspace/fam46b/DESeq2/stat_fc.txt','/home/bio-longyk/workspace/fam46b/DESeq2/annotation.txt',18)
+#args<-commandArgs(T)
+
+files=c('/home/bio-longyk/workspace/fam46b/STAR/S5_combined/Aligned.sortedByCoord.out.bam','/home/bio-longyk/workspace/fam46b/STAR/S6_combined/Aligned.sortedByCoord.out.bam','/home/bio-longyk/workspace/fam46b/STAR/S7_combined/Aligned.sortedByCoord.out.bam')
+
+fc_PE <- featureCounts(files,annot.ext=args[1],isGTFAnnotationFile=TRUE,GTF.featureType="exon",GTF.attrType="gene_id",useMetaFeatures=TRUE,isPairedEnd=TRUE, requireBothEndsMapped=TRUE,strandSpecific=2, nthreads=args[5])
+
+write.table(fc_PE$counts,args[2],quote=FALSE,sep='\\t',row.names=TRUE,col.names=NA)
+write.table(fc_PE$stat,args[3],quote=FALSE,sep='\\t',row.names=TRUE,col.names=NA)
+write.table(fc_PE$annotation,args[4],quote=FALSE,sep='\\t',row.names=TRUE,col.names=NA)
+

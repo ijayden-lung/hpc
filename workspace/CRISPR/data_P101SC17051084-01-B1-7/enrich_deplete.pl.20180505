@@ -1,0 +1,171 @@
+#!/usr/bin/perll -w
+
+
+my $foldChange = 4;
+my $minRead    = 10;
+
+open FILE,'mKO_3T3_target.tsv';
+<FILE>;
+my %enrich9VS3_1;
+my %enrich9VS3_2;
+my %enrich9VS3_3;
+my %deplete9VS3_1;
+my %deplete9VS3_2;
+my %deplete9VS3_3;
+my %enrich15VS3_1;
+my %enrich15VS3_2;
+my %enrich15VS3_3;
+my %deplete15VS3_1;
+my %deplete15VS3_2;
+my %deplete15VS3_3;
+my %enrich15VS9_1;
+my %enrich15VS9_2;
+my %enrich15VS9_3;
+my %deplete15VS9_1;
+my %deplete15VS9_2;
+my %deplete15VS9_3;
+
+
+while(<FILE>){
+	chomp;
+	my ($target,$day15_1,$day15_2,$day15_3,$day3_1,$day3_2,$day3_3,$day9_1,$day9_2,$day9_3) = split;
+	if($day9_1>$minRead && $day3_1 >$minRead){
+		if($day9_1/$day3_1 > $foldChange){
+			$enrich9VS3_1{$target} = '';
+		}
+		elsif($day3_1/$day9_1 >$foldChange){
+			$deplete9VS3_1{$target} = '';
+		}
+	}
+	if($day9_2>$minRead && $day3_2 >$minRead){
+		if($day9_2/$day3_2 > $foldChange){
+			$enrich9VS3_2{$target} = '';
+		}
+		elsif($day3_2/$day9_2 >$foldChange){
+			$deplete9VS3_2{$target} = '';
+		}
+	}
+	if($day9_3>$minRead && $day3_3 >$minRead){
+		if($day9_3/$day3_3 > $foldChange){
+			$enrich9VS3_3{$target} = '';
+		}
+		elsif($day3_3/$day9_3 >$foldChange){
+			$deplete9VS3_3{$target} = '';
+		}
+	}
+
+	if($day15_1>$minRead && $day3_1 >$minRead){
+		if($day15_1/$day3_1 > $foldChange){
+			$enrich15VS3_1{$target} = '';
+		}
+		elsif($day3_1/$day15_1 >$foldChange){
+			$deplete15VS3_1{$target} = '';
+		}
+	}
+	if($day15_2>$minRead && $day3_2 >$minRead){
+		if($day15_2/$day3_2 > $foldChange){
+			$enrich15VS3_2{$target} = '';
+		}
+		elsif($day3_2/$day15_2 >$foldChange){
+			$deplete15VS3_2{$target} = '';
+		}
+	}
+	if($day15_3>$minRead && $day3_3 >$minRead){
+		if($day15_3/$day3_3 > $foldChange){
+			$enrich15VS3_3{$target} = '';
+		}
+		elsif($day3_3/$day15_3 >$foldChange){
+			$deplete15VS3_3{$target} = '';
+		}
+	}
+
+
+	if($day15_1>$minRead && $day9_1 >$minRead){
+		if($day15_1/$day9_1 > $foldChange){
+			$enrich15VS9_1{$target} = '';
+		}
+		elsif($day9_1/$day15_1 >$foldChange){
+			$deplete15VS9_1{$target} = '';
+		}
+	}
+	if($day15_2>$minRead && $day9_2 >$minRead){
+		if($day15_2/$day9_2 > $foldChange){
+			$enrich15VS9_2{$target} = '';
+		}
+		elsif($day9_2/$day15_2 >$foldChange){
+			$deplete15VS9_2{$target} = '';
+		}
+	}
+	if($day15_3>$minRead && $day9_3 >$minRead){
+		if($day15_3/$day9_3 > $foldChange){
+			$enrich15VS9_3{$target} = '';
+		}
+		elsif($day9_3/$day15_3 >$foldChange){
+			$deplete15VS9_3{$target} = '';
+		}
+	}
+}
+
+my $inter1 = &Venn(\%enrich9VS3_1,\%enrich9VS3_2,\%enrich9VS3_3,"Day9 VS Day3 Enrichment") ;
+&Gene($inter1);
+my $inter2 = &Venn(\%enrich15VS3_1,\%enrich15VS3_2,\%enrich15VS3_3,"Day15 VS Day3 Enrichment") ;
+&Gene($inter2);
+my $inter3 = &Venn(\%enrich15VS9_1,\%enrich15VS9_2,\%enrich15VS9_3,"Day15 VS Day9 Enrichment") ;
+&Gene($inter3);
+my $inter4 = &Venn(\%deplete9VS3_1,\%deplete9VS3_2,\%deplete9VS3_3,"Day9 VS Day3 Depletion") ;
+&Gene($inter4);
+my $inter5 = &Venn(\%deplete15VS3_1,\%deplete15VS3_2,\%deplete15VS3_3,"Day15 VS Day3 Depletion") ;
+&Gene($inter5);
+my $inter6 = &Venn(\%deplete15VS9_1,\%deplete15VS9_2,\%deplete15VS9_3,"Day15 VS Day9 Depletion") ;
+&Gene($inter6);
+&Venn($inter1,$inter2,$inter3,"Inteerset");
+
+sub Venn{
+	my %interset;
+	my ($ref1,$ref2,$ref3,$info) = @_;
+	my %enrich_1 = %$ref1;
+	my %enrich_2 = %$ref2;
+	my %enrich_3 = %$ref3;
+	my @Venn = (0,0,0,0,0,0,0);
+	foreach my $key (keys %enrich_1){
+		$Venn[0]++;
+		if(exists $enrich_2{$key}){
+			$Venn[3]++;
+			if(exists $enrich_3{$key}){
+				$Venn[6]++;
+				$interset{$key} = '';
+			}
+		}
+	}
+	foreach my $key (keys %enrich_2){
+		$Venn[1]++;
+		if(exists $enrich_3{$key}){
+			$Venn[4]++;
+		}
+	}
+	foreach my $key (keys %enrich_3){
+		$Venn[2]++;
+		if(exists $enrich_1{$key}){
+			$Venn[5]++;
+		}
+	}
+	print "$info\n";
+	print "plot(Venn(SetNames = c('Rep1', 'Rep2','Rep3'), Weight=c('100'=$Venn[0],'010'=$Venn[1],'001'=$Venn[2],'110'=$Venn[3],'011'=$Venn[4],'101'=$Venn[5],'111'=$Venn[6])),doWeights = TRUE)\n";
+
+	return \%interset;
+}
+
+sub Gene{
+	my ($ref) = @_;
+	open FILE, 'Mouse_broadgpp-brie-library-contents.csv';
+	<FILE>;
+	print "\n";
+	while(<FILE>){
+		chomp;
+		my ($gene,$target) = (split /,/)[1,6];
+		if (exists $ref->{"G$target"} || exists $ref->{$target}){
+			print "$target\t$gene\n";
+		}
+	}
+	print "\n";
+}

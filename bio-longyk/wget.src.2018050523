@@ -1,0 +1,12 @@
+#!/bin/bash
+# 
+#PBS -q fat
+#PBS -N fastq-dump 
+#PBS -l nodes=1:ppn=1
+#PBS -j oe 
+#PBS -l walltime=999:00:00
+#PBS -l cput=999:00:00  
+
+
+
+fastq-dump -I --split-files  -O /home/bio-longyk/fastq SRR536346

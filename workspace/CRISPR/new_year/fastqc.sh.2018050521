@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -q cal
+#PBS -N FASTQC
+#PBS -l nodes=1:ppn=12
+#PBS -j oe 
+#PBS -l walltime=06:00:00
+cd ~/workspace/CRISPR/new_year/
+for i in *fq.gz
+do
+	fastqc -t 12 -o FASTQC_OUT  $i
+done
+
+
+

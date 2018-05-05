@@ -1,0 +1,110 @@
+#!/usr/bin/perl -w
+open FILE,'DESeq2_remove_lincRNA.tsv';
+<FILE>;
+my %mRNA;
+while(<FILE>){
+	chomp;
+	my ($gene_name,$gene_id,$baseMean,$l2fc,$stat,$pval,$qval,$tag) = split;
+	$baseMean = sprintf("%.f",$baseMean);
+	$l2fc = sprintf("%.2f",$l2fc);
+	$mRNA{$gene_id} = "$gene_name\t$baseMean\t$l2fc\t$tag";
+}
+
+open FILE,'DESeq2_miRNA.tsv';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene_name,$gene_id,$baseMean,$l2fc,$stat,$pval,$qval,$tag) = split;
+	$baseMean = sprintf("%.f",$baseMean);
+	$l2fc = sprintf("%.2f",$l2fc);
+	$mRNA{$gene_id} = "$gene_name\t$baseMean\t$l2fc\t$tag";
+}
+open FILE,"awk '(\$3 == \"gene\"){print \$1,\$4,\$5,\$7,\$10}' /home/bio-longyk/cnda/ensembl/hg38.ensemblv90.nopsuedo.gtf | ";
+my %genePos;
+while(<FILE>){
+	chomp;
+	my ($chr,$str,$end,$strand,$gene_id) = split;
+	$gene_id =~ s/\"|\;//g;
+	if(exists $mRNA{$gene_id}){
+		$genePos{$strand}->{$chr}->{$gene_id} = [$str,$end];
+	}
+}
+
+open FILE,"awk '(\$3 == \"miRNA\"){print \$1,\$4,\$5,\$7,\$9}' /home/bio-longyk/cnda/miRNA/hsa.gff3.txt |";
+while(<FILE>){
+	chomp;
+	my ($chr,$str,$end,$strand,$info) = split;
+	my ($gene_id,$gene_name) = (split /\=|\;/,$info)[1,5];
+	if(exists $mRNA{$gene_id}){
+		$genePos{$strand}->{$chr}->{$gene_id} = [$str,$end];
+	}
+}
+
+
+
+
+
+open FILE,'DESeq2_lincRNA.tsv';
+<FILE>;
+my %lincRNA;
+my $lincRank;
+while(<FILE>){
+	chomp;
+	my ($gene_name,$gene_id,$baseMean,$l2fc,$stat,$pval,$qval,$tag) = split;
+	$baseMean = sprintf("%.f",$baseMean);
+	$l2fc = sprintf("%.2f",$l2fc);
+	$qval = 2 if ($qval eq "NA");
+	$lincRank{$gene_id} = $qval;
+	#if($tag ne "No"){
+		$lincRNA{$gene_id} = "$gene_name\t$baseMean\t$l2fc\t$tag";
+		#}
+}
+
+
+open FILE,"awk '(\$3 == \"gene\"){print \$1,\$4,\$5,\$7,\$10}' /home/bio-longyk/cnda/gencode/gencode.v27.long_noncoding_RNAs.gtf | ";
+my %lincPos;
+while(<FILE>){
+	chomp;
+	my ($chr,$str,$end,$strand,$gene_id) = split;
+	$gene_id = substr($gene_id,1,15);
+	if(exists $lincRNA{$gene_id}){
+		$lincPos{$gene_id} = [$chr,$str,$end,$strand];
+	}
+}
+
+open OUT,'>DE_lincRNA_vicinityGene.tsv';
+print OUT "lincRNA_id\tlincRNA_name\tlincRNA_mean\tlincRNAl2fc\tlincRNAtag\tlincRNAchr\tlincRNAstart\tlincRNAend\tlincRNAStrand\tgene_id\tgene_name\tmean\tl2fc\ttag\tchr\tstart\tend\tstrand\tdistance\torientatin\n";
+foreach my $lincRNA (sort{$lincRank{$a}<=>$lincRank{$b}} keys %lincRank){
+	my $pos = $lincPos{$lincRNA};
+	my ($chr,$str,$end,$strand) = @$pos;
+	my $orientation = "SameDirection";
+	while(my ($mrna_strand,$val) = each %genePos){
+		if($mrna_strand eq $strand){
+			$orientation = "SameDirection";
+		}
+		else{
+			$orientation = "DiffDirection";
+		}
+		my $val2 = $val->{$chr};
+		foreach my $gene_id (sort {$val2->{$a}->[0]<=>$val2->{$b}->[0]} keys %$val2){
+			my ($mrna_str,$mrna_end) = @{$val2->{$gene_id}};
+			my $diffdn = $mrna_str-$end;
+			my $diffup = $mrna_end-$str;
+			if($diffup > -10000 && $diffup <0){
+				print OUT "$lincRNA\t$lincRNA{$lincRNA}\t$chr\t$str\t$end\t$strand\t";
+				print OUT "$gene_id\t$mRNA{$gene_id}\t$chr\t$mrna_str\t$mrna_end\t$mrna_strand\tupstream:$diffup\t$orientation\n";
+			}
+			elsif($diffdn >0 && $diffdn < 10000){
+				print OUT "$lincRNA\t$lincRNA{$lincRNA}\t$chr\t$str\t$end\t$strand\t";
+				print OUT "$gene_id\t$mRNA{$gene_id}\t$chr\t$mrna_str\t$mrna_end\t$mrna_strand\tdownstream:$diffdn\t$orientation\n";
+			}
+			elsif($diffdn < 0 && $diffup > 0){
+				print OUT "$lincRNA\t$lincRNA{$lincRNA}\t$chr\t$str\t$end\t$strand\t";
+				print OUT "$gene_id\t$mRNA{$gene_id}\t$chr\t$mrna_str\t$mrna_end\t$mrna_strand\toverlap\t$orientation\n";
+			}
+			elsif($diffdn > 10000){
+				last;
+			}
+		}
+	}
+}

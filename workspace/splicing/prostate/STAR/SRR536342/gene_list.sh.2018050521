@@ -1,0 +1,15 @@
+samtools view -H Aligned.sortedByCoord.out.bam > gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr3:58008400-58172251 >> gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr11:62856102-62888875 >> gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr10:103967201-104029233 >> gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr11:35138870-35232402 >> gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr20:62307955-62367321 >> gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr6:31834608-31839766 >> gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr7:549197-727650 >> gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr11:57753243-57819546 >> gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr11:12674591-12944483 >> gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr3:53156009-53192717 >> gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr19:35497220-35513658 >> gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr11:842808-867116 >> gene_list.sam
+samtools view Aligned.sortedByCoord.out.bam chr3:51983278-51989202 >> gene_list.sam
+

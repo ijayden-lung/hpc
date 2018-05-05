@@ -1,0 +1,9 @@
+#!/usr/bin/env Rscript
+
+library(ggsignif)
+library(ggplot2)
+pdf("BoxPlot_fam46b.pdf")
+data = read.table("Input_boxplot.tsv",header=TRUE,sep="\t")
+ggplot(data, aes(x=sample, y=log2(readCount)))+geom_boxplot()+
+geom_signif(comparisons = list(c('shRNA1','shRNA2')),map_signif_level=TRUE)+
+labs(x='Sample',y="Log2 Read Count")

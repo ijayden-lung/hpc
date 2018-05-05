@@ -1,0 +1,45 @@
+#!/bin/bash
+#PBS -q batch
+#PBS -N featureCounts
+#PBS -l nodes=4:ppn=4
+#PBS -j oe 
+
+
+cd ~/data1/clean_data/rmsk/
+
+GENE='~/data1/cnda/ensembl/hg38.ensemblv90.nopsuedo.gtf'
+RMSK='erv1_hg38.gtf'
+GENE1='clean_sorted_hg38.gtf'
+RMSK1='clean_sorted_ERV1.gtf'
+echo 'Sorting...'
+#awk '($1 ~ /chr[0-9XY]+$/ && $3 == "gene")' ~/data1/cnda/ensembl/hg38.ensemblv90.nopsuedo.gtf | sort  -k 1,1 -k 4,4n -k 5,5n  -o clean_sorted_hg38.gtf
+#awk '($1 ~ /chr[0-9XY]+$/)' erv1_hg38.gtf | sort  -k 1,1 -k 4,4n -k 5,5n  -o clean_sorted_ERV1.gtf
+
+
+ANNO='Anno_ERV1.gtf'
+echo 'Annotating..'
+#perl ~/data1/clean_data/rmsk/annotate_rmsk.pl $RMSK1 $GENE1 $ANNO
+
+TABLE='table_fc_erv1.tsv'
+echo 'Counting...'
+#./feature_count2.r $ANNO $TABLE 'stat_fc.txt'
+
+echo 'Normalizing...'
+NORM='Norm_erv1.tsv'
+READ='55466733,1140137 56008815,1087045 49862208,1041942 56489417,1144368'
+perl add_tag_norm.pl $ANNO $TABLE $NORM "$READ"
+
+
+echo 'Filteriing...'
+FILTER='Filter_Norm_erv1.tsv'
+MIN=20
+HEADER="gene_name	high_1	high_2	low_1	low_2	Tag"
+perl filter.pl $NORM $FILTER $MIN "$HEADER"
+
+echo 'BoxPloting...'
+PDF='BoxPlot_erv1.pdf'
+#./boxplot.r $FILTER $PDF
+
+echo 'ScatterPloting...'
+PDF='ScatterPlot_erv1.pdf'
+./scatterplot.r $FILTER $PDF

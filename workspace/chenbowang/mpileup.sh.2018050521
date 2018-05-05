@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N Depth
+#PBS -l nodes=1:ppn=1
+#PBS -j oe 
+#PBS -l walltime=24:00:00
+
+#samtools depth --reference /home/biology/genome/hg38/hg38.fa SRR2966453/tead1.bam SRR2966454/tead1.bam >depth
+
+#samtools depth -r chr1:67135504-67136091  --reference  /home/biology/genome/hg38/hg38.fa  /home/bio-jiafj/AS_new/mock_b/total/156.total.bam  /home/bio-jiafj/AS_new/mock_b/total/157.total.bam  /home/bio-jiafj/AS_new/mock_b/total/233.total.bam >~/workspace/chenbowang/test.depth
+
+
+
+samtools mpileup -BQ 30 -r chr1:67135504-67136091 -f /home/biology/genome/hg38/hg38.fa  /home/bio-jiafj/AS_new/mock_b/total/156.total.bam  /home/bio-jiafj/AS_new/mock_b/total/157.total.bam  /home/bio-jiafj/AS_new/mock_b/total/233.total.bam >~/workspace/chenbowang/test.bcf

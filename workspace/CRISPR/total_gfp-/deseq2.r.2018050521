@@ -1,0 +1,32 @@
+#!/usr/bin/env Rscript
+pdf('Result.pdf')
+library("DESeq2")
+data = read.table("mKO_293R.tsv",header=TRUE,row.names=1)
+names(data) = c('gene','GFPpos1','GFPpos2','GFPneg1','GFPneg2','library','total1','total2')
+cts = data[,c(4,5,7,8)]
+coldata <- data.frame(row.names = colnames(cts),condition = c("GFPneg","GFPneg","total","total"))
+
+dds <- DESeqDataSetFromMatrix(countData = cts,colData = coldata, design = ~ condition)
+###Alternative Step;
+
+dds <- dds[ rowSums(counts(dds)) > 1, ]
+
+
+dds$condition <- factor(dds$condition, levels=c("GFPneg","total"))
+
+dds <- DESeq(dds)
+
+res <- results(dds,alpha=0.01,lfcThreshold=.5, altHypothesis="greaterAbs")
+
+resLFC <- lfcShrink(dds, coef=2, res=res)
+summary(res)
+res <- resLFC
+resOrdered <- res[order(res$padj),]   ####Alternative Step;
+write.table(resOrdered, "DESeq2_Results_GFP-VStotal.tsv",quote=FALSE,sep="\t",col.names=TRUE,row.names=TRUE )
+#write.table(resOrdered, "Prost_Results.tsv",quote=FALSE,sep="\t",col.names=TRUE,row.names=TRUE )
+
+plotDispEsts(dds)
+hist(res$padj, breaks=100,col="skyblue", border="slateblue", main="")
+plotMA(res)
+
+

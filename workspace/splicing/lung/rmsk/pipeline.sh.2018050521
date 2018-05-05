@@ -1,0 +1,51 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N featureCounts
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=6:00:00
+THREADS=18
+
+cd ~/workspace/EMT/rmsk/
+echo 'Counting...'
+
+GTF="/home/bio-longyk/cnda/refSeq/hg38.repeatMasker.gtf"
+mouCount="table_fc.tsv"
+STAT='stat_fc.txt'
+./feature_count.r $GTF $mouCount $STAT $THREADS
+
+
+echo 'Normlizing...'
+#####NORMALIZE THE READ COUNT
+mouNor="table_norm.tsv"
+mouRef="/home/bio-longyk/cnda/refSeq/hg38.rmsk"
+READ='66365019,2083648 58100590,2178180 55865395,1636306 49424823,1507903 50922205,2055041 53360036,1606298'
+Header='Day0.1 Day0.2 Day0.3 Day7.1 Day7.2 Day7.3'
+perl /home/bio-longyk/workspace/EMT/rmsk/normlize_gene_count.pl $mouCount $mouNor  $mouRef "$Header" "$READ"
+
+
+########Class or Family
+echo 'Classifying...'
+mouNam="table_name_norm.tsv"
+Filter=100
+perl /home/bio-longyk/workspace/EMT/rmsk/categorize.pl $mouNor $mouNam 0 $Filter
+mouFam="table_family_norm.tsv"
+Filter=1000
+perl /home/bio-longyk/workspace/EMT/rmsk/categorize.pl $mouNor $mouFam 2 $Filter
+mouCls="table_class_norm.tsv"
+Filter=5000
+perl /home/bio-longyk/workspace/EMT/rmsk/categorize.pl $mouNor $mouCls 1 $Filter
+
+
+echo 'HeatMaping ...'
+###HeatMap
+classPDF="hg38_class_enrich.pdf"
+classMain="hg38 repClass"
+familyPDF="hg38_family_enrich.pdf"
+familyMain="hg38 repFamily"
+namePDF="hg38_name.pdf"
+nameMain="hg38_repName"
+/home/bio-longyk/workspace/EMT/rmsk/heatmap.r "$mouCls" "$classPDF" "$classMain" "$mouFam" "$familyPDF" "$familyMain" "$mouNam" "$namePDF" "$nameMain"
+
+
+

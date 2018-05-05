@@ -1,0 +1,543 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+#use threads;
+use Cwd;
+use Data::Dumper;
+
+
+my $cur_out_dir = $ARGV[0];
+my $genome_name = $ARGV[1];
+my $USE_REFERENCE_GENOME = $ARGV[2];
+my $PREDICT_WITH_MIRBASE_HITS = $ARGV[3];
+
+
+
+# get chrom sizes
+my %chrom_sizes_hash = ();
+my $chrom_sizes_file = "../Genome-Annotation-1.0/$genome_name/$genome_name.chrom.sizes";
+open(GH, $chrom_sizes_file);
+while(<GH>){
+
+	chomp;
+	my @vals = split(/\t/, $_);
+
+	$chrom_sizes_hash { $vals[0] } = $vals[1];
+
+}
+#print Dumper(\%chrom_sizes_hash);
+
+
+my $wdir = getcwd;
+
+
+my $fasta_out_dir = "$cur_out_dir/predicted_fasta_results";
+# debug
+#my @pred_class = ('FP'); 
+my @pred_class = ('TP', 'FP', 'FN', 'novel_mirnas'); 
+
+my $cc = 0;
+
+# rna_fold_dir:
+my $rna_fold_dir = "$cur_out_dir/rna_fold_dir";
+
+# tmp_rna_fold_dir:
+my $tmp_rna_fold_dir = "$cur_out_dir/tmp_rna_fold_dir";
+`mkdir -p $tmp_rna_fold_dir`;
+
+# new_rna_fold_dir:
+my $new_rna_fold_dir = "$cur_out_dir/new_rna_fold_dir";
+`mkdir -p $new_rna_fold_dir`;
+
+# initial bowtie2 run output
+# cons_seqs_cluster.1510  0       18      58451124        0       3S3M1D1I18M     *       0       0       CTTAACCCCATTATCACACTAAATA       IIIIIIIIIIIIIIIIIIIIIIIII       AS:i:38 XS:i:38 XN:i:0  XM:i:0  XO:i:2  XG:i:2  NM:i:2  MD:Z:3^G18      YT:Z:UU
+my %init_bowtie2_hash = ();
+open(BB, "$cur_out_dir/cons_seqs_bowtie.out.sam");
+while(<BB>){
+	chomp;
+	my @v = split(/\t/, $_);
+
+	my $cluster = $v[0];
+	$cluster =~ s/cons_seqs_cluster\.//;
+	my $strand = $v[1];
+	my $chr = $v[2];
+	my $start_coord = $v[3];
+
+	if($chr ne '*'){
+		$init_bowtie2_hash{ $cluster } = [($chr, $strand, $start_coord)];
+	}
+}
+close(BB);
+#print Dumper(\%init_bowtie2_hash);
+
+
+
+my %known_mirs_hash = ();
+open(KMF, "$cur_out_dir/Known_miRNAs_in_input_sample.txt"); #or die "Can't open '$cur_out_dir/Known_miRNAs_in_input_sample.txt': $!";
+while(<KMF>){
+	chomp;
+
+	my ($cluster, $mirna) = split(/\t/, $_);
+	$cluster =~ s/nalignm\.//;
+	$known_mirs_hash{ $cluster } = $mirna;
+}
+close(KMF);
+#print Dumper(\%known_mirs_hash);
+
+my $new_hairpins_dir = "$fasta_out_dir/FASTA";
+`mkdir -p $new_hairpins_dir`;
+
+my %pred_classes_hash = ('TP' => 'known_hairpins',
+			 'FP' => 'novel_hairpins',
+			 'FN' => 'not_predicted_known_hairpins',
+			 'novel_mirnas' => 'novel_hairpins');
+
+my %strand_flag_hash = ('0' => '+',
+			'256' => '+',
+			'16' => '-',
+			'272' => '-');
+
+
+
+# TODO:
+# - also write hairpins into .fa files already from this script, and include chromosome and coords in the header of each sequence.
+# - make FASTA also for the mature ones from here already.
+# - replace nalignm... with real mirnas for the known case, use $PREDICT_WITH_MIRBASE_HITS and read 'Known_miRNAs_in_input_sample.txt' file to make mappings.
+# replace the corresponding code snippet from wrapup_output.R, this step will be done here.
+
+# new_genomic_coords for TP and FP 'enriched' clusters
+open(NGC, ">$cur_out_dir/new_genomic_coords.txt");
+open(PFT, ">$cur_out_dir/paralogs_feature_table.txt");
+print PFT "cluster\tbracket-mirna-fraction\thairpin-size-estimate\tloop-mirna-distance-estimate\tloop-size-estimate\tloops-in-hairpin\tminimum-free-energy\tmirna-bracket-discrepancy\tmirna-bracket-majority\tmirna-unmatched\n";
+
+foreach(@pred_class){
+
+	chdir $wdir;
+
+	my @threads = ();
+
+	my $pr_class = $_;
+	my $p_file = "$fasta_out_dir/$pr_class.fa";
+
+	if(-e $p_file){ 
+
+		print "$pred_classes_hash{$pr_class}\n";
+		
+		# new (revised) pr_class.fa file
+		open(NPF, ">$fasta_out_dir/new.$pr_class.fa");
+		open(NHAIRP, ">$new_hairpins_dir/$pred_classes_hash{$pr_class}.fa");
+
+
+
+		# align TP.fa and FP.fa against genome to get best N (=5) hits
+		`util/bowtie2 --local -k 5 -x ../Genome-Annotation-1.0/$genome_name/$genome_name -f -U $p_file -S $p_file.sam -D 20 -R 3 -N 0 -L 20 -i S,1,0.50 --rdg 1,1 --rfg 1,1 -p 16`;
+		`cat $p_file.sam | grep -v "@" > $p_file.sam.tmp; mv $p_file.sam.tmp $p_file.sam`;
+
+
+		# nalignm.43      16      1       30739154        255     26M     *       0       0       CCGTCTCAGCTACAGACATCAGTGAC      IIIIIIIIIIIIIIIIIIIIIIIIII      AS:i:52 XN:i:0  XM:i:0  XO:i:0  XG:i:0  NM:i:0  MD:Z:26 YT:Z:UU
+		# Store sam hits into a hash of arrays of arrays
+		my %sam_hash = ();
+		open(FH, "$p_file.sam");
+		while(<FH>){
+			chomp;
+
+			my @vals = split(/\t/, $_);
+			my $cluster = $vals[0];
+			$cluster =~ s/nalignm\.//;
+			my $strand = $vals[1];
+			my $chr = $vals[2];
+			my $start = $vals[3];
+			my $cigar = $vals[5];
+			my $mature_seq = $vals[9];
+			my $aln_length = length($vals[9]);
+			$cigar =~ s/\d//g;
+
+			if(!defined( $sam_hash{ $cluster } )){
+				$sam_hash{ $cluster } = [[ ($strand, $chr, $start, $cigar, $mature_seq, $aln_length) ]];
+			} else{
+				my @new_arr = ();
+				push @new_arr, @{$sam_hash{ $cluster }};
+				push @new_arr, [ ($strand, $chr, $start, $cigar, $mature_seq, $aln_length) ];
+
+				$sam_hash{ $cluster } = [ @new_arr ];
+			}
+
+		}
+		close(FH);
+		#print Dumper(\%sam_hash);
+
+		
+		
+
+		my @singleton_clusters = ();
+		# Analyse each cluster:
+		# 	if: cluster has only one hit then keep that hit
+		# 	elsif: cluster has multiple hits, get possible hairpin seqs for each of them,
+		# 		calculate their genomic features and assess their hairpin eligibility.
+		for my $cur_cluster ( keys %sam_hash ) {
+			my @hits_array = @{ $sam_hash{$cur_cluster} };
+			if($#hits_array == 0){
+				my ($strand, $chr, $start, $cigar, $mature_seq, $aln_length)  = @{$hits_array[0]};
+
+				my $tmp_mir_arm = '';
+				my $cur_hairpin_seq = '';
+
+				my $tmp_fold_file = "nalignm.$cur_cluster.3p.tmpFold.txt";
+				if( -e "$rna_fold_dir/$tmp_fold_file" ){
+					$tmp_mir_arm = "-3p";
+					$cur_hairpin_seq = `sed -n '2p' $rna_fold_dir/$tmp_fold_file`; # | tr [a-z] [A-Z]`;
+
+					# debug: mv -> cp
+					`cp $rna_fold_dir/$tmp_fold_file $new_rna_fold_dir`;
+				} else{
+					$tmp_fold_file = "nalignm.$cur_cluster.5p.tmpFold.txt";
+					if(-e "$rna_fold_dir/$tmp_fold_file" ){
+						$tmp_mir_arm = "-5p";
+						$cur_hairpin_seq = `sed -n '2p' $rna_fold_dir/$tmp_fold_file`; # | tr [a-z] [A-Z]`;
+
+						`cp $rna_fold_dir/$tmp_fold_file $new_rna_fold_dir`;
+					}
+				}
+			
+			
+				print NPF ">nalignm.$cur_cluster"."$tmp_mir_arm\n$mature_seq\n";
+
+				if($chr eq '*'){
+					#print "cur_hairpin_seq: $cur_hairpin_seq\n";
+					#print "cur_cluster: $cur_cluster, cigar: $cigar, tmp_mir_arm: $tmp_mir_arm\n";
+
+					if(defined( $init_bowtie2_hash{ $cur_cluster } )){
+						my @arr = @{ $init_bowtie2_hash{ $cur_cluster }  };	
+						#print join(", ", @arr)."\n";
+						$chr = $arr[0]; 
+						$strand = $arr[1];
+						$start = $arr[2];
+					}
+				}
+
+
+				# prepare genomic coords file for all new mature-paralogs
+				$tmp_mir_arm =~ s/\-//;
+
+				my ($hairpin_start, $hairpin_end) = get_hairpin_ends($start, $tmp_mir_arm);
+				
+				# debug
+				#print "cur_cluster: $cur_cluster, cigar: $cigar, tmp_mir_arm: $tmp_mir_arm, strand: $strand\n";
+				#print "hairpin_start: $hairpin_start, hairpin_end: $hairpin_end\n";
+
+
+				my $mature_identifier = '';
+				if( $pr_class eq 'TP' | $pr_class eq 'FN'){
+					$mature_identifier = "|mature:$known_mirs_hash{$cur_cluster}";
+				}
+
+				if( ($cur_hairpin_seq ne '') & ($chr ne '*') ){
+					chomp($cur_hairpin_seq);
+
+					if( ($strand == 16) | ($strand == 272)){
+						#get reverse complementary:
+						$cur_hairpin_seq = `echo $cur_hairpin_seq | tr "[ATUGCatugcNn]" "[UAACGuaacgNn]" | rev`;
+						chomp($cur_hairpin_seq);
+					}
+
+					print NHAIRP ">nalignm.$cur_cluster$mature_identifier|chr-$chr:$strand_flag_hash{$strand}:$hairpin_start-$hairpin_end\n$cur_hairpin_seq\n";
+					print NGC "$cur_cluster\t$strand\t$chr\t$hairpin_start\t$hairpin_end\n";
+				}
+
+				push @singleton_clusters, $cur_cluster;
+
+			} else {
+				my $final_paralog_id = 1;
+				foreach my $hit (0..@hits_array-1){
+
+					my ($strand, $chr, $start, $cigar, $mature_seq, $aln_length) = @{$hits_array[$hit]};
+					#print "chr: $chr, chr: $start, $cigar\n";
+
+					if(($cigar eq 'M') || ($cigar eq 'SMS') || ($cigar eq 'SM') || ($cigar eq 'MS')){ #perfect matches only
+						#print "perfect match\n";
+
+						my ($bfh_ref, $hh_ref) = assess_hairpin_eligibility($cur_cluster, $final_paralog_id, $chr, $start, $aln_length);
+						if($bfh_ref == -1){
+							next;
+						}
+
+						my %best_features_hash = %$bfh_ref;
+						my %hairpin_hash = %$hh_ref;
+
+						# mv fold file to new_rna_fold_dir:
+						my $cur_fold_file = $hairpin_hash{ 'fold_file' };
+						`cp $cur_fold_file $new_rna_fold_dir`;
+	
+						my $tmp_mir_arm = $hairpin_hash{ 'mir_arm' };
+						if($tmp_mir_arm ne ''){
+							$tmp_mir_arm = "-$tmp_mir_arm";
+						}
+
+						print NPF ">nalignm.$cur_cluster-$final_paralog_id"."$tmp_mir_arm\n$mature_seq\n";
+
+						$tmp_mir_arm =~ s/\-//;
+						#print NGC "nalignm.$cur_cluster-$final_paralog_id\t$strand\t$chr\t$start\t$tmp_mir_arm\t$mature_seq\t$aln_length\n";
+
+						
+						my $mature_identifier = '';
+						if( $pr_class eq 'TP' | $pr_class eq 'FN'){
+							$mature_identifier = "|mature:$known_mirs_hash{$cur_cluster}";
+						}
+
+
+						my $cur_hairpin_seq = $hairpin_hash{ 'sequence' };
+						my $hairpin_start = $hairpin_hash{ 'start' };
+						my $hairpin_end = $hairpin_hash{ 'end' };
+
+						if( ($strand == 16) | ($strand == 272)){
+							#get reverse complementary:
+							$cur_hairpin_seq = `echo $cur_hairpin_seq | tr "[ATUGCatugcNn]" "[UAACGuaacgNn]" | rev`;
+							chomp($cur_hairpin_seq);
+						} elsif( ($strand == 0) | ($strand == 256)){
+							$cur_hairpin_seq = `echo $cur_hairpin_seq | tr "[Tt]" "[Uu]"`;
+							chomp($cur_hairpin_seq);
+						}
+
+						print NHAIRP ">nalignm.$cur_cluster-$final_paralog_id$mature_identifier|chr-$chr:$strand_flag_hash{$strand}:$hairpin_start-$hairpin_end\n$cur_hairpin_seq\n";
+						print NGC "$cur_cluster-$final_paralog_id\t$strand\t$chr\t$hairpin_start\t$hairpin_end\n";
+
+						# print genomic features into file
+						print PFT "$cur_cluster-$final_paralog_id\t$best_features_hash{'bracket-mirna-fraction'}\t$best_features_hash{'hairpin-size-estimate'}\t$best_features_hash{'loop-mirna-distance-estimate'}\t$best_features_hash{'loop-size-estimate'}\t$best_features_hash{'loops-in-hairpin'}\t$best_features_hash{'minimum-free-energy'}\t$best_features_hash{'mirna-bracket-discrepancy'}\t$best_features_hash{'mirna-bracket-majority'}\t$best_features_hash{'mirna-unmatched'}\n";
+
+
+						$final_paralog_id++;
+
+
+						#print Dumper(\%best_features_hash);
+						#print Dumper(\%hairpin_hash);
+
+						#$VAR1 = {
+						#'bracket-mirna-fraction' => '0.954545454545455',
+						#'score' => '0.56979020979021',
+						#'loops-in-hairpin' => '1',
+						#'minimum-free-energy' => '-38.80',
+						#'mirna-bracket-discrepancy' => '1',
+						#'mirna-bracket-majority' => '21',
+						#'mirna-unmatched' => '1',
+						#'hairpin-size-estimate' => '65',
+						#'loop-size-estimate' => '3',
+						#'loop-mirna-distance-estimate' => '10'
+						#};
+						#$VAR1 = {
+						#'sequence' => 'CCTTTGGGGTGAGGTAGTAGGTTGTATAGTTTGGGGCTCTGCCCTGCTATGGGATAACTATACAATCTACTGTCTTTCCTGAAGTGGCTG',
+						#'fold_file' => '../tmp/e7dfe26a-7c96-cc9a-a6d2-e162bd4fcbcd/1/tmp_rna_fold_dir/nalignm443-1.5p.tmpFold.txt',
+						#'start' => 46112742,
+						#'end' => 46112832
+						#};
+
+
+					} 
+
+				}
+
+			}
+		}
+
+
+		#print "cc: $cc\n";
+		#print join(", ", @singleton_clusters);
+
+
+		close(NPF);
+		close(NHAIRP);
+	}
+
+
+}
+
+
+
+
+`mv $rna_fold_dir $rna_fold_dir-depr`;
+`mv $new_rna_fold_dir  $rna_fold_dir`;
+
+
+
+
+
+if($PREDICT_WITH_MIRBASE_HITS eq 'True'){
+	`touch $cur_out_dir/predicted_fasta_results/PREDICT_WITH_MIRBASE_HITS`;
+	`chmod 777 $cur_out_dir/predicted_fasta_results/PREDICT_WITH_MIRBASE_HITS`;
+}
+
+
+sub assess_hairpin_eligibility{
+
+	my $cur_cluster = shift;
+	my $paralog = shift;
+	my $chr = shift;
+	my $start = shift;
+	my $aln_length = shift;
+
+	#print "chr: $chr, start: $start, aln_length: $aln_length\n";
+
+	my $end = '';
+	my $prevalent_fold = '';
+	my $prevalent_hairpin_seq = '';
+	my $prevalent_start = '';
+	my $prevalent_end = '';
+
+	if($chr eq '*'){
+		return (-1, -1);
+	}
+
+	my $cur_chrom_size = $chrom_sizes_hash{ $chr };
+	my @start_offsets = (10, 60);
+
+	my %best_features_hash = ();
+	my $mir_arm = '';
+
+	my %mir_arm_hash = ( $start_offsets[0] => '5p', 
+			     $start_offsets[1] => '3p' );
+
+	my $start_original = $start;
+
+	foreach my $st_offset (@start_offsets){
+		$start = $start_original - $st_offset;
+		my $end = $start + 90;
+
+		if( $end > $cur_chrom_size ){
+			my $diff = $end - $cur_chrom_size;
+			$start -= $diff;
+			$end -= $diff;
+		}
+
+		if( $start < 0 ){
+			$start = 0;
+		}
+		my $out = `../Genome-Annotation-1.0/tools/twoBitToFa  ../Genome-Annotation-1.0/$genome_name/$genome_name.2bit:$chr:$start-$end /dev/stdout`;
+		my @out_vals = split(/\n/, $out);
+		shift @out_vals;
+		my $hairpin_seq = join('', @out_vals);
+		#print "out: $out\n";	
+
+		my $aligned_cons_seq = substr($hairpin_seq, ($st_offset-1), $aln_length);
+		if(!defined($aligned_cons_seq)){
+			# debug
+			#print "out: $out\n";
+			#print "st_offset: $st_offset\n";
+			#print "aln_length: $aln_length\n";
+		}
+
+		my $lc_aligned_cons_seq = lc($aligned_cons_seq);
+
+		$hairpin_seq =~ s/$aligned_cons_seq/$lc_aligned_cons_seq/;
+		#print "hairpin_seq: $hairpin_seq\n";
+		#print "aligned_cons_seq: $aligned_cons_seq\n";
+
+		my $fold = `echo $hairpin_seq | util/RNAfold --noPS 2>/dev/null`;
+		#print "fold: $fold\n";
+		
+
+
+		my $tmpFoldName = "$tmp_rna_fold_dir/nalignm.$cur_cluster-$paralog.$mir_arm_hash{ $st_offset}.tmpFold.txt";
+		open(FF, ">$tmpFoldName");
+		print FF ">nalignm.$cur_cluster-$paralog\n$fold";
+		close(FF);
+
+		my $gf_out = `./hairpin_features.pl $tmpFoldName`;
+		if($gf_out eq 'NA'){
+			next;
+		}
+		#print "gf_out: $gf_out\n";
+
+		my @gf_vals = split(/=>|\n/, $gf_out);
+		my %gf_hash = @gf_vals;
+
+		#print join(", ", @gf_vals)."\n";
+		#print Dumper(\%gf_hash);
+
+
+		if( !(%best_features_hash) ){
+			%best_features_hash = %gf_hash;
+			$mir_arm = $mir_arm_hash{ $st_offset};
+			$prevalent_fold = $fold;
+			#print "fold: $fold\n";
+			#$prevalent_hairpin_seq = uc($hairpin_seq);
+			$prevalent_hairpin_seq = $hairpin_seq;
+			$prevalent_start = $start;
+			$prevalent_end = $end;
+
+		} elsif( $gf_hash{ 'score' } > $best_features_hash{ 'score' }){
+			%best_features_hash = %gf_hash;
+			$mir_arm = $mir_arm_hash{ $st_offset};
+			$prevalent_fold = $fold;
+			#print ">Better fold: $fold\n";
+			#$prevalent_hairpin_seq = uc($hairpin_seq);
+			$prevalent_hairpin_seq = $hairpin_seq;
+			$prevalent_start = $start;
+			$prevalent_end = $end;
+		} 
+	}
+
+	if( %best_features_hash ){
+		if( $best_features_hash{ 'score' } > 0.15 ){
+			$cc++;
+			#print "$best_features_hash{ 'score' }\n";
+			#print "$best_features_hash{ 'hairpin-size-estimate' }\n";
+			#print "$best_features_hash{ 'bracket-mirna-fraction' }\n";
+			#print Dumper(\%best_features_hash);
+			
+			#print "$prevalent_fold\n";
+
+			#print "$prevalent_hairpin_seq\n";
+			#print "$prevalent_start\n";
+			#print "$prevalent_end\n";
+		}
+
+	}
+
+	my %compl_arm_hash = ( '5p' => '3p', '3p' => '5p' );
+	
+	my $FOUND_CANDIDATE = 0;
+
+	if( ($mir_arm ne '') & ($best_features_hash{ 'score' } > 0.15)){
+		my $tmpFoldName_toDelete = "$tmp_rna_fold_dir/nalignm.$cur_cluster-$paralog.$mir_arm.tmpFold.txt";
+		$tmpFoldName_toDelete =~ s/$mir_arm/$compl_arm_hash{$mir_arm}/;
+		`rm -f $tmpFoldName_toDelete`;
+		$FOUND_CANDIDATE = 1;
+	} else{
+		`rm -f $tmp_rna_fold_dir/nalignm.$cur_cluster-$paralog.5p.tmpFold.txt`;
+		`rm -f $tmp_rna_fold_dir/nalignm.$cur_cluster-$paralog.3p.tmpFold.txt`;
+	}
+
+	my %hairpin_hash = ( 'sequence' => $prevalent_hairpin_seq,
+			     'start' => $prevalent_start,
+			     'end' => $prevalent_end,
+			     'fold_file' => "$tmp_rna_fold_dir/nalignm.$cur_cluster-$paralog.$mir_arm.tmpFold.txt",
+			     'mir_arm' => $mir_arm );
+	
+	#print Dumper(\%best_features_hash);
+	#print Dumper(\%hairpin_hash);
+	#print "Prevalent mir_arm: $mir_arm\n";
+
+	if($FOUND_CANDIDATE){
+		return (\%best_features_hash, \%hairpin_hash);
+	} else{
+		return (-1, -1);
+	}
+}
+
+
+sub get_hairpin_ends{
+
+	my $mature_start = shift;
+	my $tmp_mir_arm = shift;
+
+	my $hairpin_start = -1;
+
+	if($tmp_mir_arm eq '5p'){
+		$hairpin_start = $mature_start - 10;
+	} elsif($tmp_mir_arm eq '3p'){
+		$hairpin_start = $mature_start - 60;
+	}
+	my $hairpin_end = $hairpin_start + 90;
+
+	return ($hairpin_start, $hairpin_end);
+}

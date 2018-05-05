@@ -1,0 +1,188 @@
+#!/usr/bin/perl -w
+
+my ($colonUp,$colonRC) = &callASE('colon');
+my ($prostUp,$prostRC) = &callASE('prost');
+my ($lungUp,$lungRC)   = &callASE('lung');
+
+my ($overlapUp) = &Venn($colonUp,$prostUp,$lungUp,'Upregulation',$colonRC,$prostRC,$lungRC);
+
+open FILE,'>Common_ASE_rmats.txt';
+my %deGene;
+while(my($key,$val) = each %$overlapUp){
+	$deGene{$key} = $val;
+	print FILE "$key\n";
+}
+
+
+sub callASE{
+	my ($tissue) = @_;
+	my %uprg;
+	my %readCount;
+	open ASE, "$tissue/MATS_output/SE.MATS.JunctionCountOnly.txt";
+	my $header = <ASE>;
+	while(<ASE>){
+		chomp;
+		my @data = split /\t/;
+		$data[1] =~ s/\"//g;
+		$data[2] =~ s/\"//g;
+		if($data[-4] < 0.01 && abs($data[-1])>0.1){
+			my ($ave1,$ave2,$average) = &average($data[12],$data[13],$data[14],$data[15]);
+			next if ($ave1 <10 || $ave2 <10);
+			$uprg{"SE\t$data[1]\t$data[2]\t$data[5]\t$data[6]\t$data[8]\t$data[9]"} = $data[-1];
+			$readCount{"SE\t$data[1]\t$data[2]\t$data[5]\t$data[6]\t$data[8]\t$data[9]"} = $average;
+		}
+	}
+	open ASE, "$tissue/MATS_output/MXE.MATS.JunctionCountOnly.txt";
+	$header = <ASE>;
+	while(<ASE>){
+		chomp;
+		my @data = split /\t/;
+		$data[1] =~ s/\"//g;
+		$data[2] =~ s/\"//g;
+		if($data[-4] < 0.01 && abs($data[-1])>0.1){
+			my ($ave1,$ave2,$average) = &average($data[16],$data[17],$data[14],$data[15]);
+			next if ($ave1 <10 || $ave2 <10);
+			$uprg{"MXE\t$data[1]\t$data[2]\t$data[5]\t$data[6]\t$data[7]\t$data[8]\t$data[10]\t$data[11]"} = $data[-1];
+			$readCount{"MXE\t$data[1]\t$data[2]\t$data[5]\t$data[6]\t$data[7]\t$data[8]\t$data[10]\t$data[11]"} = $average;
+		}
+	}
+	open ASE, "$tissue/MATS_output/RI.MATS.JunctionCountOnly.txt";
+	$header = <ASE>;
+	while(<ASE>){
+		chomp;
+		my @data = split /\t/;
+		$data[1] =~ s/\"//g;
+		$data[2] =~ s/\"//g;
+		if($data[-4] < 0.01 && abs($data[-1])>0.1){
+			my ($ave1,$ave2,$average) = &average($data[12],$data[13],$data[14],$data[15]);
+			next if ($ave1 <10 || $ave2 <10);
+			$uprg{"RI\t$data[1]\t$data[2]\t$data[5]\t$data[6]\t$data[7]\t$data[8]\t$data[9]\t$data[10]"} = $data[-1];
+			$readCount{"RI\t$data[1]\t$data[2]\t$data[5]\t$data[6]\t$data[7]\t$data[8]\t$data[9]\t$data[10]"} = $average;
+		}
+	}
+	open ASE, "$tissue/MATS_output/A3SS.MATS.JunctionCountOnly.txt";
+	$header = <ASE>;
+	while(<ASE>){
+		chomp;
+		my @data = split /\t/;
+		$data[1] =~ s/\"//g;
+		$data[2] =~ s/\"//g;
+		if($data[-4] < 0.01 && abs($data[-1])>0.1){
+			my ($ave1,$ave2,$average) = &average($data[12],$data[13],$data[14],$data[15]);
+			next if ($ave1 <10 || $ave2 <10);
+			if($data[4] eq "+"){
+				$uprg{"A3SS\t$data[1]\t$data[2]\t$data[5]\t$data[7]\t$data[10]"} = $data[-1];
+				$readCount{"A3SS\t$data[1]\t$data[2]\t$data[5]\t$data[7]\t$data[10]"} = $average;
+			}
+			else{
+				$uprg{"A3SS\t$data[1]\t$data[2]\t$data[6]\t$data[8]\t$data[9]"} = $data[-1];
+				$readCount{"A3SS\t$data[1]\t$data[2]\t$data[6]\t$data[8]\t$data[9]"} = $average;
+			}
+		}
+	}
+	open ASE, "$tissue/MATS_output/A5SS.MATS.JunctionCountOnly.txt";
+	$header = <ASE>;
+	while(<ASE>){
+		chomp;
+		my @data = split /\t/;
+		$data[1] =~ s/\"//g;
+		$data[2] =~ s/\"//g;
+		if($data[-4] < 0.01 && abs($data[-1])>0.1){
+			my ($ave1,$ave2,$average) = &average($data[12],$data[13],$data[14],$data[15]);
+			next if ($ave1 <10 || $ave2 <10);
+			if($data[4] eq "+"){
+				$uprg{"A5SS\t$data[1]\t$data[2]\t$data[6]\t$data[8]\t$data[9]"} = $data[-1];
+				$readCount{"A5SS\t$data[1]\t$data[2]\t$data[6]\t$data[8]\t$data[9]"} = $average;
+			}
+			else{
+				$uprg{"A5SS\t$data[1]\t$data[2]\t$data[5]\t$data[7]\t$data[10]"} = $data[-1];
+				$readCount{"A5SS\t$data[1]\t$data[2]\t$data[5]\t$data[7]\t$data[10]"} = $average;
+			}
+		}
+	}
+	return (\%uprg,\%readCount);
+}
+
+sub average{
+	my ($data1,$data2,$data3,$data4) = @_;
+	my $sum1 = 0;
+	my $num1 = 0;
+	my @count1 = ((split /,/,$data1),(split /,/,$data2));
+	foreach my $count (@count1){
+		$sum1 += $count;
+		$num1++;
+	}
+	my $average1 = $sum1/$num1;
+	my $sum2 = 0;
+	my $num2= 0;
+	my @count2 = ((split /,/,$data3),(split /,/,$data4));
+	foreach my $count (@count2){
+		$sum2 += $count;
+		$num2++;
+	}
+	my $average2 = $sum2/$num2;
+	my $average = ($average1+$average2)/2;
+	return ($average1,$average2,$average);
+}
+
+
+sub Venn{
+	my %interset;
+	my ($ref1,$ref2,$ref3,$info,$rc1,$rc2,$rc3) = @_;
+	my %enrich1 = %$ref1;
+	my %enrich2 = %$ref2;
+	my %enrich3 = %$ref3;
+	my $num =0;
+	my @Venn = (0,0,0,0,0,0,0);
+	open FILE, '>Same_ASE_rmats.tsv';
+	foreach my $key (keys %enrich1){
+		if(exists $enrich2{$key}){
+			if(exists $enrich3{$key}){
+				if($enrich1{$key}*$enrich2{$key}>0 && $enrich1{$key}*$enrich3{$key}>0){
+					$interset{$key} = '';
+					$num++;
+					print FILE "Colon\t$key\t$enrich1{$key}\t$rc1->{$key}\n";
+					print FILE "Prost\t$key\t$enrich2{$key}\t$rc2->{$key}\n";
+					print FILE "Lung\t$key\t$enrich3{$key}\t$rc3->{$key}\n";
+				}
+				else{
+					print "$key\n";
+				}
+				$Venn[6]++;
+			}
+			else{
+				$Venn[3]++;
+			}
+		}
+		else{
+			if(exists $enrich3{$key}){
+				$Venn[5]++;
+			}
+			else{
+				$Venn[0]++;
+			}
+		}
+	}
+
+	foreach my $key (keys %enrich2){
+		if(!exists $enrich1{$key}){
+			if(exists $enrich3{$key}){
+				$Venn[4]++;
+			}
+			else{
+				$Venn[1]++;
+			}
+		}
+	}
+
+	foreach my $key (keys %enrich3){
+		if(!exists $enrich1{$key} && !exists $enrich2{$key}){
+			$Venn[2]++;
+		}
+	}
+
+	print "$info\n";
+	print "plot(Venn(SetNames = c('Colon', 'Prostate','Lung'), Weight=c('100'=$Venn[0],'010'=$Venn[1],'001'=$Venn[2],'110'=$Venn[3],'011'=$Venn[4],'101'=$Venn[5],'111'=$Venn[6])),doWeights = TRUE)\n";
+	print "$num\n";
+	return \%interset;
+}

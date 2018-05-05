@@ -1,0 +1,12 @@
+#!/bin/bash
+
+cat RM-MEF-P13-1_HKNT3ALXX_L2_1.clean.fq.gz RM-MEF-P13-1_HKNT3ALXX_L3_1.clean.fq.gz >RM-MEF-P13-1_1.clean.fq.gz
+cat RM-MEF-P13-1_HKNT3ALXX_L2_2.clean.fq.gz RM-MEF-P13-1_HKNT3ALXX_L3_2.clean.fq.gz >RM-MEF-P13-1_2.clean.fq.gz
+cat RM-MEF-P13-2_HKNT3ALXX_L2_1.clean.fq.gz RM-MEF-P13-2_HKNT3ALXX_L3_1.clean.fq.gz >RM-MEF-P13-2_1.clean.fq.gz
+cat RM-MEF-P13-2_HKNT3ALXX_L2_2.clean.fq.gz RM-MEF-P13-2_HKNT3ALXX_L3_2.clean.fq.gz >RM-MEF-P13-2_2.clean.fq.gz
+
+cat RM-MEF-P14-1_HKNT3ALXX_L2_1.clean.fq.gz RM-MEF-P14-1_HKNT3ALXX_L3_1.clean.fq.gz >RM-MEF-P14-1_1.clean.fq.gz
+cat RM-MEF-P14-1_HKNT3ALXX_L2_2.clean.fq.gz RM-MEF-P14-1_HKNT3ALXX_L3_2.clean.fq.gz >RM-MEF-P14-1_2.clean.fq.gz
+cat RM-MEF-P14-2_HKNT3ALXX_L4_1.clean.fq.gz RM-MEF-P14-2_HKNT3ALXX_L5_1.clean.fq.gz >RM-MEF-P14-2_1.clean.fq.gz
+cat RM-MEF-P14-2_HKNT3ALXX_L4_2.clean.fq.gz RM-MEF-P14-2_HKNT3ALXX_L5_2.clean.fq.gz >RM-MEF-P14-2_2.clean.fq.gz
+

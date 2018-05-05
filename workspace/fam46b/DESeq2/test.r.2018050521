@@ -1,0 +1,6 @@
+#!/usr/bin/env Rscript
+cts = read.table("table_ReadCount.tsv",header=TRUE,sep="\t",row.names=1)
+coldata <- data.frame(row.names = colnames( cts ),condition = c('control','shRNA','shRNA'))
+coldata
+#dds <- DESeqDataSetFromMatrix(countData = cts,colData = coldata, design = ~ condition)
+

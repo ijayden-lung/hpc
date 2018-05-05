@@ -1,0 +1,75 @@
+#!/usr/bin/perl -w
+
+my %hash1;
+open FILE,'tabBP_Input_gobp_tcf3_0-2k.txt';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($go) = split /\t/;
+	$hash1{$go} = '';
+}
+
+my %hash2;
+open FILE,'tabBP_Input_gobp_tcf3_0-2k_High.txt';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($go) = split /\t/;
+	$hash2{$go} = '';
+}
+
+
+my %hash3;
+open FILE,'tabBP_Input_gobp_tcf3_0-2k_No.txt';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($go) = split /\t/;
+	$hash3{$go} = '';
+}
+
+&Venn(\%hash1,\%hash2,\%hash3,'0-2k_all','0-2k_High','0-2k_No');
+
+sub Venn{
+	my ($ref1,$ref2,$ref3,$cat1,$cat2,$cat3) = @_;
+	my %enrich1 = %$ref1;
+	my %enrich2 = %$ref2;
+	my %enrich3 = %$ref3;
+	my @Venn = (0,0,0,0,0,0,0);
+	foreach my $key (sort keys %enrich1){
+		if(exists $enrich2{$key}){
+			if(exists $enrich3{$key}){
+				$Venn[6]++;
+			}
+			else{
+				$Venn[3]++;
+			}
+		}
+		else{
+			if(exists $enrich3{$key}){
+				$Venn[5]++;
+			}
+			else{
+				$Venn[0]++;
+			}
+		}
+	}
+
+	foreach my $key (keys %enrich2){
+		if(!exists $enrich1{$key}){
+			if(exists $enrich3{$key}){
+				$Venn[4]++;
+			}
+			else{
+				$Venn[1]++;
+			}
+		}
+	}
+
+	foreach my $key (keys %enrich3){
+		if(!exists $enrich1{$key} && !exists $enrich2{$key}){
+			$Venn[2]++;
+		}
+	}
+	print "plot(Venn(SetNames = c('$cat1', '$cat2','$cat3'), Weight=c('100'=$Venn[0],'010'=$Venn[1],'001'=$Venn[2],'110'=$Venn[3],'011'=$Venn[4],'101'=$Venn[5],'111'=$Venn[6])),doWeights = TRUE,doEuler=TRUE)\n";
+}

@@ -1,0 +1,9 @@
+#!/bin/bash
+#PBS -q batch
+#PBS -N bowtie-build 
+#PBS -l nodes=1:ppn=1
+#PBS -j oe
+#PBS -V
+
+cd ~/data1/cnda/bt1_index/
+bowtie-build  /share/apps/genomics/genome/mm10/mm10.fa mm10

@@ -1,0 +1,45 @@
+#!/usr/bin/perl -w
+
+
+my $fq = $ARGV[0];
+
+`gunzip $fq`;
+$fq =~ s/\.gz//;
+
+
+open(FQ, '<', $fq);
+my $fa_name = $fq.".fa";
+#$fa_name =~ s/fq$/fa/;
+#$fa_name =~ s/fastq$/fa/;
+
+
+
+open(FA, '>', $fa_name);
+
+my $line_cnt = 0;
+while(my $line = <FQ>){
+
+    $line_cnt++;
+
+
+    if($line_cnt == 1){
+        $line =~ s/^@/>/;
+        #$line =~ s/\s\d+/_x$1/g;
+        $line =~ s/\s(\d+)/_x$1/;
+        print FA $line;
+    } elsif($line_cnt == 2){
+        print FA $line;
+    } elsif($line_cnt == 3){
+        next;
+    } elsif($line_cnt == 4){
+        $line_cnt = 0;
+        next;
+    }
+}
+
+close(FA);
+close(FQ);
+
+`gzip $fa_name`;
+
+print "$fa_name.gz";

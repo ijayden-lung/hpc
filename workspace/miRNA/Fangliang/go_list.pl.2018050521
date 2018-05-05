@@ -1,0 +1,40 @@
+#!/usr/bin/perl -w
+open FILE,'Deseq2Results.tsv';
+<FILE>;
+my %up;
+my %dn;
+my %bg;
+my $Max = 0;
+my $Min = 100000;
+while(<FILE>){
+	chomp;
+	my ($mirna,$exp,$lfc,$stat,$pval,$qval) = split /\t/;
+	my ($mature) = split /\-\>/,$mirna;
+	$bg{$mature} = $exp;
+	next if $qval eq "NA";
+	if($qval<=0.05 && $lfc>=1){
+		$up{$mature} = $lfc;
+		$Max = $exp if $Max < $exp;
+		$Min = $exp if $Min > $exp;
+	}
+	if($qval<=0.05 && $lfc<=-1){
+		$dn{$mature} = $lfc;
+		$Max = $exp if $Max < $exp;
+		$Min = $exp if $Min > $exp;
+	}
+}
+
+print "Min: $Min\tMax: $Max\n";
+
+open OUT,'>miRNA_up.txt';
+foreach my $key (sort{$up{$b} <=> $up{$a}} keys %up){
+	print OUT "$key\n";
+}
+open OUT,'>miRNA_dn.txt';
+foreach my $key (sort{$dn{$b} <=> $dn{$a}} keys %dn){
+	print OUT "$key\n";
+}
+open OUT,'>miRNA_bg.txt';
+foreach my $key (sort{$bg{$b} <=> $bg{$a}} keys %bg){
+	print OUT "$key\n" if ($bg{$key}<=$Max && $bg{$key}>=$Min);
+}

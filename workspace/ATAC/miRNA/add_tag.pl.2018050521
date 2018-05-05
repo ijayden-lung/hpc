@@ -1,0 +1,46 @@
+#!/usr/bin/perl -w
+
+my %target;
+#open FILE,'miRWalk2_runx2_predicted.txt';
+open FILE,'Overlap_predicted_miRNA';
+#open FILE,'TargetScan_7.1_ENST00000371432.3_predicted_targeting_details.txt';
+
+#open FILE, "grep 3UTR miRWalk_miRNA_Targets.csv | awk -F \",\" '{print \$1}' | sort | uniq -c | awk '(\$1 > 5){print \$2}' |";
+#open FILE, "awk '{print \$1}' TargetScan_7.1_ENST00000371432.3_predicted_targeting_details.txt | sort | uniq -c |awk '(\$1 > 2){print \$2}' |";
+
+my $header = <FILE>;
+chomp $header;
+my @header = split /\t/,$header;
+my %index;
+for(my$i=0;$i<@header;$i++){
+	$index{$header[$i]} = $i;
+}
+while(<FILE>){
+	chomp;
+	my ($mature,$sum) = (split)[3,-1];
+	my @data = split;
+	#$target{$mature} = '' if ($data[$index{'Targetscan'}] ==1 && $data[$index{'miRWalk'}] ==1 && $data[$index{'miRanda'}] ==1 && $data[$index{'RNA22'}] ==1 && $sum >6); 
+	$target{$data[3]} = '';	
+}
+
+my $num = keys %target;
+print "$num\n";
+
+open DE,'DESeq2_miRNA.tsv';
+$header = <DE>;
+chomp $header;
+open OUT,'>Tag_DESeq2_miRNA.tsv';
+print OUT "id\t$header\ttag\n";
+while(<DE>){
+	chomp;
+	my ($mirna) = split;
+	my ($mature,$precur) = split /\-\>/,$mirna;
+	if(exists $target{$mature}){
+		print OUT "$_\tTargetRUNX2\n";
+	}
+	else{
+		print OUT "$_\tOthers\n";
+	}
+}
+
+system("./maplot.r Tag_DESeq2_miRNA.tsv MAPlot_runx2_mirna.pdf")

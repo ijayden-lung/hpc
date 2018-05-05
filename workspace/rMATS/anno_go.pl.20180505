@@ -1,0 +1,35 @@
+#!/usr/bin/perl -w
+
+my %hash;
+my $i=0;
+foreach my $file (glob "GO*"){
+	open FILE, $file;
+	<FILE>;
+	print "$file\n";
+	while(<FILE>){
+		my ($gene) = split /\t/;
+		$hash{$file}->{$gene} = $_;
+	}
+}
+
+open SAME,"Same_ASE.txt";
+my $header = <SAME>;
+chomp $header;
+
+my @go = keys %hash;
+open OUT,'>Anno_Same_ASE.txt';
+print OUT join "\t",$header,@go,"\n";
+while(<SAME>){
+	chomp;
+	my (undef,undef,undef,$gene) = split;
+	print OUT $_;
+	foreach my $go (@go){
+		if(exists $hash{$go}->{$gene}){
+			print OUT "\tYes";
+		}
+		else{
+			print OUT "\tNo";
+		}
+	}
+	print OUT "\n";
+}

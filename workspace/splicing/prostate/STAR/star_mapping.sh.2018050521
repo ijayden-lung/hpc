@@ -1,0 +1,23 @@
+#!/bin/bash
+# 
+#PBS -q batch
+#PBS -N STAR_mapping
+#PBS -l nodes=2:ppn=16
+#PBS -j oe 
+#PBS -l walltime=699:30:00
+#PBS -l cput=624:00:00  
+#PBS -l mem=48000m
+
+sample=("SRR536342" "SRR536344" "SRR536346" "SRR536348" "SRR536350" "SRR536352")
+#sample=("low-2")
+
+echo Mapping reads
+
+for i in ${sample[*]}
+do
+	mkdir /home/liulingjie/prost/star_mapping/${i}
+	cd /home/liulingjie/prost/star_mapping/${i}
+	STAR --twopassMode Basic --runThreadN 32 --genomeDir /home/liulingjie/prog/hg_index  --scoreDelOpen -1000 --scoreInsOpen -1000  --readFilesIn /home/liulingjie/prost/fastq/fastx_trimmer_out/${i}_1.fastq /home/liulingjie/prost/fastq/fastx_trimmer_out/${i}_2.fastq --outSAMtype BAM SortedByCoordinate  --outBAMsortingThreadN 32 --alignEndsType EndToEnd 
+	echo
+done
+

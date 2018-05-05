@@ -1,0 +1,79 @@
+#!/usr/bin/perl -w
+my %conventer;
+open FILE,'Ensembl_ID_2_Name';
+while(<FILE>){
+	chomp;
+	my ($id,$name) = split;
+	$conventer{$name} = $id;
+}
+
+open FILE,'allmotifs.txt';
+open OUT,'>allmotifs_gene.txt';
+my $header = <FILE>;
+chomp $header;
+print OUT "$header\tgene_id\tgene_name\n";
+while(<FILE>){
+	chomp;
+	my ($motif) = split;
+	my ($name) = split /\(/,$motif;
+	my (undef,$INFO) = split /\//,$motif;
+	my (undef,$NAME) = split /\-/,$INFO;
+	$name = uc $name;
+	$NAME = uc $NAME;
+	if($name =~ /\:/){
+		my ($name1,$name2) = split /\:/,$name;
+		($name2) = split /\-/,$name2;
+		if(exists $conventer{$name1} && exists $conventer{$name2}){
+			my $id1 = $conventer{$name1};
+			print OUT "$_\t$id1\t$name1\n";
+			my $id2 = $conventer{$name2};
+			print OUT "$_\t$id2\t$name2\n";
+		}
+		elsif(exists $conventer{$name2}){
+			my $id2 = $conventer{$name2};
+			print OUT "$_\t$id2\t$name2\n";
+		}
+		elsif(exists $conventer{$name1}){
+			my $id1 = $conventer{$name1};
+			print OUT "$_\t$id1\t$name1\n";
+		}
+		elsif(exists $conventer{$NAME}){
+			my $ID = $conventer{$NAME};
+			print OUT "$_\t$ID\t$NAME\n";
+		}
+		else{
+			print OUT "$_\tNA\t$name2\n";
+		}
+	}
+	elsif($name =~ /\-/){
+		my ($name1,$name2) = split /\-/,$name;
+		if(exists $conventer{$name1}){
+			my $id1 = $conventer{$name1};
+			print OUT "$_\t$id1\t$name1\n";
+		}
+		elsif(exists $conventer{$name2}){
+			my $id2 = $conventer{$name2};
+			print OUT "$_\t$id2\t$name2\n";
+		}
+		elsif(exists $conventer{$NAME}){
+			my $ID = $conventer{$NAME};
+			print OUT "$_\t$ID\t$NAME\n";
+		}
+		else{
+			print OUT "$_\tNA\t$name\n";
+		}
+	}
+	else{
+		if(exists $conventer{$name}){
+			my $id = $conventer{$name};
+			print OUT "$_\t$id\t$name\n";
+		}
+		elsif(exists $conventer{$NAME}){
+			my $ID = $conventer{$NAME};
+			print OUT "$_\t$ID\t$NAME\n";
+		}
+		else{
+			print OUT "$_\tNA\t$name\n";
+		}
+	}
+}

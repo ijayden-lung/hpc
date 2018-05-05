@@ -1,0 +1,4 @@
+#!/usr/bin/perl -w
+$a = 10;
+print "$a\n";
+

@@ -1,0 +1,25 @@
+#!/usr/bin/perl -w
+
+### mKO, hKO
+#my $seq1 = "AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTNNNNNNtcttGTGGAAAGGACGAAACACCg";
+#my $seq2 = "gttttagagctaGAAAtagcaagttaaaataaggctagtccgttatcaacttgaaaaagtggcaccgagtcggtgcTTTTTTaagcttggcgtaactagatcttgagacaaatggcagtattcatccacaattttaaaagaaaaggggggattgg";
+
+### mREP,hREP
+#my $seq1 = 'AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTNNNNNNgcacaaaaggaaactcaccctaactgtaaagtaattgtgtgttttgagactataagtatcccttggagaaccaccttgttg';
+#my $seq2 = 'gtttaagagctaagctggaaacagcatagcaagtttaaataaggctagtccgttatcaacttgaaaaagtggcaccgagtcgAGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG';
+
+### hTFKO
+my $seq1 = 'AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTNNNNNNcacaaaaggaaactcaccctaactgtaaagtaattgtgtgttttgagactataagtatcccttggagaaccaccttgttgg';
+my $seq2 = 'gtttaagagctatgctggaaacagcatagcaagtttaaataaggctagtccgttatcaacttgaaaaagtggcaccgagtcggtgctttttttgcggccgcgtggataaccgtattaccgccatgcatggtcannnnnnnnnnnnnnnnnnnnAGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATCTCGTATGCCGTCTTCTGCTTG';
+
+open FILE,'lib_hTFKO.csv';
+<FILE>;
+open OUT,'>hTFKO.fa';
+while(<FILE>){
+	chomp;
+	my $grna = (split /,/)[6];
+	print OUT ">$grna\n$seq1";
+	print OUT "$grna";
+	print OUT "$seq2\n";
+}
+

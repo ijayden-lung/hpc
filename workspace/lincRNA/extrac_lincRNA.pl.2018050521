@@ -1,0 +1,88 @@
+#!/usr/bin/perl -w
+
+my %conventer;
+open CON,'/home/bio-longyk/cnda/ensembl/Ensembl_ID_2_Name';
+while(<CON>){
+	chomp;
+	my ($id,$name) = split;
+	$name = uc $name;
+	$conventer{$id} = $name;
+}
+
+my %gencode;
+open GEN,"awk '(\$3 == \"gene\"){print \$10,\$14}' /home/bio-longyk/cnda/gencode/gencode.v27.long_noncoding_RNAs.gtf |";
+while(<GEN>){
+	chomp;
+	my ($ens_id,$gene_name) = split;
+	$ens_id = substr($ens_id,1,15);
+	$gene_name = substr($gene_name,1,-2);
+	$gencode{$ens_id} = $gene_name;
+}
+
+
+open FILE,'/home/bio-longyk/workspace/miRNA/Fangliang/miRWalk2/DESeq2_mRNA.tsv';
+open OUT,'>/home/bio-longyk/workspace/lincRNA/DESeq2_lincRNA.tsv';
+open OUT2,'>/home/bio-longyk/workspace/lincRNA/DESeq2_remove_lincRNA.tsv';
+my $header = <FILE>;
+chomp $header;
+print OUT "gene_name\tgene_id\t$header\tTag\n";
+print OUT2 "gene_name\tgene_id\t$header\tTag\n";
+my $upregulated = 0;
+my $dnregulated = 0;
+my $expGene = 0;
+while(<FILE>){
+	chomp;
+	my ($gene,$mean,$l2fc,$stat,$pval,$qval) = split;
+	my $tag = "No";
+	$expGene++;
+	if ($l2fc > 1 && $qval<0.05 && $l2fc>0){
+		$upregulated++;
+		$tag="High";
+	}
+	if ($l2fc <-1 && $qval<0.05 && $l2fc<0){
+		$dnregulated++;
+		$tag="Low";
+	}
+	if(exists $gencode{$gene}){
+		print OUT "$gencode{$gene}\t$_\t$tag\n";
+	}
+	else{
+		print OUT2 "$conventer{$gene}\t$_\t$tag\n";
+	}
+}
+
+print "total expressed lincRNA: $expGene\n";
+print "upregulated lincRNA: $upregulated\n";
+print "dnregulated lincRNA: $dnregulated\n";
+
+
+my $conventer;
+open FILE,"awk '(\$3 == \"miRNA\"){print \$1,\$4,\$5,\$7,\$9}' /home/bio-longyk/cnda/miRNA/hsa.gff3.txt |";
+while(<FILE>){
+	chomp;
+	my ($chr,$str,$end,$strand,$info) = split;
+	my ($gene_id,$gene_name) = (split /\=|\;/,$info)[1,5];
+	$conventer{$gene_name} = $gene_id if (!exists $conventer{$gene_name}); 
+}
+
+open FILE,'/home/bio-longyk/workspace/miRNA/Fangliang/Deseq2Results.tsv';
+open OUT,'>/home/bio-longyk/workspace/lincRNA/DESeq2_miRNA.tsv';
+$header = <FILE>;
+chomp $header;
+print OUT "gene_name\tgene_id\t$header\tTag\n";
+my %repeat;
+while(<FILE>){
+	chomp;
+	my ($gene,$mean,$l2fc,$stat,$pval,$qval) = split;
+	my ($mature,$precusor) = split /\-\>/,$gene;
+	my $tag = "No";
+	if ($qval ne "NA" && $l2fc > 0 && $qval<0.05){
+		$tag="High";
+	}
+	if ($qval ne "NA" && $l2fc <0 && $qval<0.05){
+		$tag="Low";
+	}
+	$repeat{$mature}++;
+	print OUT "$mature\t$conventer{$mature}\t$mean\t$l2fc\t$stat\t$pval\t$qval\t$tag\n" if $repeat{$mature} < 2;
+}
+

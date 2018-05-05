@@ -1,0 +1,90 @@
+#!/usr/bin/perl 
+
+use List::Util qw(first max maxstr min minstr reduce shuffle sum);
+use Math::Round;
+use Statistics::R;
+
+
+
+######Global Variable;
+my $SJOverhangMin = 6;
+my $readCountMin  = 20;
+my $sample_list = 'sample_list';
+open FILE,$sample_list;
+
+my %sample;
+while(<FILE>){
+	chomp;
+	my ($sample,$conditon) = split;
+	$sample{$sample} = $condition;
+}
+
+&junction("chr11",35139370,35189835,83,163);
+
+sub junction{
+	my @sample = keys %sample;
+	my ($chr,$str,$end,$flag1,$flag2) = @_;
+	my %junc;
+	my @sum_sj;
+	for(my $i=0;$i<@sample;$i++){
+		open BAM, "samtools view -q 255 $sample[$i] $chr:$str-$end | awk '(\$6 ~ \"N\" && (\$2 == $flag1 || \$2 == $flag2) && \$6 !~ \"S\" && \$6 !~ \"D\" && \$6 !~ \"I\"){print \$4,\$6}' | ";
+		while(<BAM>){
+			my ($str,$CIGAR) = split;
+			my ($exon1,$exon2,$exon3,$str2,$str3,$end1,$end2,$end3);
+			my @info = split /N|M/,$CIGAR;
+			if(@info == 3){
+				if($info[0] >=$SJOverhangMin && $info[2] >=$SJOverhangMin){
+					$end1 = $str+$info[0]-1;  ####
+					$str2 = $end1+$info[1]+1;
+					$junc{"$end1-$str2"}->[$i]++;
+					$sum_sj[$i]++;
+				}
+			}
+			elsif(@info == 5){
+				if($info[0] >=$SJOverhangMin && $info[2] >=$SJOverhangMin && $info[4] >=$SJOverhangMin){
+					$end1 = $str+$info[0]-1;
+					$str2 = $end1+$info[1]+1;
+					$end2 = $str2+$info[2]-1;
+					$str3 = $end2+$info[3]+1;
+					$junc{"$end1-$str2"}->[$i]++;
+					$junc{"$end2-$str3"}->[$i]++;
+					$sum_sj[$i] +=2;
+				}
+			}
+
+		}
+
+	}
+
+	open SPL,">Splicing.tsv";
+	print SPL "Junction\t",join( "\t",@sample),"\n";
+	
+	my @size_factor;
+	my $average = sum(@sum_sj)/@sum_sj;
+	for my $i (0..$#sample){
+		$size_factor[$i] = $average/$sum_sj[$i];
+	}
+	print "@size_factor\n";
+	foreach my $key (sort (keys %junc)){
+		my $sum = 0;
+		my $zeroCount = 0;
+		for my $i (0..$#sample){
+			if(!defined ($junc{$key}->[$i])){
+				$junc{$key}->[$i] = 0;
+				$zeroCount++;
+			}
+			else{
+				$junc{$key}->[$i] = round($junc{$key}->[$i]*$size_factor[$i]);
+			}
+			$sum += $junc{$key}->[$i];
+		}
+
+		next if ($sum < $readCountMin*@sample || $zeroCount > @sample/2);  ####Filtering
+		
+		print SPL "$key\t";
+		for my $i (0..$#sample){
+			print SPL "$junc{$key}->[$i]\t";
+		}
+		print SPL "\n";
+	}
+}

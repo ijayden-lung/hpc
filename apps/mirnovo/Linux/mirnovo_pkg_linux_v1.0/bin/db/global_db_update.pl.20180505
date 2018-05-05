@@ -1,0 +1,14 @@
+#!/usr/bin/env perl
+
+#my @genomes = ("hsa", "mmu", "dme", "cel");
+
+open(GENOMES, "./specieslist");
+
+my @genomes = <GENOMES>;
+close(GENOMES);
+
+foreach(@genomes){
+	print "Processing genome: $_\n";
+	`./update_mature_mirs_db.pl $_`;
+}
+

@@ -1,0 +1,55 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+my $full_rfam_file = "Rfam_10.1.fasta";
+
+
+open(FH, $full_rfam_file);
+open(OUT, ">Rfam_tRNAs_and_rRNAs.fasta");
+
+my $id = '';
+my $seq = '';
+my $OMMIT_SEQ = 'T';
+
+while(<FH>){
+
+	chomp;
+
+	if($_ =~ /^>/){
+		
+		my $id = $_;
+
+		if($seq eq ''){
+			if( ($id !~ /ctRNA/ & $id =~ /tRNA/) | $id =~ /rRNA/ ){
+				print OUT "$id\n";
+				$OMMIT_SEQ = 'F';
+			}		
+			
+		} else{
+			if($OMMIT_SEQ eq 'F'){
+				print OUT "$seq\n";
+				$OMMIT_SEQ = 'T';
+			}
+		
+			if( ($id !~ /ctRNA/ & $id =~ /tRNA/) | $id =~ /rRNA/ ){
+                                print OUT "$id\n";
+                                $OMMIT_SEQ = 'F';       
+                        }	
+		}		
+
+		$seq = '';
+	
+	} else{
+		$seq .= $_;
+	} 
+
+}
+
+if($OMMIT_SEQ eq 'F'){
+	print OUT "$seq\n";
+}
+
+close(FH);
+close(OUT);

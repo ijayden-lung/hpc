@@ -1,0 +1,18 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+pdf('ScatterPlot_motif_pval.pdf',width=10,height=10)
+data = read.table('knownResults_motifs_All_pval.txt',header=TRUE)
+
+
+ggplot(data, aes(x=-log10(High_pval), y=-log10(Low_pval)))+geom_point()+ geom_text(aes(y = -log10(Low_pval) + 1, label =substr(Motif,0,5)))
+ggplot(data, aes(x=-log10(High_pval), y=-log10(Low_pval)))+geom_point()+ geom_text(aes(y = -log10(Low_pval) + 1, label =substr(Motif,0,6)))+xlim(100,250)+ylim(0,20)
+ggplot(data, aes(x=-log10(High_pval), y=-log10(NotSig_pval)))+geom_point()
+ggplot(data, aes(x=-log10(Low_pval), y=-log10(NotSig_pval)))+geom_point()
+
+
+pdf('ScatterPlot_motifDist_L2FC.pdf')
+data = read.table('Input_boxplot_motifDist_runx2.txt',header=TRUE)
+ggplot(data,aes(x=Distance,y=L2FC))+geom_point()+xlim(0,2000)

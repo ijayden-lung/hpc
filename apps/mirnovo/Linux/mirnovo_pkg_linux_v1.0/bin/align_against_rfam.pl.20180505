@@ -1,0 +1,99 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+my $usearch_dir = $ARGV[0];
+my $cur_out_dir = $ARGV[1];
+my $job_id = $ARGV[2];
+
+print "[$job_id]>> Aligning against rfam db to detect rRNAs and tRNAs...\n";
+`util/blastall -p blastn -e 0.01 -d rfam_db/rfam_trnas_and_rrnas_db.fasta -m 8 -i $cur_out_dir/consensus_sequences.fa -o $cur_out_dir/rfam_blast.out  -v 1 -b 5 -F F -W 7 -a 16`;
+
+
+my $rout = `cat $cur_out_dir/rfam_blast.out | grep 'rRNA' | cut -f1 | uniq | sed 's/cons_seqs_cluster\.//'`;
+my @rRNAs_list = split("\n", $rout);
+#print("rRNAs_list:\n");
+#print join(",", @rRNAs_list)."\n";
+
+
+my $tout = `cat $cur_out_dir/rfam_blast.out | grep 'tRNA' | cut -f1 | uniq | sed 's/cons_seqs_cluster\.//'`;
+my @tRNAs_list = split("\n", $tout);
+#print("tRNAs_list:\n");
+#print join(",", @tRNAs_list)."\n";
+
+
+my %rRNAs_hash = map { $_ => 1 } @rRNAs_list;
+my %tRNAs_hash = map { $_ => 1 } @tRNAs_list;
+
+
+# filter consensus_sequences.fa file
+
+open(FH, "$cur_out_dir/consensus_sequences.fa");
+open(OUT,">$cur_out_dir/filtered_consensus_sequences.fa");
+
+
+my $id = '';
+my $seq = '';
+my $OMMIT_SEQ = 'T';
+
+while(<FH>){
+
+	chomp;
+
+	if($_ =~ /^>/){
+		
+		my $full_id = $_;
+		my $id = $full_id;
+
+		$id =~ s/>cons_seqs_cluster\.//;
+
+		if($seq eq ''){
+			if( !defined($rRNAs_hash{$id}) & !defined($tRNAs_hash{$id})  ){
+				print OUT "$full_id\n";
+				$OMMIT_SEQ = 'F';
+			}		
+			
+		} else{
+			if($OMMIT_SEQ eq 'F'){
+				print OUT "$seq\n";
+				$OMMIT_SEQ = 'T';
+			}
+		
+			if( !defined($rRNAs_hash{$id}) & !defined($tRNAs_hash{$id})  ){
+                                print OUT "$full_id\n";
+                                $OMMIT_SEQ = 'F';       
+                        }	
+		}		
+
+		$seq = '';
+	
+	} else{
+		$seq .= $_;
+	} 
+
+}
+
+if($OMMIT_SEQ eq 'F'){
+	print OUT "$seq\n";
+}
+
+close(FH);
+close(OUT);
+
+my $rfam_hits_dir = $cur_out_dir."/rfam_hits";
+mkdir $rfam_hits_dir;
+
+
+# rename .alignm files of the returned tRNA and rRNA lists		
+foreach(@rRNAs_list){
+	`mv $usearch_dir/alignm.$_ $rfam_hits_dir/rRNA.$_`;
+}
+
+foreach(@tRNAs_list){
+	`mv $usearch_dir/alignm.$_ $rfam_hits_dir/tRNA.$_`;
+}
+
+`mv $cur_out_dir/filtered_consensus_sequences.fa $cur_out_dir/consensus_sequences.fa`; 
+
+print "[$job_id]<< rRNAs and tRNAs detection complete!\n\n";

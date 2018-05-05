@@ -1,0 +1,74 @@
+#!/usr/bin/perl -w
+
+my %tf;
+open EXP,'../Similarity_exp.tsv';
+my $header = <EXP>;
+chomp $header;
+while(<EXP>){
+	chomp;
+	my @data = split /\t/;
+	$tf{$data[1]} = "$data[11]\t$data[13]\t$data[12]\t$data[14]";
+}
+
+open FILE,'motifName.txt';
+my %motif;
+while(<FILE>){
+	chomp;
+	my @data = split /\t/;
+	if(@data == 4 ){
+		$motif{$data[0]} = $data[2];
+	}
+}
+
+my %chiq;
+foreach $file (glob 'motifs_*/knownResults.txt'){
+	my $species = 'mm10';
+	my $sample  = 'ES';
+	my $type    = 'g';
+	if($file =~ /rn6/){
+		$species = 'rn6';
+	}
+	if($file =~ /D136/){
+		$sample = 'MEF';
+	}
+	if($file =~ /s2000/){
+		$type = 's';
+	}
+
+	open FILE,$file;
+	<FILE>;
+	while(<FILE>){
+		chomp;
+		my ($motifName,$padj) = (split /\t/)[0,4];
+		if($padj < 0.05){
+			$chiq{$motifName}->{"$species\_$sample\_$type"} = "Yes";	
+		}
+		else{
+			 $chiq{$motifName}->{"$species\_$sample\_$type"} = "No";
+		 }
+	}
+}
+
+open FILE,'/home/bio-longyk/cnda/ortholog/mouse2rat.txt';
+<FILE>;
+my %similar;
+my %ortholog;
+while(<FILE>){
+	chomp;
+	my @data = split /\t/;
+	$similar{$data[0]} = $data[5];
+	$ortholog{$data[0]} = "$data[0]\t$data[1]\t$data[2]\t$data[3]";
+}
+
+
+open OUT,'>Sig_Similar_Eep.tsv';
+print OUT "motif\tmouse_id\tmouse_name\trat_id\trat_name\tsimilarity\tFPKM_Mouse_ES\tFPKM_Mouse_MEF\tFPKM_Rat_ES\tFPKM_Rat_MEF\tmm10_ES_g\tmm10_ES_s\tmm10_MEF_g\tmm10_MEF_s\trn6_ES_g\trn6_ES_s\trn6_MEF_g\trn6_MEF_s\n";
+while(my($motif,$id) = each %motif){
+	if(exists $chiq{$motif}){
+		my $val = $chiq{$motif};
+		if(exists $tf{$id}){
+			print OUT "$motif\t$ortholog{$id}\t$similar{$id}\t$tf{$id}\t$val->{'mm10_ES_g'}\t$val->{'mm10_ES_s'}\t$val->{'mm10_MEF_g'}\t$val->{'mm10_MEF_s'}\t$val->{'rn6_ES_g'}\t$val->{'rn6_ES_s'}\t$val->{'rn6_MEF_g'}\t$val->{'rn6_MEF_s'}\n";
+		}
+	}
+}
+

@@ -1,0 +1,20 @@
+#!/usr/bin/perl -w
+open FILE,'Same_ase.tsv';
+my %diff;
+my %count;
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$perDiff) = (split /\t/)[1,2,7];
+	$diff{"$gene_id\t$gene_name"} += $perDiff;
+	$count{"$gene_id\t$gene_name"}++;
+}
+
+my %ave;
+while(my ($key,$val) =each %diff){
+	$ave{$key} = $val/$count{$key};
+}
+
+open OUT, '>ASE_sig.txt';
+foreach my $key (sort{$ave{$b}<=>$ave{$a}} keys %ave){
+	printf OUT ("%s\t%.2f\n",$key,$ave{$key});
+}

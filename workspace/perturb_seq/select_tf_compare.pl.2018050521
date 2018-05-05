@@ -1,0 +1,71 @@
+#!/usr/bin/perl -w
+open TF,'mm.tf';
+<TF>;
+my %tf;
+while(<TF>){
+	chomp;
+	my (undef,$p_id) = split;
+	$tf{$p_id} = '';
+}
+
+my %similar;
+my %homo;
+open HOMO,'Homo_similarity_oneGeneone1.txt';
+while(<HOMO>){
+	chomp;
+	my ($g_id,$t_id,$p_id,$rat_g,$rat_t,$rat_p,$base,$amino) = split;
+	if(exists $tf{$p_id}){
+		$similar{$g_id}->{$p_id} = "$g_id\t$t_id\t$p_id\t$rat_g\t$rat_t\t$rat_p\t$base\t$amino";
+		$homo{$g_id} = $rat_g;
+	}
+}
+
+open NAME, "awk '(\$3 == \"gene\"){print \$10,\$14}' /home/bio-longyk/cnda/ensembl/Mus_musculus.GRCm38.86.gtf |";
+my %name;
+while(<NAME>){
+	chomp;
+	my ($id,$name) =split;
+	$id =~ s/\"|\;//g;
+	$name =~ s/\"|\;//g;
+	$name{$id} = $name;
+}
+
+
+my %mouse;
+open MOU,'mm10_fpkm';
+<MOU>;
+while(<MOU>){
+	chomp;
+	my ($g_id,$es1,$es2,$es3,$mef1,$mef2,$mef3,$mef4) = split;
+	my $es = ($es1+$es2+$es3)/3;
+	my $mef = ($mef1+$mef2+$mef3+$mef4)/4;
+	$mouse{$g_id} = [$es,$mef];
+}
+my %rat;
+open RAT,'rn6_fpkm';
+<RAT>;
+while(<RAT>){
+	chomp;
+	my ($g_id,$es1,$es2,$es3,$mef1,$mef2,$mef3,$mef4) = split;
+	my $es = ($es1+$es2+$es3)/3;
+	my $mef = ($mef1+$mef2+$mef3+$mef4)/4;
+	$rat{$g_id} = [$es,$mef];
+}
+
+
+open OUT,'>Similarity_exp.tsv';
+print OUT "Gene_Symbol\tMouse_GID\tMouse_TID\tMouse_PID\tRat_GID\tRat_TID\tRat_PID\tsimilar_base\tsimilar_amino\tES_log2FC\tMEF_log2FC\tMouse_ES\tRat_ES\tMouse_MEF\tRat_MEF\n";
+while(my ($mou,$rat) = each %homo){
+	next if (!exists $mouse{$mou} || !exists $rat{$rat});
+	my $m_es = $mouse{$mou}->[0]+0.1;
+	my $m_mef = $mouse{$mou}->[1]+0.1;
+	my $r_es = $rat{$rat}->[0]+0.1;
+	my $r_mef = $rat{$rat}->[1]+0.1;
+	my $es_lfc = log($m_es/$r_es)/log(2);
+	my $mef_lfc = log($m_mef/$r_mef)/log(2);
+	my $protein = $similar{$mou};
+	while(my ($p_id,$val) = each %$protein){
+		print OUT "$name{$mou}\t$val\t$es_lfc\t$mef_lfc\t$m_es\t$r_es\t$m_mef\t$r_mef\n";
+	}
+}
+

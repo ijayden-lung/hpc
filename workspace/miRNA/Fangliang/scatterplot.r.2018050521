@@ -1,0 +1,7 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+args<-commandArgs(T)
+pdf(args[1])
+data = read.table(args[2],header=TRUE,row.names=1)
+ggplot(data, aes(x=log2(SL1), y=log2(SL2)))+geom_point()+stat_ellipse()
+ggplot(data, aes(x=log2(SH1), y=log2(SH2)))+geom_point()+stat_ellipse()

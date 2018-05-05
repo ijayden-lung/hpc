@@ -1,0 +1,767 @@
+#!/usr/bin/env python
+
+from __future__ import division
+from sys import argv
+from sys import exit
+import os.path
+import subprocess
+import gzip
+import re
+import Queue
+import threading
+import time
+import csv
+import os
+import sys
+
+"""cmd to run script:
+		python miRNA_clust_seqs.py <vsearch_outp_dir> <hits_on_mature_miR_file>
+"""
+
+
+def cluster_parser(fasta_file):
+    """Parses a cluster alignmnet outp from vsearch, stores the
+       seqs in a matrix like [['A', 'T', 'C', ..]],
+    """
+    fasta = open(fasta_file)
+
+    cluster_label_list = []
+    cluster_seq_matrix = []
+    for line in fasta:
+        line = line.rstrip()
+        if line.startswith('>'):
+            cluster_label_list += [line[1:]]
+        else:
+            cluster_seq_matrix += [list(line)]
+	    tt = list(line)
+	    #print(tt)
+
+    fasta.close()
+    return cluster_label_list, cluster_seq_matrix
+
+def calc_seqLen_readNumb_GCcont(cluster_label_list, cluster_seq_matrix, cluster_file):
+    """Gets as input 2 lists of same length (1.labels, 2.aligned_seqs of
+       a single cluster) and RETURNS a tuple with 3 features of the cluster:
+       avg_seq_len, avg_GC_cont, number of deep sequencing reads
+    """
+    feature_list = []
+    sum_all_reads = 0
+    sum_seq_len = 0
+    sum_GC_cont = 0
+    sum_seq_len_2 = 0
+
+    #print(cluster_label_list)
+    #print(cluster_seq_matrix)
+
+    for i in range(len(cluster_seq_matrix)):
+        # Seq_Len & number of reads
+        gaps = cluster_seq_matrix[i].count('-')
+        alignm_len = len(cluster_seq_matrix[i])
+        Seq_Len = alignm_len - gaps
+        if Seq_Len == 0:
+            print("Error : line 62 miRNA_clust_stats_opt.py, cluster_file: %s") % (cluster_file)
+            #print(cluster_seq_matrix)
+            #print('-------------')
+            #print(gaps)
+            #print('-------------')
+            #print(alignm_len)
+            #print('-------------')
+            #os._exit(1)
+
+        sum_seq_len += Seq_Len
+
+        # label form: >trn_t14_i11_3823x -> get '3823'
+        x_read_counts = int(cluster_label_list[i].split("_x")[1])
+        #x_read_counts = int( x_read_counts.replace('x', ''))
+
+        sum_seq_len_2 += Seq_Len * x_read_counts #consider also read counts
+
+        sum_all_reads += x_read_counts
+
+        # GC_content
+        GC_sum = cluster_seq_matrix[i].count('G') + cluster_seq_matrix[i].count('C')
+        GC_Content = GC_sum/Seq_Len
+        sum_GC_cont += GC_Content
+
+    avg_seq_len = sum_seq_len/len(cluster_seq_matrix)
+    avg_seq_len_2 = sum_seq_len_2/sum_all_reads #consider also read counts
+    avg_GC_cont = sum_GC_cont/len(cluster_seq_matrix)
+    #print avg_seq_len
+    return avg_seq_len_2, avg_GC_cont, sum_all_reads
+
+def calc_seq_position_stats(cluster_label_list, cluster_seq_matrix):
+    """Calculates position statistics for a cluster
+       and stores them in posit_diction
+    """
+#    print(cluster_label_list)
+#    print(cluster_seq_matrix)
+
+    read_variant_depths = []
+    for v in cluster_label_list:
+        depth = int(v.split("_x")[1])
+        #depth = int(depth.replace('x', ''))
+        read_variant_depths.append(depth)
+        #print(depth)
+
+    variants_total_depth = sum(read_variant_depths)
+    #print(read_variant_depths)
+    #print(variants_total_depth)
+
+    seq_number = len(cluster_seq_matrix)
+    seq_len = len(cluster_seq_matrix[0])
+
+    # initialise posit_diction
+    posit_diction = {}
+    for i in range(seq_len):
+        pos = 'pos' + str(i)
+        posit_diction[pos] = []
+        # will be like {'pos14': [], 'pos15': [],..}
+        # value of each key will be of form [%As, %Ts, %Cs, %Gs, %Ns, %gaps]
+        # where %As: perc. of seqs with A at this position (see diction_key)
+    # transpose cluster_seq_matrix and count how many elems of eg matr[0] are 'A'
+    T_clust_seq_matr = zip(*cluster_seq_matrix)
+
+    #print(T_clust_seq_matr)
+
+
+    for i in range(len(T_clust_seq_matr)):
+        T_clust_seq_matr[i] = list(T_clust_seq_matr[i])
+    # now matrix is transposed
+    # each elem's index corresponds to seq-position ->
+    # T_clust_seq_matr[i]: i-th position of cluster alignment
+
+    for i in range(len(T_clust_seq_matr)):
+        pos = 'pos' + str(i)
+
+        tmp_dict = {'A': 0, 'T': 0, 'G': 0, 'C': 0, 'N': 0, '-': 0}
+        #print(T_clust_seq_matr[i])
+
+        for j, nt in enumerate(T_clust_seq_matr[i]):
+	    nt = nt.upper()
+            tmp_dict[nt] += read_variant_depths[j]
+
+        for x in tmp_dict:
+            tmp_dict[x] /= variants_total_depth
+            tmp_dict[x] = round(tmp_dict[x], 5)
+        #print(tmp_dict)
+
+        tmp_list = []
+        for k in ('A', 'T', 'C', 'G', 'N', '-'):
+            #print(tmp_dict[k])
+            tmp_list.append(tmp_dict[k])
+            posit_diction[pos] = tmp_list
+
+        tmp_ratios_sum = round(sum(tmp_list), 2)
+
+        # validate that ratios are consistent
+        if tmp_ratios_sum != 1.0:
+            print("Error! As+Ts+Cs+Gs+Ns+gaps do not sum up to 1.0! Exiting... (Index: %s)") % (i)
+            print(tmp_ratios_sum)
+            print(type(tmp_ratios_sum))
+            #print(type(1.0))
+            #print([As, Ts, Cs, Gs, Ns, gaps])
+            exit(0)
+
+        #print(tmp_list)
+        #print(posit_diction)
+
+# deprecated:
+#        As = round((T_clust_seq_matr[i].count('A')/seq_number), 5)
+#        Ts = round((T_clust_seq_matr[i].count('T')/seq_number), 5)
+#        Cs = round((T_clust_seq_matr[i].count('C')/seq_number), 5)
+#        Gs = round((T_clust_seq_matr[i].count('G')/seq_number), 5)
+#        Ns = round((T_clust_seq_matr[i].count('N')/seq_number), 5)
+#        gaps = round((T_clust_seq_matr[i].count('-')/seq_number), 5)
+
+#        posit_diction[pos] += [As, Ts, Cs, Gs, Ns, gaps]
+
+    return posit_diction
+
+def CALCUL_posit_stats(posit_diction):
+    """Calculates pos_list & T_pos_list (seq_stats table) for a single
+       cluster of seqs, to process on seq-stats more easily
+    """
+    # keys of posit_diction not sorted
+    # sort them and store them in list
+    pos_list = []
+    for i in range(len(posit_diction)):
+        pos = 'pos' +str(i)
+        pos_list += [posit_diction[pos]]
+
+    T_pos_list = zip(*pos_list) # is a list of tuples
+    # each tuple -> a seq  ## tuple elements -> alignm-positions
+    #for line in T_pos_list:
+        #print line
+    #print "POS_LIST"
+    #for line in pos_list:
+        #print line
+    # return pos_list matrix & its transposed version (T_pos_list)
+    return pos_list, T_pos_list
+
+def find_consensus_complem_seq(pos_list):
+    """Finds the consensus seq of a single cluster
+    """
+    base_list = ['A', 'T', 'C', 'G', 'N', '-']
+    rev_compl_base_list = ['T', 'A', 'G', 'C', 'N', '-']
+    # find "dominant" nt at each position
+    # dominant nt-> the nt at that position of the alignment
+    #     with the highest percentage
+
+
+    dominant_nts = []
+    rev_complement_dominant_nts = []
+    for pos in range(len(pos_list)):
+        # find the index of pos_list[pos] with the dom_nt
+        dom_nt_index = [i for i, j in enumerate(pos_list[pos]) if j == max(pos_list[pos])]
+        #print("pos_list:")
+        #print(pos_list)
+        #print("dom_nt_index: ")
+        #print(dom_nt_index)
+
+        # returns a list with one elem; in case of >1 dominant nts -> more elems in list
+        index = dom_nt_index[0] # dom_nt_index is already a list
+    	dominant_nts += [base_list[index]]
+        rev_complement_dominant_nts += [rev_compl_base_list[index]]
+	""" deprecated:
+	if len(dom_nt_index) == 1:
+            index = dom_nt_index[0] # dom_nt_index is already a list
+            dominant_nts += [base_list[index]]
+            rev_complement_dominant_nts += [rev_compl_base_list[index]]
+        elif len(dom_nt_index) > 1:
+            # for cases of >1 dominant nts, occuring at equal percentages in cluster
+            index = dom_nt_index[0] # pick first dominant nt (randomly)
+            dominant_nts += [base_list[index].lower()]
+            rev_complement_dominant_nts += [rev_compl_base_list[index].lower()]
+	"""
+    # expect a list ['A', 'T', 'A',.... ] of len = len(pos_list)
+    # this list is the consensus seq
+    cons_seq_pre = ''.join([base for base in dominant_nts])
+    rev_compl_cons_seq_pre = ''.join([base for base in rev_complement_dominant_nts])
+    # trail gaps and N's from the end from the ends of cons_seq
+    cons_seq = cons_seq_pre.strip('-')
+    cons_seq = cons_seq.replace('-', '')
+    cons_sequence = cons_seq.strip('N')
+
+    rev_comp_cons_seq = rev_compl_cons_seq_pre.strip('-')
+    rev_comp_cons_seq = rev_comp_cons_seq.replace('-', '')
+    rev_comp_cons_sequence = rev_comp_cons_seq.strip('N')[::-1]
+
+    return cons_sequence, rev_comp_cons_sequence
+
+def write_posit_stats(posit_diction, T_pos_list, stats_fname):
+    """Writes all statistics of a cluster in file,  <>.seq_stats
+    """
+    stats_file = open(stats_fname, 'w')
+    row_names = ['A', 'T', 'C', 'G', 'N', 'Gaps']
+
+    # design first row and write it in file (see 1st row in TABLE SCHEME below)
+    positions = range(1,len(posit_diction)+1)
+    first_row = 'POS' + (''.join(['\t'+ str(number) for number in positions])) + '\n'
+    stats_file.write(first_row)
+
+    # write the 6 table rows
+    for i in  range(len(T_pos_list)): #len(T_pos_list) will always be 6
+        seq_stats = (row_names[i]+'\t%.8f'*len(T_pos_list[0])+'\n') % (T_pos_list[i])
+        # T_pos_list[i] is a tuple
+        stats_file.write(seq_stats)
+
+    # writen output will always be a tab-delim table with
+    # #rows=7 (see table scheme below), #cols=clust.alignment length(i-th col ->i-th position)
+    stats_file.close()
+
+#   Output TABLE SCHEME:
+
+# POS \t  1  \t  2  \t 3  \t 4  \t  5 \t 6... 22
+# A
+# T
+# C
+# G
+# N
+# Gaps
+
+def make_stats_figure(stats_fname, sum_all_reads, cur_out_dir):
+    """Calls Rscript that uses seq_stats of a cluster and makes
+       seq_stats barplot
+    """
+    cmd = "Rscript make_clust_stats_plot.R %s %s %s 1>/dev/null 2>&1" %(stats_fname, sum_all_reads, cur_out_dir)
+    #print(cmd)
+    subprocess.check_call(cmd, shell=True)
+
+
+def rec_alignm_features(cluster_number, pos_list, T_pos_list):
+    """
+    """
+    #print('cluster_number:')
+    #print(cluster_number)
+    #print('pos_list:')
+    #print(pos_list)
+    #print('T_pos_list:')
+    #print(T_pos_list)
+
+    # find first full-bar position
+    SFB = 0 # 'Start Full Bars' position
+    while pos_list[SFB][5] > max_allowed_gap:
+        SFB += 1
+    #starting from 0, 1st full-bar pos=i
+    num_gap_bars = SFB # numb of bars before start of full bars ### RECORD
+
+    # find how quickly the 'gap ratio' scales-up from 0 to 0.2; bar is 80% full
+    # at 5' end
+    scale_rate_5p = 0
+    while pos_list[scale_rate_5p][5] > scale_rate_5p_thres:
+        scale_rate_5p += 1
+
+    # first 8-mer (from full-bar start) -> i up to (i + 8)
+    mismatches_in_8mer = []
+    for pos in range(SFB, SFB+8):
+        #check if all nt percentages at 8 pos. are < 'mismatches_in_8mer_thres'
+        mism = all(nt_perc < mismatches_in_8mer_thres for nt_perc in pos_list[pos]) # returns True/False
+        #print(mism)
+        mismatches_in_8mer += [mism] #maybe won't be used # returns list of 8 True/False's
+        #returns a list [True, False, ..] with 8 elems, True: there's mismatc at that pos
+    ##print "mism_in_8mer: ", mismatches_in_8mer
+    num_mism_in_8mer = mismatches_in_8mer.count(True) ### RECORD
+
+    #if num_mism_in_8mer >= 1:
+        #print(num_mism_in_8mer)
+        #exit(0)
+
+    EFB = -1 # End Full Bars, start from last alignment position
+    while pos_list[EFB][5] > max_allowed_gap:
+        #print("EFB: " + str(EFB))
+        EFB -= 1
+    EndFB = len(pos_list) + EFB # position of last full bar, starting from 0
+    #"main body (full bars)" : from pos. SFB+8 to EndFB
+
+
+    # MainBody: from SFB to EndFB
+    MainBody_length = EndFB - SFB +1 ### RECORD
+
+    mismatches_MainBody = []
+    #mismatches in Main Body
+    for pos in range(SFB+8, EndFB+1):
+        MB_mism = all(nt_perc < mismatches_in_8mer_thres for nt_perc in pos_list[pos]) # returns True/False
+        mismatches_MainBody += [MB_mism] # returns a list of 8 True/False's
+        #returns a list [True, False, False, ..], True: there's mismatc at that pos
+    ##print "mismatches in MB: ", mismatches_MainBody
+    num_mism_in_MB = mismatches_MainBody.count(True) ### RECORD
+
+    #AT content at 3p end (let's define 3p end as the last Full Bar -> EndFB)
+    ##AT_cont_3p_end = pos_list[EndFB][0] + pos_list[EndFB][1]
+
+
+    #avg AT content at 3 positions after 3p end
+    total_sum_ATcont_after3p = 0
+    pos_3p = EndFB+1
+    pos_3p_cnt = 0
+    while ( len(pos_list) - pos_3p > 0):
+        #print("pos_3p:")
+        #print(pos_3p)
+        total_sum_ATcont_after3p += (pos_list[pos_3p][0] + pos_list[pos_3p][1]) #0->A's; 1->T's
+        pos_3p += 1
+        pos_3p_cnt += 1
+        if pos_3p_cnt == 3:
+            break
+
+    if pos_3p_cnt == 0:
+        avg_ATcont_after3p = 'NA'
+    else:
+        avg_ATcont_after3p = total_sum_ATcont_after3p / pos_3p_cnt
+
+    #print("avg_ATcont_after3p:")
+    #print(avg_ATcont_after3p)
+
+    # deprecated code:
+    #for pos in range(EndFB + 1, EndFB + 4):
+    #    try:
+    #        total_sum_ATcont_after3p += (pos_list[pos][0] + pos_list[pos][1]) #0->A's; 1->T's
+    #        avg_ATcont_after3p = total_sum_ATcont_after3p/3 ### RECORD
+    #    except IndexError:
+    #        if len(pos_list)-EndFB-1 > 0:
+    #            avg_ATcont_after3p = total_sum_ATcont_after3p/(len(pos_list)-EndFB-1)
+    #            print "!--- Cluster %s had only %s nucleotides after 3p end (full bars) ---!" % (str(cluster_number), str(len(pos_list)-EndFB-1))
+    #        elif len(pos_list)-EndFB-1 == 0:
+    #            avg_ATcont_after3p = 'NA'
+    #            print "!--- Cluster %s did not have any nucleotides after 3p end (full bars) ---!" % (str(cluster_number))
+
+
+
+    #find length from first gap bar after main body till alignment end (skala)
+    len_after_MB = abs(EFB) - 1 ### REC
+
+    #find how quickly the 'gap ratio' drops from 0.1 to 0.8 (at least 0.8)
+    if pos_list[-1][5] > gap_droppin_len_thres:
+        step_3p_region_gaps = -1
+        while pos_list[step_3p_region_gaps][5] >= gap_droppin_len_thres:
+                step_3p_region_gaps -= 1
+                last_step_bar = len(pos_list) + step_3p_region_gaps
+                gap_droppin_len = last_step_bar - EndFB +1
+    else:
+        gap_droppin_len = 0
+
+    #SFB+1, EndFB+1: start, end indexes of main body now starting from 1!
+    return num_gap_bars, num_mism_in_8mer, num_mism_in_MB, SFB+1, EndFB+1, len_after_MB, \
+           gap_droppin_len, MainBody_length, avg_ATcont_after3p, scale_rate_5p
+
+def parse_blast_hits_outp(blast_hits_outp):
+    # input: tab delimeted .txt file
+    # each line -> a cluster; contains cluster-name and hits
+    blast_hits = open(blast_hits_outp)
+
+    blast_hits_diction = {}
+    for line in blast_hits:
+        line = line.rstrip().split('\t')
+        if line[1] == "No hits":
+                blast_hits_diction[ line[0] ] = 'NO' # NO miRNA
+        else:
+                blast_hits_diction[ line[0] ] = 'YES' # miRNA
+    blast_hits.close()
+    return blast_hits_diction
+
+def find_complementary_clusts():
+    cmd = 'reaper-16-098/src/swan -q '+ cur_out_dir +'/consensus_sequences.fa -r ' + cur_out_dir + '/rev_compl_cons_sequences.fa --key-value -o ' +cur_out_dir + '/complem_clusters.swan.out'
+    #print cmd
+    #print subprocess.check_output(cmd, shell = True)
+    subprocess.check_call(cmd, shell=True)
+    # parse swan outp; excise query-cluster-cons-seq & rev-coml-cluster;
+    # and store them in diction as {query-clust: rev-compl-clust}
+    swan_output = open(cur_out_dir + "/complem_clusters.swan.out", "r")
+    complementary_clusts_diction = {}
+    for swan_line in swan_output:
+        swan_line = swan_line.strip()
+        query_clust = re.search('q-annot={cons_seqs_cluster\.[0-9]*', swan_line).group(0)
+        query_clust_number = re.search('[0-9].*', query_clust).group(0)
+        ##complementary_clusts_diction[query_clust_number] = []
+
+        rev_compl_clust = re.search('r-annot={rev_compl.cons_seqs_cluster\.[0-9]*', swan_line).group(0)
+        rev_compl_clust_number = re.search('[0-9].*', rev_compl_clust).group(0)
+        ##complementary_clusts_diction[query_clust_number] += [rev_compl_clust_number]
+
+        #find also alignment identity percent.
+        aln_id_data = re.search('aln-id=[0-9]*', swan_line).group(0)
+        aln_id = re.search('[0-9].*', aln_id_data).group(0)
+
+        complementary_clusts_diction[query_clust_number] = [rev_compl_clust_number, aln_id]
+    swan_output.close()
+    #print "dictionary with complementary clusters:"
+    #print complementary_clusts_diction
+    return complementary_clusts_diction
+
+def write_compl_clusts_file(complementary_clusts_diction):
+    rev_compl_clusters = open(cur_out_dir + "/rev_compl_clusters.txt", "a")
+    for key, value in complementary_clusts_diction.items():
+        values = ",".join([str(clust_num) for clust_num in value])
+        line = '%s\t%s\n' % (key, values)
+        rev_compl_clusters.write(line)
+    rev_compl_clusters.close()
+
+def make_seqstats_barplots_dirs(cur_out_dir):
+    """Make: a dir to save all <>.seq.stats
+             a dir to save barplots
+    """
+    cmd1 = 'mkdir ' + cur_out_dir + '/cluster_seqs_statistics' # standard dir name
+    cmd2 = 'mkdir ' + cur_out_dir + '/cluster_stats_barplots' # standard dir name
+    subprocess.check_call(cmd1, shell=True)
+    subprocess.check_call(cmd2, shell=True)
+
+
+
+
+# **** multi-threading module ****
+exitFlag = 0
+#writeConsSeqsLock = threading.Lock()
+updateDictLock = threading.Lock()
+
+
+class clusterFeaturesThread (threading.Thread):
+    def __init__(self, threadID, q):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.q = q
+    def run(self):
+    	# debug / dbg:
+	try:
+		#print "Starting " + self.name
+		getFeaturesForCluster(self.threadID, self.q)
+		#print "Exiting " + self.name
+	except:
+		print("Exception during clusterFeaturesThread call <miRNA_clust_stats_opt.py>, cluster_file_name: " + str(self.q.get()))
+
+
+
+def getFeaturesForCluster(threadID, q):
+    #print("threadID: "+ str(threadID))
+
+    while not exitFlag:
+        queueLock.acquire()
+        if not workQueue.empty():
+            #data_index = q.get()
+            #cluster_file_name = clu_list[data_index]
+            cluster_file_name = q.get()
+            queueLock.release()
+
+
+            cluster_file = '%s/%s' % (vsearch_dir, cluster_file_name)
+            #print("%s processing cluster_file: %s" % (threadID, cluster_file))
+
+
+            # parse cluster_file - get seqs
+            cluster_label_list, cluster_seq_matrix = cluster_parser(cluster_file)
+
+            # calculate first features of the cluster
+            avg_seq_len_2, avg_GC_cont, sum_all_reads = \
+               calc_seqLen_readNumb_GCcont(cluster_label_list, cluster_seq_matrix, cluster_file)
+
+            # calc. nucleotide stats at each alignm. position - store in diction
+            posit_diction = calc_seq_position_stats(cluster_label_list, cluster_seq_matrix)
+
+            # store pos_stats in pos_list and T_pos_list
+            pos_list, T_pos_list = CALCUL_posit_stats(posit_diction)
+
+            #store cluster number ## to use for writing cons_seqs_file & feature_table
+            #print(cluster_file_name)
+            cluster_number = cluster_file_name.split('.')[1]
+            #print("cluster_number: "+ cluster_number)
+
+            # find consensus sequence & rev. compl. and append to cons_seqs & rev_compl_cons file
+            cons_sequence, rev_comp_cons_sequence = find_consensus_complem_seq(pos_list)
+
+
+	    # NEW:
+	    cons_seqs_dict[cluster_number] = cons_sequence
+	    rev_comp_cons_seqs_dict[cluster_number] = rev_comp_cons_sequence
+
+            #writeConsSeqsLock.acquire()
+#            cons_seqs_file.write('>cons_seqs_cluster.%s\n' % cluster_number)
+#            cons_seqs_file.write(cons_sequence + '\n')
+
+#            rev_compl_cons_seqs_file.write('>rev_compl.cons_seqs_cluster.%s\n' % cluster_number)
+#            rev_compl_cons_seqs_file.write(rev_comp_cons_sequence + '\n')
+            #writeConsSeqsLock.release()
+
+
+
+
+            #print(cons_sequence)
+            #print(" cl_" + cluster_number)
+
+            seq_complexity_cmd = "perl ./profileComplexSeq.pl " + cons_sequence + " cl_" + cluster_number
+            #print(seq_complexity_cmd)
+            #res = subprocess.check_output(seq_complexity_cmd, shell=True).rstrip().split('\t')
+
+            cl_id, gcs, ats, cpg, cwf, ce, cz, cm2, cm3, ct2, ct3, cl2, cl3 = subprocess.check_output(seq_complexity_cmd, shell=True).rstrip().split('\t')
+
+            tmp_list = [gcs, ats, cpg, cwf, ce, cz, cm2, cm3, ct2, ct3, cl2, cl3]
+            seq_complexity_list = []
+            for t in tmp_list:
+                t = float(t)
+                seq_complexity_list.append(t)
+
+
+
+
+            # write <>.seq_stats file - put in cluster_seqs_statistics dir
+            stats_fname = cur_out_dir + '/cluster_seqs_statistics/%s.seq_stats' % (cluster_file_name)
+            write_posit_stats(posit_diction, T_pos_list, stats_fname)
+
+            # make barplot
+            make_stats_figure(stats_fname, sum_all_reads, cur_out_dir)
+
+            # calc alignment features
+            num_gap_bars, num_mismatches_8mer, num_mism_in_MB, SFB, EndFB, len_after_MB, gap_droppin_len, \
+                 MainBody_length, avg_ATcont_after3p, scale_rate_5p = rec_alignm_features(cluster_number, pos_list, T_pos_list)
+
+            # record YES (miRNA) if cluster has hit in mature miR db, or NO (not miRNA)
+            hits_on_mature_miR = ''
+            if MAP_AGAINST_KNOWN_MIRBASE_SPECIES == 'True':
+                hits_on_mature_miR = blast_hits_diction_mature[cluster_file_name]
+
+
+            # append features of this cluster to feature_matrix -> will be used to write feat.table
+            feature_list = [cluster_number, avg_seq_len_2, MainBody_length, avg_GC_cont, \
+                avg_ATcont_after3p, sum_all_reads, num_gap_bars, scale_rate_5p, num_mismatches_8mer, \
+                num_mism_in_MB, len_after_MB, gap_droppin_len]
+
+            # EXTRA:
+            for clx in seq_complexity_list:
+		#print(clx)
+                feature_list.append(clx)
+
+            if MAP_AGAINST_KNOWN_MIRBASE_SPECIES == 'True':
+                feature_list.append(hits_on_mature_miR)
+
+
+
+            # replace with dictionary in the parallel version
+            updateDictLock.acquire()
+            feature_matrix[cluster_number] = feature_list
+            updateDictLock.release()
+
+
+            ##feature_line = ("%s\t"*11 + "%s\n") % (feature_tuple)
+            ##feature_file.write(feature_line)
+        else:
+            queueLock.release()
+        time.sleep(1)
+	
+
+
+
+if __name__=='__main__':
+
+
+    vsearch_dir = argv[1]
+    cur_out_dir = argv[2]
+    MAP_AGAINST_KNOWN_MIRBASE_SPECIES = argv[3]  #True/False
+    job_id = argv[4]
+
+    NUM_OF_THREADS =  30      # add as extra argument later on
+
+    blast_hits_outp = cur_out_dir + '/Hits_on_mature_miRNAs.txt' # blast hits on db of mature miRNA seqs
+
+    make_seqstats_barplots_dirs(cur_out_dir)
+
+    tmp_genomic_alignments_dir = cur_out_dir + "/tmp_genomic_alignments"
+    if not os.path.exists(tmp_genomic_alignments_dir):
+    	os.makedirs(tmp_genomic_alignments_dir)
+
+    blast_hits_diction_mature = {}
+    if MAP_AGAINST_KNOWN_MIRBASE_SPECIES == 'True':
+        blast_hits_diction_mature = parse_blast_hits_outp(blast_hits_outp)
+
+
+    # read feature thresholds:
+    features_dict = {}
+    for key, val in csv.reader(open("conf/features_conf.csv")):
+        features_dict[key] = val
+
+    max_allowed_gap = float(features_dict['max_allowed_gap'])
+    scale_rate_5p_thres = float(features_dict['scale_rate_5p_thres'])
+    mismatches_in_8mer_thres = float(features_dict['mismatches_in_8mer_thres'])
+    gap_droppin_len_thres = float(features_dict['gap_droppin_len_thres'])
+
+
+    #put the filenames of all cluster files in a list
+    cmd = 'ls -v %s| grep "nalignm\.[0-9]*$" | paste -sd " " -' % (vsearch_dir)
+    #print(cmd)
+    clu_list = subprocess.check_output(cmd, shell = True).rstrip().split(' ')
+    #print(clu_list)
+
+
+    print("["+job_id+"]>> Calculating core and seq. complexity features for each cluster...")
+    #print(" __sed start__ ")
+
+    feature_matrix = {}
+    cons_seqs_dict = {}
+    rev_comp_cons_seqs_dict = {}
+
+
+    # get features for each cluster using multiple threads
+    queueLock = threading.Lock()
+    workQueue = Queue.Queue(len(clu_list))
+    threads = []
+
+
+    #for cluster_file_name in clu_list:
+    for threadID in range(0, NUM_OF_THREADS):
+        #print("threadID: "+str(threadID))
+        thread = clusterFeaturesThread(threadID, workQueue)
+        thread.start()
+        threads.append(thread)
+
+    # Fill the queue
+    queueLock.acquire()
+    for cluster_file_name in clu_list:
+        workQueue.put(cluster_file_name)
+    queueLock.release()
+
+    # Wait for queue to empty
+    while not workQueue.empty():
+        pass
+
+    # Notify threads it's time to exit
+    exitFlag = 1
+
+    # Wait for all threads to complete
+    for t in threads:
+        t.join()
+
+    # write cons seqs to files uinsg one thread
+    cons_seqs_file = open(cur_out_dir+"/consensus_sequences.fa", "w")
+    for key in cons_seqs_dict:
+    	cons_seqs_file.write('>cons_seqs_cluster.%s\n' % key)
+	cons_seqs_file.write(cons_seqs_dict[key] + '\n')
+    cons_seqs_file.close()
+
+    rev_compl_cons_seqs_file = open (cur_out_dir+"/rev_compl_cons_sequences.fa", "a")
+    for key in rev_comp_cons_seqs_dict:
+    	rev_compl_cons_seqs_file.write('>rev_compl.cons_seqs_cluster.%s\n' % key)
+	rev_compl_cons_seqs_file.write(rev_comp_cons_seqs_dict[key] + '\n')
+    rev_compl_cons_seqs_file.close()
+
+
+
+
+    # **** features exctraction complete for all clusters ****
+
+    # find rev.complementary clusters; will return complement_diction
+    compl_clusts_diction = find_complementary_clusts()
+
+    # save rev.complement clusters in .txt file
+    write_compl_clusts_file(compl_clusts_diction)
+
+    # open feature_table.txt and write header
+    feature_file = open(cur_out_dir + "/feature_table.txt", "a")
+    header = 'cluster\tavg_seq_len\tMainBody_length\tavg_GC_cont\tavg_ATcont_after3p\t' + \
+             'sum_all_reads\tnum_gap_bars\tscale_rate_5p\tnum_mismatches_8mer\tnum_mism_in_MB\t' + \
+             'len_after_MB\tgap_droppin_len\t' + \
+             'gcs\tats\tcpg\tcwf\tce\tcz\tcm2\tcm3\tct2\tct3\tcl2\tcl3'
+             
+	     #'\tgcs\tcpg\tcwf\tce\tcz\tcm1\t' + \
+             #'cm2\tcm3\tcm4\tcm5\tcm6\tct1\tct2\tct3\tct4\tct5\tct6\tcl1\tcl2\tcl3\tcl4\tcl5\tcl6'
+
+    header +='\tident2rev_compl_clust'
+
+
+    if MAP_AGAINST_KNOWN_MIRBASE_SPECIES == 'True':
+        header +='\thits_on_mature_miR'
+
+
+    header +='\n'
+
+    feature_file.write(header)
+
+    # add one more feature for every cluster that shows if it has rev.compl. clusters
+    # and write features in feature_table.txt
+    for key in sorted(feature_matrix.iterkeys(), key=int):
+        cluster_feature_list = feature_matrix[key]
+    #for cluster_feature_list in feature_matrix:
+        # cluster_feature_list[0] -> cluster_number
+        ##compl_feature = compl_clusts_diction.get(cluster_feature_list[0])
+        ##if compl_feature == None:
+        ##	cluster_feature_list += ['No']
+        ##else:
+        ##	cluster_feature_list += ['Yes']
+        # swap positions oin list of compl_feature and hits_on_miR
+        ##cluster_feature_list[12], cluster_feature_list[13] = cluster_feature_list[13], cluster_feature_list[12]
+
+        # grep the pec. ident. of each cluster-cons-seq to its closest seq. from the rev.compl.fa
+        ident_2compl_data = compl_clusts_diction.get(cluster_feature_list[0])
+        if ident_2compl_data != None:
+            ident_2compl_feature = ident_2compl_data[1]
+        else:
+            ident_2compl_feature = 'NA'
+        cluster_feature_list += [ident_2compl_feature]
+        if MAP_AGAINST_KNOWN_MIRBASE_SPECIES == 'True':
+            cluster_feature_list[len(cluster_feature_list)-2], cluster_feature_list[len(cluster_feature_list)-1] = cluster_feature_list[len(cluster_feature_list)-1], cluster_feature_list[len(cluster_feature_list)-2]
+
+
+        # write/append line to feature_table.txt
+        feature_tuple = tuple(cluster_feature_list)
+        feature_line = ("%s\t"*(len(cluster_feature_list)-1) + "%s\n") % (feature_tuple)
+        feature_file.write(feature_line)
+    feature_file.close()
+
+
+    #print(" __sed end__ ")
+    print("["+job_id+"]<< Core and seq. complexity feature calculations complete!\n")

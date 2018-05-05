@@ -1,0 +1,7 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+args<-commandArgs(T)
+pdf(args[2])
+data = read.table(args[1],header=TRUE)
+
+ggplot(data, aes(x=log10(baseMean), y=log2FoldChange,colour=Tag))+geom_point()+labs(x="Log10 Mean ReadCount", y="Log2(High/Low)")+ylim(-7.5,7.5)

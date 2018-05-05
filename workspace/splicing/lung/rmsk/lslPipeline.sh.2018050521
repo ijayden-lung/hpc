@@ -1,0 +1,36 @@
+#!/bin/bash
+#PBS -q cal
+#PBS -N featureCounts
+#PBS -l nodes=1:ppn=12
+#PBS -j oe 
+#PBS -l walltime=8:00:00
+
+cd ~/workspace/EMT/rmsk/
+
+
+
+########Class or Family
+echo 'Classifying...'
+mouNor="awk '(\$2 ~ /LTR|SINE|LINE/ || NR ==1)' table_norm.tsv |"
+mouNam="table_name_norm.tsv"
+Filter=100
+perl /home/bio-longyk/workspace/EMT/rmsk/categorize.pl "$mouNor" $mouNam 0 $Filter
+mouFam="table_family_norm.tsv"
+Filter=1000
+perl /home/bio-longyk/workspace/EMT/rmsk/categorize.pl "$mouNor" $mouFam 2 $Filter
+mouCls="table_class_norm.tsv"
+Filter=5000
+perl /home/bio-longyk/workspace/EMT/rmsk/categorize.pl "$mouNor" $mouCls 1 $Filter
+
+
+echo 'HeatMaping ...'
+###HeatMap
+classPDF="hg38_lsl_class_enrich.pdf"
+classMain="hg38 repClass"
+familyPDF="hg38_lsl_family_enrich.pdf"
+familyMain="hg38 repFamily"
+namePDF="hg38_lsl_name.pdf"
+nameMain="hg38_repName"
+/home/bio-longyk/workspace/EMT/rmsk/heatmap.r "$mouCls" "$classPDF" "$classMain" "$mouFam" "$familyPDF" "$familyMain" "$mouNam" "$namePDF" "$nameMain"
+
+

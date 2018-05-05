@@ -1,0 +1,16 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+pdf('ScatterPlotGeCKOFoldChange.pdf')
+data = read.table('GeCKO_FoldChange.tsv',header=TRUE,row.names=1)
+
+#result = lm(lfch2 ~ lfch1,data=data)
+#summary(result)
+
+ggplot(data, aes(x=lfch1, y=lfch2))+geom_point()+labs(x = "Log2(High1/Control1)",y = "Log2(High2/Control2)")
+ggplot(data, aes(x=lfcl1, y=lfcl2))+geom_point()+labs(x = "Log2(Low1/Control1)",y = "Log2(Low2/Control2)")
+ggplot(data, aes(x=lfcl1, y=lfcl4))+geom_point()+labs(x = "Log2(Low1/Control1)",y = "Log2(Low4/Control4)")
+
+

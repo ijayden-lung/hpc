@@ -1,0 +1,59 @@
+#!/usr/bin/perl -w
+use List::Util qw(first max maxstr min minstr reduce shuffle sum);
+
+my ($mouCount,$mouNorm,$mouRef,$mouHeader,$read) = @ARGV;
+my @mouHeader = split /\s+/,$mouHeader;
+open FILE, $mouRef;
+my $field = <FILE>;
+my %class;
+my %famlily;
+while(<FILE>){
+	chomp;
+	my ($gene,$class,$family) = (split)[10,11,12];
+	$class{$gene} = $class;
+	$family{$gene} = $family;
+}
+
+open MOU, "$mouCount";
+<MOU>;
+my %mouse;
+while(<MOU>){
+	chomp;
+	my @data = split;
+	my $gene = shift @data;
+	for($j=0;$j<@data;$j++){
+		$mouse{$gene}->[$j] += $data[$j];
+	}
+}
+
+
+############New Normalizing
+my @mou_sum;
+my $i=0;
+my $total = 0;
+foreach my $ele (split /\s+/,$read){
+	my ($uniq,$mult) = split /,/,$ele;
+	$mou_sum[$i] = $uniq+$mult;
+	$total += $mou_sum[$i];
+	$i++;
+}
+my $average = $total/@mou_sum;
+for(my $i=0;$i<@mou_sum;$i++){
+	$mou_sf[$i] = $average/$mou_sum[$i];
+}
+############New Normalizing
+print "@mou_sf\n";
+
+open OUT1, ">","$mouNorm";
+print OUT1 join "\t","repName\trepClass\trepFamily",@mouHeader,"\n";
+while(my($key,$val) = each %mouse){
+	for(my$i=0;$i<@mou_sf;$i++){
+		$val->[$i] *= $mou_sf[$i];
+	}
+	print OUT1 "$key\t$class{$key}\t$family{$key}";
+	for(my $i=0;$i<@mou_sf;$i++){
+		print OUT1 "\t$val->[$i]";
+	}
+	print OUT1 "\n";
+}
+

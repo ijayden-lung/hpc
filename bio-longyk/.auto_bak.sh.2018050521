@@ -1,0 +1,38 @@
+#!/bin/bash
+
+bak_to_dir_par="/home/bio-longyk/.bak/"
+
+
+find ~ -depth  -name "*\.pl" -or -name "*\.r" -or -name "*\.sh" -or -name "*\.py" | while read line
+do
+	bak_dir=${line%/*}
+	bak_dir=${bak_dir#*/}
+	bak_dir=${bak_dir#*/}
+	bak_dir=${bak_dir#*/}
+	bak_dir="${bak_to_dir_par}${bak_dir}"
+	file=${line##*/}
+	bak_file="${bak_dir}/${file}.$(date +%Y%m%d%H)"
+
+	if [ ! -d $bak_dir ];then
+		mkdir -p $bak_dir
+	fi
+
+	new_sum_file="${bak_dir}/${file}.md5.$(date +%Y%m%d)"
+	old_sum_file="${bak_dir}/${file}.md5"
+
+	if [ ! -f "$old_sum_file" ]; then
+		  touch "$old_sum_file"
+	fi
+
+	find $line |xargs -I {} md5sum {} >$new_sum_file 2>/dev/null
+	new_md5_sum=`awk '{print $1}' $new_sum_file`
+	old_md5_sum=`awk '{print $1}' $old_sum_file`
+	if [ "$new_md5_sum" = "$old_md5_sum" ];then
+		echo "Same file"
+		rm $new_sum_file
+	else
+		echo "Copy File"
+		mv $new_sum_file $old_sum_file
+		cp $line $bak_file
+	fi
+done

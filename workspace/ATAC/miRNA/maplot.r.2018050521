@@ -1,0 +1,7 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+args<-commandArgs(T)
+pdf(args[2])
+data = read.table(args[1],header=TRUE,row.names=1)
+
+ggplot(data, aes(x=log10(baseMean), y=log2FoldChange,color=tag))+geom_point()+labs(x="Log10 Mean ReadCount", y="log2(High/Low)")+geom_hline(aes(yintercept=1), colour="#990000", linetype="dashed")+geom_hline(aes(yintercept=-1), colour="#990000", linetype="dashed")+ylim(-9,9)

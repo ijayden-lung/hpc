@@ -1,0 +1,168 @@
+#!/usr/bin/perl -w
+#
+my ($rmsk,$gene,$out) = @ARGV;
+
+open RMSK,"awk '(\$7 == \"+\"){print}' $rmsk |";
+open GENE,"awk '(\$7 == \"+\"){print}' $gene |";
+open OUT , '>',$out;
+
+my @rmsk = <RMSK>;
+my @gene = <GENE>;
+chomp @rmsk;
+chomp @gene;
+my %attr2;
+my @relation;
+for(my $i=0,$j=0;$i<@rmsk && $j<@gene;$i++,$j++){
+	my ($chr1,$source1,$feature1,$str1,$end1,$score1,$strand1,$frame1,$attribute1) = split /\t/,$rmsk[$i];
+	my ($chr2,$source2,$feature2,$str2,$end2,$score2,$strand2,$frame2,$attribute2) = split /\t/,$gene[$j];
+	foreach (split /;/,$attribute2){my ($key,$val) = split;$val =~ s/\;|\"//g;$attr2{$key} = $val;}
+	while($chr1 ne $chr2){
+		my ($chr_1) = split /\s+/,$rmsk[$i-1];
+		my ($chr_2) = split /\s+/,$gene[$j-1];
+		if($chr1 eq $chr_1 && $chr2 ne $chr_2){
+			$i++;
+			last if ($i>=$#rmsk);
+			($chr1,$source1,$feature1,$str1,$end1,$score1,$strand1,$frame1,$attribute1) = split /\t/,$rmsk[$i];
+		}
+		elsif($chr1 ne $chr_1 && $chr2 eq $chr_2){
+			$j++;
+			last if ($j>=$#gene);
+			($chr2,$source2,$feature2,$str2,$end2,$score2,$strand2,$frame2,$attribute2) = split /\t/,$gene[$j];
+			foreach (split /;/,$attribute2){my ($key,$val) = split;$val =~ s/\;|\"//g;$attr2{$key} = $val;}
+		}
+	}
+
+	while($end1 <= $str2 || $end2 <=$str1){
+		if($end1 <= $str2){
+			my $dist = $str2 - $end1;
+			if($dist <10000){
+				$relation[$i] .= "upstream $attr2{'gene_name'},";
+			}
+			$i++;
+			last if ($i>=$#rmsk);
+			($chr1,$source1,$feature1,$str1,$end1,$score1,$strand1,$frame1,$attribute1) = split /\t/,$rmsk[$i];
+			while($chr1 ne $chr2){
+				$j++;
+				last if ($j>=$#gene);
+				($chr2,$source2,$feature2,$str2,$end2,$score2,$strand2,$frame2,$attribute2) = split /\t/,$gene[$j];
+				foreach (split /;/,$attribute2){my ($key,$val) = split;$val =~ s/\;|\"//g;$attr2{$key} = $val;}
+			}
+		}
+		elsif($end2 <=$str1){
+			my $dist = $str1 - $end2;
+			if($dist <10000){
+				$relation[$i] .= "downstream $attr2{'gene_name'},";
+			}
+			$j++;
+			last if ($j>=$#gene);
+			($chr2,$source2,$feature2,$str2,$end2,$score2,$strand2,$frame2,$attribute2) = split /\t/,$gene[$j];
+			foreach (split /;/,$attribute2){my ($key,$val) = split;$val =~ s/\;|\"//g;$attr2{$key} = $val;}
+			while($chr1 ne $chr2){
+				$i++;
+				last if ($i>=$#rmsk);
+				($chr1,$source1,$feature1,$str1,$end1,$score1,$strand1,$frame1,$attribute1) = split /\t/,$rmsk[$i];
+			}
+		}
+	}
+	$relation[$i] .= "intron $attr2{'gene_name'}";
+}
+
+
+for(my $i=0;$i<@rmsk;$i++){
+	my %attr1;
+	my ($chr1,$source1,$feature1,$str1,$end1,$score1,$strand1,$frame1,$attribute1) = split /\t/,$rmsk[$i];
+	$attribute1 =~  s/\s+$//;
+	foreach (split /;/,$attribute1){my ($key,$val) = split;$val =~ s/\;|\"//g;$attr1{$key} = $val;}
+	my $exon_id = "$attr1{'transcript_id'}_$chr1";
+	if(defined $relation[$i]){
+		chop $relation[$i];
+		print OUT "$rmsk[$i]exon_id \"$exon_id\"; relation \"$relation[$i]\";\n";
+	}
+	else{
+		print OUT "$rmsk[$i]exon_id \"$exon_id\"; relation \"none\";\n";
+	}
+}
+
+
+
+
+open RMSK,"awk '(\$7 == \"-\"){print}' $rmsk |";
+open GENE,"awk '(\$7 == \"-\"){print}' $gene |";
+my @rmskM = <RMSK>;
+my @geneM = <GENE>;
+chomp @rmskM;
+chomp @geneM;
+my @relationM;
+for(my $i=0,$j=0;$i<@rmskM && $j<@geneM;$i++,$j++){
+	my ($chr1,$source1,$feature1,$str1,$end1,$score1,$strand1,$frame1,$attribute1) = split /\t/,$rmskM[$i];
+	my ($chr2,$source2,$feature2,$str2,$end2,$score2,$strand2,$frame2,$attribute2) = split /\t/,$geneM[$j];
+	foreach (split /;/,$attribute2){my ($key,$val) = split;$val =~ s/\;|\"//g;$attr2{$key} = $val;}
+
+
+	while($chr1 ne $chr2){
+		my ($chr_1) = split /\s+/,$rmskM[$i-1];
+		my ($chr_2) = split /\s+/,$geneM[$j-1];
+		if($chr1 eq $chr_1 && $chr2 ne $chr_2){
+			$i++;
+			last if ($i>=$#rmskM);
+			($chr1,$source1,$feature1,$str1,$end1,$score1,$strand1,$frame1,$attribute1) = split /\t/,$rmskM[$i];
+		}
+		elsif($chr1 ne $chr_1 && $chr2 eq $chr_2){
+			$j++;
+			last if ($j>=$#geneM);
+			($chr2,$source2,$feature2,$str2,$end2,$score2,$strand2,$frame2,$attribute2) = split /\t/,$geneM[$j];
+			foreach (split /;/,$attribute2){my ($key,$val) = split;$val =~ s/\;|\"//g;$attr2{$key} = $val;}
+		}
+	}
+
+	while($end1 <= $str2 || $end2 <=$str1){
+		if($end1 <= $str2){
+			my $dist = $str2 - $end1;
+			if($dist <10000){
+				$relationM[$i] .= "downstream $attr2{'gene_name'},";
+			}
+			$i++;
+			last if ($i>=$#rmskM);
+			($chr1,$source1,$feature1,$str1,$end1,$score1,$strand1,$frame1,$attribute1) = split /\t/,$rmskM[$i];
+			while($chr1 ne $chr2){
+				$j++;
+				last if ($j>=$#geneM);
+				($chr2,$source2,$feature2,$str2,$end2,$score2,$strand2,$frame2,$attribute2) = split /\t/,$geneM[$j];
+				foreach (split /;/,$attribute2){my ($key,$val) = split;$val =~ s/\;|\"//g;$attr2{$key} = $val;}
+			}
+		}
+		elsif($end2 <=$str1){
+			my $dist = $str1 - $end2;
+			if($dist <10000){
+				$relationM[$i] .= "upstream $attr2{'gene_name'},";
+			}
+			$j++;
+			last if ($j>=$#geneM);
+			($chr2,$source2,$feature2,$str2,$end2,$score2,$strand2,$frame2,$attribute2) = split /\t/,$geneM[$j];
+			foreach (split /;/,$attribute2){my ($key,$val) = split;$val =~ s/\;|\"//g;$attr2{$key} = $val;}
+			while($chr1 ne $chr2){
+				$i++;
+				last if ($i>=$#rmskM);
+				($chr1,$source1,$feature1,$str1,$end1,$score1,$strand1,$frame1,$attribute1) = split /\t/,$rmskM[$i];
+			}
+		}
+	}
+	$relationM[$i] .= "intron $attr2{'gene_name'}";
+}
+
+
+for(my $i=0;$i<@rmskM;$i++){
+	my %attr1;
+	my ($chr1,$source1,$feature1,$str1,$end1,$score1,$strand1,$frame1,$attribute1) = split /\t/,$rmskM[$i];
+	$attribute1 =~  s/\s+$//;
+	foreach (split /;/,$attribute1){my ($key,$val) = split;$val =~ s/\;|\"//g;$attr1{$key} = $val;}
+	my $exon_id = "$attr1{'transcript_id'}_$chr1";
+	if(defined $relationM[$i]){
+		chop $relationM[$i];
+		print OUT "$rmskM[$i]exon_id \"$exon_id\"; relation \"$relationM[$i]\";\n";
+	}
+	else{
+		print OUT "$rmskM[$i]exon_id \"$exon_id\"; relation \"none\";\n";
+	}
+}
+

@@ -1,0 +1,30 @@
+#!/usr/bin/perl -w
+#
+open FILE, 'myscript.gene';
+my %mygene;
+while(<FILE>){
+	chomp;
+	$mygene{$_} = '';
+}
+open FILE, 'rmats.u';
+my %rmats;
+while(<FILE>){
+	chomp;
+	$rmats{$_} = '';
+}
+
+my $i=0;
+open OUT, '>duo';
+my %duo;
+foreach my $key (keys %mygene){
+	if(exists $rmats{$key}){
+		$i++;
+	}
+	else{
+		$duo{$key} = '';
+		print OUT "$key\n";
+	}
+}
+print "$i\n";
+
+

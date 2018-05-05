@@ -1,0 +1,22 @@
+#!/bin/bash
+
+echo 5-8
+samtools view high-1/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep CTGCCT | grep 14959N | wc -l
+samtools view high-2/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep CTGCCT | grep 14959N | wc -l
+samtools view high-1/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep ATGCCT | grep 14959N | wc -l
+samtools view high-2/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep ATGCCT | grep 14959N | wc -l
+echo 5-7-8
+samtools view high-1/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep CTGCCT | grep 14140N12M807N | wc -l
+samtools view high-2/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep CTGCCT | grep 14140N12M807N | wc -l
+samtools view high-1/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep ATGCCT | grep 14140N12M807N | wc -l
+samtools view high-2/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep ATGCCT | grep 14140N12M807N | wc -l
+echo 6-8
+samtools view high-1/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep CTGCCT | grep 14807N | wc -l
+samtools view high-2/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep CTGCCT | grep 14807N | wc -l
+samtools view high-1/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep ATGCCT | grep 14807N | wc -l
+samtools view high-2/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep ATGCCT | grep 14807N | wc -l
+echo 6-7-8
+samtools view high-1/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep CTGCCT | grep 13988N12M807N | wc -l
+samtools view high-2/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep CTGCCT | grep 13988N12M807N | wc -l
+samtools view high-1/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep ATGCCT | grep 13988N12M807N | wc -l
+samtools view high-2/Aligned.sortedByCoord.out.bam chr11:12879801-12879801 | grep ATGCCT | grep 13988N12M807N | wc -l

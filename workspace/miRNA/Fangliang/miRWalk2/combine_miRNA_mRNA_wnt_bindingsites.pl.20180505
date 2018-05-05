@@ -1,0 +1,157 @@
+#!/usr/bin/perl -w
+
+my %conventer;
+open CON,'/home/bio-longyk/cnda/ensembl/Ensembl_TID2GID.txt';
+while(<CON>){
+	chomp;
+	my ($gid,$tid) = split;
+	$conventer{$tid} = $gid;
+}
+
+open CON,'/home/bio-longyk/cnda/ensembl/Ensembl_ID_2_Name';
+while(<CON>){
+	chomp;
+	my ($id,$name) = split;
+	$name = uc $name;
+	$conventer{$name} = $id;
+}
+
+open CONV, '/home/bio-longyk/cnda/ensembl2refSeq.txt';
+<CONV>;
+while(<CONV>){
+	chomp;
+	my ($id,$refSeq,$name) = split /\t/;
+	$conventer{$refSeq} = $id;
+}
+
+
+my %hash;
+foreach my $file (glob '../TargetScan/conserved/TargetScan7.1__*'){
+	open FILE,$file;
+	my $header = <FILE>;
+	my @data  = split /\t/,$header;
+	while(<FILE>){
+		chomp;
+		my $id = 'NA';
+		my ($name,$tid,$conserved,$poorconserved,$mirna) = (split /\t/)[0,1,4,8,13];
+		($mirna) = split /\./,$mirna;
+		$name = uc $name;
+		($tid) = split /\./,$tid;
+		if(exists $conventer{$name}){
+			$id = $conventer{$name};
+		}
+		elsif(exists $conventer{$tid}){
+			$id = $conventer{$tid};
+		}
+		#print "$name\t$tid\n" if $id eq "NA";
+		next if $id eq 'NA';
+		$hash{$mirna}->{$id} = [$conserved,$poorconserved];
+	}
+}
+
+
+foreach my $file (glob '../TargetScan/poorly_conserved/TargetScan7.1__*'){
+	#my $index1 = index($file,'TargetScan7.1__') + 15;
+	#my $mir = substr($file,$index1,-22);
+	#my @MIR = split /_/,$mir;
+	#my $prefix = substr($MIR[0],0,3);
+	#for(my $i=1;$i<@MIR;$i++){
+	#	$MIR[$i] = "$prefix-$MIR[$i]";
+	#}
+	open FILE,$file;
+	my $header = <FILE>;
+	my @data  = split /\t/,$header;
+	while(<FILE>){
+		chomp;
+		my $id = 'NA';
+		my ($name,$tid,$poorconserved,$mirna) = (split /\t/)[0,1,4,9];
+		($mirna) = split /\./,$mirna;
+		($tid) = split /\./,$tid;
+		$name = uc $name;
+		if(exists $conventer{$name}){
+			$id = $conventer{$name};
+		}
+		elsif(exists $conventer{$tid}){
+			$id = $conventer{$tid};
+		}
+		#print "$name\t$tid\n" if $id eq "NA";
+		next if $id eq 'NA';
+		$hash{$mirna}->{$id} = [0,$poorconserved];
+	}
+}
+
+my %wnt_gene;
+open WNTGENE,'mart_export_wnt_gene.txt';
+<WNTGENE>;
+while(<WNTGENE>){
+	chomp;
+	my ($id,$name,$go_id,$go_name) = split /\t/;
+	if(exists $wnt_gene{$id}){
+		$wnt_gene{$id} .= ";$go_name";
+	}
+	else{
+		$wnt_gene{$id} = $go_name;
+	}
+}
+
+my %exp_mirna;
+open EXP,'../Deseq2Results.tsv';
+<EXP>;
+while(<EXP>){
+	chomp;
+	my ($mirna,$basemean,$l2fc)  = split;
+	$basemean = sprintf ("%.0f",$basemean);
+	$l2fc = sprintf("%.2f",$l2fc);
+	my ($mature,$precusor) = split /\-\>/,$mirna;
+	if(exists $exp_mirna{$mature}){
+		my ($basemean_tmp) = split /\t/,$exp_mirna{$mature};
+		$exp_mirna{$mature} = "$basemean\t$l2fc" if $basemean_tmp < $basemean;
+	}
+	else{
+		$exp_mirna{$mature} = "$basemean\t$l2fc";
+	}
+}
+
+my %exp_gene;
+open EXP,'DESeq2_mRNA.tsv';
+<EXP>;
+while(<EXP>){
+	chomp;
+	my ($gene_id,$basemean,$l2fc) = split;
+	$basemean = sprintf ("%.0f",$basemean);
+	$l2fc = sprintf("%.2f",$l2fc);
+	$exp_gene{$gene_id} = "$basemean\t$l2fc";
+}
+
+
+open FILE,'predicted_downregulated.txt';
+open OUT,'>miRNA_down_predictedTarget_bindSites_WNT.txt';
+print OUT "miRNA\tmiRNAReadsMean\tmiRNALog2FC\ttargetGeneId\ttargetGeneName\tgeneReadsMean\tgemeLog2FC\tconversedBindingSites\tpoorconservedBindingSites\tWNTPathway\n";
+while(<FILE>){
+	chomp;
+	my ($mirna,undef,$gene_name,undef,$refSeq) = split;
+	next if $mirna eq 'miRNA';
+	#my $mirna = substr($miRna,4);
+	#print "$mirna\n";
+	if(!exists $hash{$mirna}){
+		print "$mirna not confidently annotated by TargetScan\n";
+	}
+	else{
+		my $gene_id = "NA";
+		if(exists $conventer{$gene_name}){
+			$gene_id  = $conventer{$gene_name};
+		}
+		elsif(exists $conventer{$refSeq}){
+			$gene_id = $conventer{$refSeq};
+		}
+		my $siteNum = exists $hash{$mirna}->{$gene_id} ? $hash{$mirna}->{$gene_id} : [0,0];
+		my $wnt_go = exists $wnt_gene{$gene_id} ? $wnt_gene{$gene_id} : "NA";
+		my $sig_gene = exists $exp_gene{$gene_id} ? $exp_gene{$gene_id} : "NA\tNA";
+		if(!exists $hash{$mirna}->{$gene_id}){
+			print "$mirna\t$gene_name are not predicted by TargetScan\n";
+		}
+		print OUT "$mirna\t$exp_mirna{$mirna}\t$gene_id\t$gene_name\t$sig_gene\t$siteNum->[0]\t$siteNum->[1]\t$wnt_go\n";
+	}
+}
+
+

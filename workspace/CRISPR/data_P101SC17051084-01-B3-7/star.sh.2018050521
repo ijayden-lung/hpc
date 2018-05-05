@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N CRISPR
+#PBS -l nodes=1:ppn=1
+#PBS -o ${out}
+#PBS -j oe 
+#PBS -l walltime=01:00:00
+
+mkdir $inp
+cd $inp
+perl /home/bio-longyk/workspace/data_P101SC17051084-01-B3-7/gRNA.pl $fq1
+

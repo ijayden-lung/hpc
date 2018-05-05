@@ -1,0 +1,26 @@
+#!/usr/bin/env Rscript
+library(grid)
+library(ggplot2)
+args<-commandArgs(T)
+data = read.table(args[1],header=T,row.names=1)
+names(data) = c('gene','GFPpos1','GFPpos2','GFPpos3','GFPneg1','GFPneg2','library','total1','total2','total3')
+pdf(args[2],width=12,height=12)
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 1)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+df <- data.frame(x = c((data$total1+data$total2+data$total3)/3*2.5,data$library*2.5),g = gl(2,labels =c('gRNA in total cells','original library'), length(data$library)))
+a<-ggplot(df, aes(log10(x),colour = g))+stat_ecdf(geom = "step",pad=FALSE)+scale_x_continuous("log10 Number of reads per sgRNA",limits=c(0,4))+scale_y_continuous("Cumulative percentage of mKO library",breaks=0.1*(0:10),labels=scales::percent)
+print(a, vp = vplayout(1,1))
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 1)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(y=log2((total1+total2+total3)/3), x=log2(library)))+geom_point()+labs(x = "Log2 Reads (original library)",y = "Log2 Reads (gRNA in total cells)")+xlim(0,10)+ylim(0,10)
+print(a, vp = vplayout(1,1))
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 1)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=log2((library+(total1+total2+total3)/3)/2), y=log2((total1+total2+total3)/3/library)))+geom_point()+labs(x = "Log2 Mean Reads",y = "Log2 (total/library)")+ylim(-10,10)
+print(a, vp = vplayout(1,1))

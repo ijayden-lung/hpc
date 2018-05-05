@@ -1,0 +1,43 @@
+#!/usr/bin/perl
+use strict;
+
+my $wd = $ARGV[0];
+
+
+# associate nalignm. ids with the mirna names.
+# else map nalignm ids with a reported id numbering list.
+
+open(AJAX_FH, '>', "$wd/ajax.processed.counts");
+print AJAX_FH "{ \"aaData\": [\n";
+
+open (PARSED_FH, "$wd/parsed.processed.counts");
+
+my $row_cnt = 0;
+
+while(my $line = <PARSED_FH>){
+
+	chomp($line);	
+
+	if($row_cnt == 0 || $line =~ /^totaldepth/){
+		$row_cnt++;
+		next;
+	}
+	elsif($row_cnt == 1){
+		$row_cnt++;
+	} else{
+		print AJAX_FH ",\n";
+		$row_cnt++;
+	}
+
+	$line =~ s/\t/\"\, \"/g;
+
+	$line = "\"$line\"";
+
+	print AJAX_FH "[$line]";	
+
+}
+
+close(PARSED_FH);
+
+print AJAX_FH "] }";
+close(AJAX_FH);

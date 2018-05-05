@@ -1,0 +1,23 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+data = read.table('Input_pdf_cdf_distance_runx2_tcf3.txt',header=TRUE,sep="\t")
+pdf('PDF_CDF_distance_runx2_tcf3.pdf')
+
+data1 =subset(data,runx_strand == '+' & tcf3_strand == '+')
+data2 =subset(data,runx_strand == '+' & tcf3_strand == '-')
+data3 =subset(data,runx_strand == '-' & tcf3_strand == '+')
+data4 =subset(data,runx_strand == '-' & tcf3_strand == '-')
+
+
+#ggplot(data=data,aes(x=dist))+geom_density()+labs(x='Distance between sites')
+ggplot(data=data1,aes(x=dist))+geom_histogram(binwidth=5)+labs(x='Distance between sites')+xlim(-200,200)
+ggplot(data=data1,aes(x=dist))+geom_histogram(binwidth=200)+labs(x='Distance between sites')+xlim(-5000,5000)
+ggplot(data=data2,aes(x=dist))+geom_histogram(binwidth=5)+labs(x='Distance between sites')+xlim(-200,200)
+ggplot(data=data2,aes(x=dist))+geom_histogram(binwidth=200)+labs(x='Distance between sites')+xlim(-5000,5000)
+ggplot(data=data3,aes(x=dist))+geom_histogram(binwidth=5)+labs(x='Distance between sites')+xlim(-200,200)
+ggplot(data=data3,aes(x=dist))+geom_histogram(binwidth=200)+labs(x='Distance between sites')+xlim(-5000,5000)
+ggplot(data=data4,aes(x=dist))+geom_histogram(binwidth=5)+labs(x='Distance between sites')+xlim(-200,200)
+ggplot(data=data4,aes(x=dist))+geom_histogram(binwidth=200)+labs(x='Distance between sites')+xlim(-5000,5000)
+df <- data.frame(x = c(abs(data$dist)),g = gl(1,labels =c('Distance'), length(data$dist)))
+ggplot(df, aes(x))+stat_ecdf(geom = "step",pad=FALSE)+scale_x_continuous("Absolute Distance between sites")+scale_y_continuous("Cumulative Fraction of sites",breaks=0.1*(0:10),labels=scales::percent)
+

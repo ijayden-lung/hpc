@@ -1,0 +1,23 @@
+#!/usr/bin/perl -w
+
+my %hash1;
+my %hash2;
+my %hash3;
+open FILE, "Same.tsv";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	$hash1{$data[1]} += $data[7];
+	$hash2{$data[1]} .= "$_\n";
+	$hash3{$data[1]}++;
+}
+
+foreach my $key (sort{$hash1{$b}<=>$hash1{$a}} keys %hash1){
+	$hash1{$key} /= $hash3{$key};
+}
+
+open OUT, ">Sort.tsv";
+print OUT "gene_id\tgene_name\tchromosome\tstrand\tsplicingType\tfixSplicingSite\tpercentDiff\tpvalue\tqvalue\talterSplicingSite, readCount(condition0|condition1), percentage(condition0|condition1\n";
+foreach my $key (sort{$hash1{$b}<=>$hash1{$a}} keys %hash1){
+	print OUT "$hash2{$key}"
+}

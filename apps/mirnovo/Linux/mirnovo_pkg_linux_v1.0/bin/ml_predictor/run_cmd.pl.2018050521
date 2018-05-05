@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+
+$genome = $ARGV[0];
+$CALC_GENOMIC_FEATURES = $ARGV[1];
+$cur_out_dir = $ARGV[2];
+$PREDICT_WITH_MIRBASE_HITS = $ARGV[3];
+
+# read run parameters from file
+my %parameters_hash = ();
+open(PARH, "$cur_out_dir/../parameters.log");
+while(<PARH>){
+
+        chomp;
+	my @vals = split("\t", $_);
+	if($#vals == 1){
+		$parameters_hash{ $vals[0] } = $vals[1];
+	} else{
+		$parameters_hash{ $vals[0] } = 'NA';
+	}
+
+}
+close(PARH);
+
+
+
+$ml_method_arg = $parameters_hash{ 'classifier_algo' };  # SVM, DL, LR, RF, randomForest
+my $only_genomic_features_option = $parameters_hash{ 'only_genomic_features_option' };
+
+print "Using $ml_method_arg for prediction...\n";
+
+
+$models_base_dir = 'trained_models'; 
+@model_rds_files = glob("ml_predictor/$models_base_dir/$ml_method_arg.$genome.Genome$CALC_GENOMIC_FEATURES*.rds");
+foreach(@model_rds_files){
+	if($_ !~ /GF/){
+		$model_file = $_; #$model_rds_files[0];
+		last;
+	}
+}
+
+if($only_genomic_features_option eq 'checked'){
+	@gf_model_rds_files = glob("ml_predictor/$models_base_dir/$ml_method_arg.$genome.Genome$CALC_GENOMIC_FEATURES*.GF.rds");
+	# if file does not exit, the original model that depends on both core features and GF is still used
+	if((scalar @model_rds_files) > 1){
+		$model_file = $gf_model_rds_files[0];
+	}
+}
+
+$ML_method = $ml_method_arg;
+
+$predictor_script = "predictor.R";
+if($PREDICT_WITH_MIRBASE_HITS eq 'False'){
+	$predictor_script = "predictor_no_mirbase.R";
+}
+
+
+print "Rscript ml_predictor/$predictor_script $model_file $ML_method $genome $cur_out_dir $CALC_GENOMIC_FEATURES\n";
+my $out = `Rscript ml_predictor/$predictor_script $model_file $ML_method $genome $cur_out_dir $CALC_GENOMIC_FEATURES`;
+print $out."\n";

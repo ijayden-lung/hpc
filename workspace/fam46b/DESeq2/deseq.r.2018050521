@@ -1,0 +1,19 @@
+#!/usr/bin/env Rscript
+library(qvalue)
+library("DESeq")
+pasillaCountTable = read.table("table_ReadCount.tsv", header=TRUE, row.names=1 )
+pasillaDesign = data.frame(row.names = colnames( pasillaCountTable ),condition = c("control","shRNA","shRNA"),libType = c("PE","PE","PE"))
+
+pairedSamples = pasillaDesign$libType == "PE"
+countTable = pasillaCountTable[ , pairedSamples ]
+condition = pasillaDesign$condition[ pairedSamples ]
+cds = newCountDataSet( countTable, condition )
+cds = estimateSizeFactors( cds )
+sizeFactors( cds )
+cds = estimateDispersions( cds )
+res = nbinomTest( cds, "control", "shRNA" )
+resOrdered <- res[order(res$padj),]
+#head(res)
+write.table( resOrdered, "Result_Table.tsv",quote=FALSE,row.names=FALSE,sep="\t" )
+
+

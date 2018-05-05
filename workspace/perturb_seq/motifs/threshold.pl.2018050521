@@ -1,0 +1,21 @@
+#!/usr/bin/perl -w
+
+open FILE,'Sig_Similar_Eep.tsv';
+my $header = <FILE>;
+
+open OUT1, '>Results_ES.txt';
+print OUT1  $header;
+open OUT2, '>Results_MEF.txt';
+print OUT2  $header;
+
+while(<FILE>){
+	chomp;
+	my ($motif,$mouse_id,$mouse_name,$rat_id,$rat_name,$similarity,$FPKM_Mouse_ES,$FPKM_Mouse_MEF,$FPKM_Rat_ES,$FPKM_Rat_MEF,$mm10_ES_g,$mm10_ES_s,$mm10_MEF_g,$mm10_MEF_s,$rn6_ES_g,$rn6_ES_s,$rn6_MEF_g,$rn6_MEF_s) = split /\t/;
+	if($similarity <90 && $FPKM_Mouse_ES > 10 && $mm10_ES_g eq "Yes" && $FPKM_Rat_ES >10 && $rn6_ES_g eq "Yes"){
+		print OUT1 "$_\n";
+	}
+	if($similarity <90 && $FPKM_Mouse_MEF > 10 && $mm10_MEF_g eq "Yes" && $FPKM_Rat_MEF >10 && $rn6_MEF_g eq "Yes"){
+		print OUT2 "$_\n";
+	}
+}
+

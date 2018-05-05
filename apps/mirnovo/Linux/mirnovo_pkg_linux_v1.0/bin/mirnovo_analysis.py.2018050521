@@ -1,0 +1,313 @@
+#!/usr/bin/env python
+
+from sys import argv
+from sys import exit
+import sys
+import os.path
+import subprocess
+import gzip
+import random
+import os
+
+
+"""
+cmd to run mirnovo_analysis.py:
+python mirnovo_analysis.py <input_reads.fa.gz> <usearch_perc_id | default: 0.8> <min_numb_reads | default: 10> <miRDB_name> <blast_perc_id | default: 0.90> <blast_evalue | default: 0.01> <MAP_AGAINST_KNOWN_MIRBASE_SPECIES> <swan_identity_threshold | default: 0.90> <swan_index | default: 8> <inflation_parameter | default: 1.4> <FILTER_RFAM_BEFORE_PREDICTION | default: TRUE> <job_id: [uuid]>
+
+
+#example call:
+python mirnovo_analysis.py input_file.fa 0.80 10 dme 0.90 0.01 True 0.90 8 1.4 True $core_uuid $job_id
+"""
+
+def create_cur_out_dir(input_reads_fasta, usearch_perc_id, min_numb_reads, blast_perc_id, MAP_AGAINST_KNOWN_MIRBASE_SPECIES, swan_identity_threshold, swan_index, inflation_parameter, CALC_GENOMIC_FEATURES, min_num_of_variants, core_uuid, job_id):
+
+    dataset_type = 'Test'
+    rfam_filtering_flag = 'incl'
+
+    if MAP_AGAINST_KNOWN_MIRBASE_SPECIES == 'True':
+        dataset_type = 'Training'
+
+    if FILTER_RFAM_BEFORE_PREDICTION == 'True':
+	rfam_filtering_flag = 'excl'
+
+    input_reads_fasta = input_reads_fasta.replace(".fa.gz", "")
+    input_reads_fasta = input_reads_fasta.replace(".fa", "")
+
+    cur_out_dir = '../tmp/' + core_uuid + '/' + job_id;
+
+    #cur_out_dir = '../tmp/' + CALC_GENOMIC_FEATURES + "GenFeat-" + input_reads_fasta + "_usId" + str(usearch_perc_id) + "_minN" + str(min_numb_reads) + "_minVariants" + str(min_num_of_variants) + "_blast" + str(blast_perc_id) + "_swanId" + swan_identity_threshold + "_swanIdx" + swan_index + "_I" + inflation_parameter  + "_RFAM" + rfam_filtering_flag + "_" + dataset_type
+
+    # ../tmp and cur_out_dir have already been created!
+    #cmd = "mkdir -p ../tmp; rm -rf " + cur_out_dir + "; mkdir " + cur_out_dir + "; chmod -R 777 " + cur_out_dir
+    #subprocess.check_call(cmd, shell=True)
+
+    return cur_out_dir
+
+
+def create_usearch_dir(cur_out_dir):
+    """Creates a directory where all usearch output files will be placed
+       Be sure no dir with same name already exists!
+    """
+    usearch_dir_name = cur_out_dir + '/usearch_out'
+    cmd = 'mkdir ' + usearch_dir_name
+    subprocess.check_call(cmd, shell = True)
+    return usearch_dir_name
+
+
+# call .py scipt for clustering -> puts output in usearch_dir
+def cluster_reads(zipped_fasta, perc_identity, min_read_N, usearch_dir, min_num_of_variants, job_id):
+    cmd = "python -u run_vsearch_clust_fast.py %s %s %s %s %s %s %s %s" % (zipped_fasta, perc_identity, min_read_N, usearch_dir, min_num_of_variants, job_id, TALLY_LENGTH_LOWER_THRES, TALLY_LENGTH_UPPER_THRES)
+    print(cmd)
+    subprocess.check_call(cmd, shell=True)
+
+def get_temp_consensus_seqs(usearch_dir, cur_out_dir, job_id):
+    cmd = 'python -u get_temp_consensus_seqs.py %s %s %s' % (usearch_dir, cur_out_dir, job_id)
+    subprocess.check_call(cmd, shell=True)
+
+def align_against_rfam(usearch_dir, cur_out_dir, job_id):
+    cmd = 'perl align_against_rfam.pl %s %s %s' % (usearch_dir, cur_out_dir, job_id)
+    subprocess.check_call(cmd, shell=True)
+
+def get_rfam_consensus_seqs(cur_out_dir, job_id):
+    cmd = 'python -u get_rfam_consensus_seqs.py %s %s' % (cur_out_dir, job_id)
+    print(cmd)
+    subprocess.check_call(cmd, shell=True)
+
+def find_similar_cons_seqs(cur_out_dir, swan_identity_threshold, swan_index, inflation_parameter, job_id):
+    cmd = 'perl find_similar_cons_seqs.pl %s %s %s %s %s' % (cur_out_dir, swan_identity_threshold, swan_index, inflation_parameter, job_id)
+    subprocess.check_call(cmd, shell=True)
+
+def merge_similar_clusters_with_cdhit(cur_out_dir, job_id, cdhit_aln_id, cdhit_kmer):
+    cmd = 'perl merge_similar_clusters_with_cdhit.pl %s %s %s %s' % (cur_out_dir, job_id, cdhit_aln_id, cdhit_kmer)
+    subprocess.check_call(cmd, shell=True)
+
+def realign_refined_clusters(usearch_dir, job_id):
+    cmd = 'python -u realign_refined_clusters.py %s %s' % (usearch_dir, job_id)
+    subprocess.check_call(cmd, shell=True)
+
+
+# blast clusters against miRNA db
+# (assume miRNA db has already been created & contains all miRNAs from a species)
+# will place outputs in blast_vs_mature_miRNAs dir.ls usearch_test_dir/ -v nalignm.* | grep "nalignm\.[0-9]*$" | paste -sd " " -
+def find_hits_on_mature_miRNAs(usearch_dir, miRNA_db_name, blast_perc_ident, blast_evalue, cur_out_dir, blast_aln_length_threshold, job_id):
+    cmd = "./blast_clusts_vs_MatureMiRNAdb %s %s %s %s %s %s %s" % (usearch_dir, miRNA_db_name, blast_perc_ident, blast_evalue, cur_out_dir, blast_aln_length_threshold, job_id)
+    print(cmd)
+    subprocess.check_call(cmd, shell=True)
+
+
+
+def calc_stats_write_features(usearch_dir_name, cur_out_dir, job_id):
+    """Calculates seq stats for each cluster, makes barplots, calc. & writes
+       down features, conse_seqs.fa and rev.compl.cons.seqs.fa
+    """
+    cmd = 'python -u miRNA_clust_stats_opt.py %s %s %r %s' % (usearch_dir_name, cur_out_dir, MAP_AGAINST_KNOWN_MIRBASE_SPECIES, job_id)
+    print(cmd)
+    subprocess.check_call(cmd, shell=True)
+
+
+def get_genomic_features(usearch_dir, cur_out_dir, genome_name, job_id):
+    """Get genomic featrues for each cluster
+    """
+    cmd = 'python -u get_genomic_features.py %s %s %s %r %s' % (usearch_dir, cur_out_dir, genome_name, MAP_AGAINST_KNOWN_MIRBASE_SPECIES, job_id)
+    print(cmd)
+    subprocess.check_call(cmd, shell=True)
+
+
+
+def write_barplots_in_html(cur_out_dir, job_id):
+    """Accesses cluster_stats_barplots dir that was created earlier
+         and writes down each barplot in file 'clust_barplots.html'
+    """
+    cmd = "./make_stats_barplots " + cur_out_dir +"/cluster_stats_barplots " + cur_out_dir + " " + job_id
+    subprocess.check_call(cmd, shell = True)
+
+def get_all_hairpins(cur_out_dir, genome_name, CALC_GENOMIC_FEATURES, PREDICT_WITH_MIRBASE_HITS):
+    """ Get all possible hairpin paralogs, make FASTA files for hairpins and mature seqs
+    	with genomic coordinates too.
+    """
+    # debug
+    cmd = "perl get_all_hairpins.new.pl %s %s %s %s" % (cur_out_dir, genome_name, CALC_GENOMIC_FEATURES, PREDICT_WITH_MIRBASE_HITS)
+    print(cmd)
+    print('Detecting paralogs...')
+    subprocess.check_call(cmd, shell = True)
+
+def prepare_output(cur_out_dir, genome_name, CALC_GENOMIC_FEATURES, PREDICT_WITH_MIRBASE_HITS):
+    """ - Prepare hairpin foldings for each predicited miRNA.
+    	- Prepare feature tables for each class of predicted miRNAs (TP, FP, etc.)
+    	and create data (ajax format) for associated data tables to present.
+    """
+    cmd = "perl prepare_output.pl %s %s %s %s" % (cur_out_dir, genome_name, CALC_GENOMIC_FEATURES, PREDICT_WITH_MIRBASE_HITS)
+    print(cmd)
+    print('Preparing output...')
+    subprocess.check_call(cmd, shell = True)
+
+
+def wrapup_output(cur_out_dir, CALC_GENOMIC_FEATURES, PREDICT_WITH_MIRBASE_HITS, core_uuid, disable_pdf_generation):
+	cmd = "Rscript wrapup_output.new.R %s %s %s %s %s" % (cur_out_dir, CALC_GENOMIC_FEATURES, PREDICT_WITH_MIRBASE_HITS, core_uuid, disable_pdf_generation)
+	print(cmd)
+	print('Finalising output...')
+	subprocess.check_call(cmd, shell = True)
+
+
+if __name__=="__main__":
+
+    input_reads_fasta = argv[1]
+    usearch_perc_id = argv[2]
+    min_numb_reads = argv[3]
+    min_num_of_variants = argv[4]
+
+    genome_name = argv[5]
+
+    # dbg:
+    # tmp placeholder genome for species without genome
+    print '> genome: ' + genome_name
+    #if genome_name == 'NA':
+    #	genome_name = 'dme'
+
+
+    miRDB_name = 'db/' + genome_name + '.fasta.mature'
+
+    blast_perc_id = argv[6]
+    blast_aln_length_threshold = argv[7]
+    blast_evalue = argv[8]
+
+
+    MAP_AGAINST_KNOWN_MIRBASE_SPECIES = argv[9]
+
+    swan_identity_threshold = argv[10]
+    swan_index = argv[11]
+    inflation_parameter = argv[12]
+
+    FILTER_RFAM_BEFORE_PREDICTION = argv[13]
+
+    CALC_GENOMIC_FEATURES = argv[14]
+
+    TRAINING_MODEL_OPTION = argv[15]
+
+    core_uuid = argv[16]
+    job_id = argv[17]
+
+    TALLY_LENGTH_LOWER_THRES = argv[18]
+    TALLY_LENGTH_UPPER_THRES = argv[19]
+    cdhit_aln_id = argv[20]
+    cdhit_kmer = argv[21]
+    disable_pdf_generation = argv[22]
+
+    tmp_mirdb_fa_file = 'db/' + genome_name + '_mature.fa'
+
+    PREDICT_WITH_MIRBASE_HITS = 'True'
+    # dbg: if genome is not registered in mirbase, set as placeholder mirbase record: dme
+    if not os.path.exists(tmp_mirdb_fa_file):
+	miRDB_name = 'db/no_mirbase.fasta.mature'
+	PREDICT_WITH_MIRBASE_HITS = 'False'
+
+
+
+    cur_out_dir = create_cur_out_dir(input_reads_fasta, usearch_perc_id, min_numb_reads, blast_perc_id, MAP_AGAINST_KNOWN_MIRBASE_SPECIES, swan_identity_threshold, swan_index, inflation_parameter, CALC_GENOMIC_FEATURES, min_num_of_variants, core_uuid, job_id)
+    usearch_dir = create_usearch_dir(cur_out_dir)
+
+    # make clusters
+    #print("... running cluster_reads() ...")
+    cluster_reads(input_reads_fasta, usearch_perc_id, min_numb_reads, usearch_dir, min_num_of_variants, job_id)
+    #print("-------- > cluster_reads() returned!")
+
+
+    # get temp consensus_sequences.fa file and then create huperclusters with swan and mcl
+    #print("......creating hyper-clusters.....")
+    get_temp_consensus_seqs(usearch_dir, cur_out_dir, job_id)
+    #print("get_temp_consensus_seqs() returned!")
+
+
+
+
+    # > Align consensus seqs against rfam
+    # exclude hits from consensus_seqs.fa file &
+    # rename .alignm files of those hits into .rRNA** or .tRNA** files
+    # TODO: need to merge potentially similar rRNA or tRNA hits in the end.
+    if FILTER_RFAM_BEFORE_PREDICTION == 'True':
+    	align_against_rfam(usearch_dir, cur_out_dir, job_id)
+	get_rfam_consensus_seqs(cur_out_dir, job_id)
+
+
+    #print("....Running find_similar_cons_seqs.pl....")
+    # deprecated: using cd-hit instead!
+    #find_similar_cons_seqs(cur_out_dir, swan_identity_threshold, swan_index, inflation_parameter, job_id)
+    #print("\nfind_similar_cons_seqs() returned!")
+
+
+    # add cd-hit refinement step to merge remaining highly similar clusters
+    # ...
+    merge_similar_clusters_with_cdhit(cur_out_dir, job_id, cdhit_aln_id, cdhit_kmer)
+    # ./util/cd-hit-est -i consensus_sequences.fa -o t95.fa -c 0.85 -n 5 -d 0 -M 0 -T 0
+
+
+    # re-align refined clusters
+    realign_refined_clusters(usearch_dir, job_id)
+
+
+    # after refined clusters have been formed...
+
+
+
+    # Depr: keep backup of clean 'mirnovo.log' so far...
+    # tmp_log_file = cur_out_dir+"/mirnovo.log"
+    # mirnovo_log_backup = open(tmp_log_file).read()
+
+
+    # TODO: SKIP when not using datasets from know species, or when using just test data.
+    #if(MAP_AGAINST_KNOWN_MIRBASE_SPECIES == 'True'):
+    # for the moment still working as it is, just returning 0KB blast outputs
+    find_hits_on_mature_miRNAs(usearch_dir, miRDB_name, blast_perc_id, blast_evalue, cur_out_dir, blast_aln_length_threshold, job_id)
+
+
+
+
+
+    # calc. cluster stats; write feature table ; write cons_seqs & rev.compl. files
+    #print("..... calculating cluster statistics / writing down cluster features .....")
+    calc_stats_write_features(usearch_dir, cur_out_dir, job_id)
+    #print("calc_stats_write_features() returned!")
+
+    # Get genomic features for each cluster
+    if(CALC_GENOMIC_FEATURES == 'True'):
+	    get_genomic_features(usearch_dir, cur_out_dir, genome_name, job_id)
+
+    # write html file with barplots
+    #print("..... creating html file with cluster barplots .....")
+    write_barplots_in_html(cur_out_dir, job_id)
+
+
+
+    ## Later on move it to a master script that calls mirnovo_analysis.py for the input dataset
+    ## and the training dataset (if applicable), in separate threads.
+
+
+
+    #cwd = os.getcwd()
+    #print('cwd: ' + cwd)
+
+    bsub_log_file = '../tmp/' + core_uuid + '/bsub.log'
+
+    if TRAINING_MODEL_OPTION == 'generate':
+	cmd = "Rscript ml_trainer/model_trainer.R "+cur_out_dir+' '+genome_name+' '+CALC_GENOMIC_FEATURES  # dbg: + ">> " + bsub_log_file
+	print(cmd)
+	subprocess.check_call(cmd, shell=True)
+
+    else: # prediction for test datasets (default)
+
+
+	cmd = "perl ./ml_predictor/run_cmd.pl " + " " + TRAINING_MODEL_OPTION + " " + CALC_GENOMIC_FEATURES + " " + cur_out_dir + " " + PREDICT_WITH_MIRBASE_HITS
+	print(cmd)
+	subprocess.check_call(cmd, shell=True)
+
+
+
+
+    if(CALC_GENOMIC_FEATURES == 'True'):
+	    get_all_hairpins(cur_out_dir, genome_name, CALC_GENOMIC_FEATURES, PREDICT_WITH_MIRBASE_HITS)
+
+    prepare_output(cur_out_dir, genome_name, CALC_GENOMIC_FEATURES, PREDICT_WITH_MIRBASE_HITS)
+    wrapup_output(cur_out_dir, CALC_GENOMIC_FEATURES, PREDICT_WITH_MIRBASE_HITS, core_uuid, disable_pdf_generation)
+
+
+    print("__ end of mirnovo analysis __")

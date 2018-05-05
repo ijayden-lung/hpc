@@ -1,0 +1,400 @@
+#!/usr/bin/env python
+
+from __future__ import division
+from sys import argv
+from sys import exit
+import os.path
+import subprocess
+import gzip
+import re
+import Queue
+import threading
+import time
+import csv
+import os
+import sys
+
+
+# **** multi-threading module ****
+exitFlag = 0
+#updateDictLock = threading.Lock()
+alignmentLock = threading.Lock()
+
+
+class clusterFeaturesThread (threading.Thread):
+    def __init__(self, threadID, q):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.q = q
+    def run(self):
+        #print "Starting " + self.name
+        getFeaturesForCluster(self.threadID, self.q)
+        #print "Exiting " + self.name
+
+
+
+def getFeaturesForCluster(threadID, q):
+    #print("threadID: "+ str(threadID))
+
+    while not exitFlag:
+        queueLock.acquire()
+        if not workQueue.empty():
+
+	    cluster_number = q.get()
+            queueLock.release()
+#            print("cluster_number: "+ cluster_number)
+
+	    ret_list = [0, 0]
+	    ret_list = get_genomic_features(cluster_number)
+
+
+#	    print(ret_list)
+
+	    best_features_dict = {}
+	    mir_arm = 'NA'
+
+	    if ret_list == -1:
+		    for ind in range(9): #dbg, otherwise 10
+			    best_features_dict[ind] = 'NA'
+		    # dbg:
+		    #print(best_features_dict)
+	    else:
+		    best_features_dict = ret_list[0]
+		    mir_arm = ret_list[1]
+
+#	    print('best_features_dict:')
+#	    print(best_features_dict)
+
+
+
+
+	    feature_list = []
+
+
+	    for k in sorted(best_features_dict):
+		feature_list.append(best_features_dict[k])
+
+            #updateDictLock.acquire()
+            genomic_feature_matrix[cluster_number] = feature_list
+            #updateDictLock.release()
+
+        else:
+            queueLock.release()
+        time.sleep(1)
+
+
+
+def call_bowtie2_for_all_cons_seqs():
+
+
+	cur_out_dir+"/consensus_sequences.fa"
+	tmp_query_file = cur_out_dir+"/consensus_sequences.fa"
+
+	output_sam = cur_out_dir+"/cons_seqs_bowtie.out.sam"
+
+	genome_index =  '../Genome-Annotation-1.0/' + genome_name + '/' + genome_name
+
+	BOWTIE2_SUCCESS = False
+	while not BOWTIE2_SUCCESS:
+		try:
+			# report first valid enough hit
+			#cmd = "bowtie2 -k 1 -x %s -f -U %s -S %s -D 20 -R 3 -N 1 -L 20 -i S,1,0.50 --rdg 1,1 --rfg 1,1 -p 16" %(genome_index, tmp_query_file, output_sam)
+			# report best hit --end-to-end (no -k option)
+			#cmd = "bowtie2 --end-to-end -x %s -f -U %s -S %s -D 20 -R 3 -N 1 -L 20 -i S,1,0.50 --rdg 1,1 --rfg 1,1 -p 16" %(genome_index, tmp_query_file, output_sam)
+			# best hit: --local, soft trimming at extreme ends is allowed
+			cmd = "util/bowtie2 --local -x %s -f -U %s -S %s -D 20 -R 3 -N 1 -L 20 -i S,1,0.50 --rdg 1,1 --rfg 1,1 -p 16" %(genome_index, tmp_query_file, output_sam)
+			# dbg :
+			#print(cmd)
+			BOWTIE2_SUCCESS = True
+			subprocess.check_call(cmd, shell=True)
+		except subprocess.CalledProcessError as e:
+			print('Exception in subprocess.CalledProcessError: '+cluster_file_name+' [recalculating...]')
+			BOWTIE2_SUCCESS = False
+
+	#print('[bowtie2] for all cons seqs returned!')
+
+
+	cmd = "cat %s | grep -v '^@' > %s.temp; mv %s.temp %s" % (output_sam, output_sam, output_sam, output_sam)
+	subprocess.check_call(cmd, shell=True)
+
+
+
+def readFromFile(name):
+    coords = {}
+    with open(name, "r") as f:
+        for line in f.readlines():
+            li = line.lstrip()
+            if not li.startswith("@"):
+                words = line.split('\t')
+                coords['chr'] = words[2]
+                coords['start'] = words[3]
+		coords['aln_length'] = len(words[9])
+    return coords
+
+
+def get_genomic_features(cluster_number):
+
+
+	start_offsets = [10, 60]
+
+	#sam_align_coords = readFromFile(output_sam)
+	sam_align_coords = sam_align_out_dict[ cluster_number ]
+
+
+#	print(sam_align_coords)
+
+
+	# check if alignment had 0 hits:
+	#if sam_align_coords['chr'] == '*' or 'MT' in sam_align_coords['chr'] or 'GL' in sam_align_coords['chr'] or 'KI' in sam_align_coords['chr']:
+	if sam_align_coords['chr'] == '*':
+		# dbg :
+#		print(cluster_file_name+ ':Bowtie2 alignment returned 0 hits!!')
+		#sys.exit(0)
+		return -1 # alignment had 0 hits, assign NA values to all genomic features.
+
+	best_features_dict = {}
+	mir_arm = ''
+
+	mir_arm_dict = {start_offsets[0]: '5p', start_offsets[1]: '3p'}
+
+	start_original = int(sam_align_coords['start'])
+
+
+	for st_offset in start_offsets:
+		start = start_original - st_offset
+		end = start + 90
+
+
+		# dbg:
+		# amend start-end indexes based on chrom size, if needed:
+		cur_chrom_size = int(genome_chrom_sizes_dict[ sam_align_coords['chr'] ])
+
+		if end > cur_chrom_size:
+			diff = end - cur_chrom_size
+			start = start - diff
+			end = end - diff
+
+			if start < 0:
+				start = 0
+
+		if start < 0:
+			start = 0
+
+		#print(sam_align_coords)
+
+		cmd = "../Genome-Annotation-1.0/tools/twoBitToFa  ../Genome-Annotation-1.0/%s/%s.2bit:%s:%d-%d /dev/stdout" %(genome_name, genome_name, sam_align_coords['chr'], start, end)
+		out = subprocess.check_output(cmd, shell = True).rstrip().split('\n')
+		# dbg :
+		#print(cmd)
+		#print('twoBitToFa output:')
+		#print(out)
+
+		out.pop(0)
+		hairpin_seq = ''.join(out)
+
+
+		#print(hairpin_seq)
+		#print("-----")
+		#print(cons_sequence)
+
+		# dbg: maybe use 22 for all cases
+		#aligned_cons_seq = hairpin_seq[st_offset:st_offset+22]
+		aligned_cons_seq = hairpin_seq[ (st_offset-1) : (st_offset-1) + int(sam_align_coords['aln_length']) ]
+		#print('aligned_cons_seq:')
+		#print(aligned_cons_seq)
+
+
+
+		#hairpin_seq = hairpin_seq.replace(cons_sequence, cons_sequence.lower())
+		hairpin_seq = hairpin_seq.replace(aligned_cons_seq, aligned_cons_seq.lower())
+		#print('hairpin_seq to lower:')
+		#print(hairpin_seq)
+
+		#cluster_file_name
+
+		cmd = "echo " + hairpin_seq + " | util/RNAfold --noPS 2>/dev/null"
+		out = subprocess.check_output(cmd, shell = True)
+
+		tmpFoldName = rna_foldings_dir + "/nalignm." + cluster_number + "." + mir_arm_dict[st_offset] +".tmpFold.txt"
+		tmpFold = open(tmpFoldName, "w")
+		out = ">nalignm."+cluster_number+"\n"+out
+		tmpFold.write(out)
+		tmpFold.close()
+
+		#alignmentLock.acquire()
+		out = subprocess.check_output(['./hairpin_features.pl', tmpFoldName], shell=False)
+		#alignmentLock.release()
+		if out == 'NA':
+			return -1
+			#print('out = NA wooooorking !!!!!!!!!')
+			#sys.exit(0)
+
+		words = re.split('=>|\n', out)
+		del words[-1]
+		features_dict = dict(map(None, *[iter(words)]*2))
+		#print(features_dict)
+		#print('=================')
+
+		if not best_features_dict:
+			best_features_dict = features_dict
+			mir_arm = '5p'
+		elif features_dict['score'] > best_features_dict['score']:
+			best_features_dict = features_dict
+			mir_arm = '3p'
+			# delete '*.5p.tmpFold.txt' file (retain only the '3p' file that indicates the arm origin of the predicted miRNA):
+			tmpFoldName = tmpFoldName.replace('3p', '5p')
+			# dbg:
+			os.remove(tmpFoldName)
+		else:
+			# retain only the '*.5p.tmpFold.txt' file:
+			os.remove(tmpFoldName)
+
+
+	#dbg: do not include it in features table since it is linearly dependent by the other genomic features
+	del best_features_dict['score']
+
+	# dbg:
+	#print(best_features_dict)
+	#print(mir_arm)
+	# os.remove(cluster_file_name + ".tmpFold.txt")
+
+	ret_list = [best_features_dict, mir_arm]
+
+	return(ret_list)
+#		bowtie2 -k 1 -x human/hsa38 -f -U r.fa -S test.sam -D 20 -R 3 -N 1 -L 20 -i S,1,0.50 --rdg 1,1 --rfg 1,1
+
+
+
+if __name__=='__main__':
+
+    usearch_dir = argv[1]
+    cur_out_dir = argv[2]
+    genome_name = argv[3]
+    MAP_AGAINST_KNOWN_MIRBASE_SPECIES = argv[4]  #True/False
+    job_id = argv[5]
+
+    NUM_OF_THREADS =  40      # add as extra argument later on
+
+    tmp_genomic_alignments_dir = cur_out_dir + "/tmp_genomic_alignments"
+    if not os.path.exists(tmp_genomic_alignments_dir):
+    	os.makedirs(tmp_genomic_alignments_dir)
+
+    rna_foldings_dir = cur_out_dir + '/rna_fold_dir'
+    if not os.path.exists(rna_foldings_dir):
+    	os.makedirs(rna_foldings_dir)
+
+    #cmd = 'ls -v %s| grep "nalignm\.[0-9]*$" | paste -sd " " -' % (usearch_dir)
+    #clu_list = subprocess.check_output(cmd, shell = True).rstrip().split(' ')
+
+
+    # read chromosome sizes
+    genome_chrom_sizes_dict = {}
+    genome_chrom_sizes_file = '../Genome-Annotation-1.0/' + genome_name + '/' + genome_name + '.chrom.sizes'
+    with open(genome_chrom_sizes_file) as f:
+    	for line in f:
+		line = line.strip()
+		vals = line.split("\t")
+		#print(vals[0] + ' - ' + vals[1])
+		genome_chrom_sizes_dict[ vals[0] ] = vals[1]
+
+
+
+    print("["+job_id+"]>> Calculating genomic features for each cluster...")
+
+
+    # call bowtie2 first for with all cons seqs in a single file
+    print("["+job_id+"]\tcalling [bowtie2]...")
+    call_bowtie2_for_all_cons_seqs()
+    print("["+job_id+"]\t[bowtie2] returned successfully!")
+
+
+    output_sam_file = cur_out_dir+"/cons_seqs_bowtie.out.sam"
+
+
+    # read bowtie2 output into a dictionary
+    sam_align_out_dict = {}
+
+    with open(output_sam_file,"r") as f:
+	for line in f.readlines():
+	    li = line.lstrip()
+	    words = li.split('\t')
+#	    print(words)
+	    coords = {}
+
+	    coords['cluster_name'] = words[0]
+	    coords['cluster_name'] = coords['cluster_name'].replace("cons_seqs_cluster.", "")
+	    coords['chr'] = words[2]
+	    coords['start'] = words[3]
+	    coords['aln_length'] = len(words[9])
+
+	    sam_align_out_dict[ coords['cluster_name'] ] = { 'chr': coords['chr'], 'start': coords['start'], 'aln_length': coords['aln_length'] }
+
+
+    clu_list = sorted(sam_align_out_dict, key=int)
+#    print(clu_list)
+
+    genomic_feature_matrix = {}
+
+    # get features for each cluster using multiple threads
+    queueLock = threading.Lock()
+    workQueue = Queue.Queue(len(clu_list))
+    threads = []
+
+
+    #for cluster_file_name in clu_list:
+    for threadID in range(0, NUM_OF_THREADS):
+        #print("threadID: "+str(threadID))
+        thread = clusterFeaturesThread(threadID, workQueue)
+        thread.start()
+        threads.append(thread)
+
+    # Fill the queue
+    queueLock.acquire()
+    for cluster_number in clu_list:
+        workQueue.put(cluster_number)
+    queueLock.release()
+
+    # Wait for queue to empty
+    while not workQueue.empty():
+        pass
+
+    # Notify threads it's time to exit
+    exitFlag = 1
+
+    # Wait for all threads to complete
+    for t in threads:
+        t.join()
+
+    # **** features exctraction complete for all clusters ****
+
+
+    genomic_feature_file = open(cur_out_dir + "/genomic_feature_table.txt", "w")
+    header ='bracket-mirna-fraction\thairpin-size-estimate\tloop-mirna-distance-estimate\t' + \
+		 'loop-size-estimate\tloops-in-hairpin\tminimum-free-energy\t' + \
+		 'mirna-bracket-discrepancy\tmirna-bracket-majority\tmirna-unmatched' #\tscore' #dbg
+    header +='\n'
+
+    genomic_feature_file.write(header)
+
+    # write features in genomic_feature_table.txt
+    for key in sorted(genomic_feature_matrix.iterkeys(), key=int):
+        cluster_feature_list = genomic_feature_matrix[key]
+
+        # write/append line to genomic_feature_table.txt
+        feature_tuple = tuple(cluster_feature_list)
+        feature_line = ("%s\t"*(len(cluster_feature_list)-1) + "%s\n") % (feature_tuple)
+        genomic_feature_file.write(feature_line)
+    genomic_feature_file.close()
+
+
+    cmd = "paste %s/feature_table.txt %s/genomic_feature_table.txt > %s/all_feature_table.txt" % (cur_out_dir, cur_out_dir, cur_out_dir)
+    subprocess.check_call(cmd, shell=True)
+    cmd = "mv %s/all_feature_table.txt %s/feature_table.txt" % (cur_out_dir, cur_out_dir)
+    subprocess.check_call(cmd, shell=True)
+
+    cmd = "awk -F'\t' 'NF==35 {print}' %s/feature_table.txt  > %s/feature_table.txt.filtered" % (cur_out_dir, cur_out_dir)
+    subprocess.check_call(cmd, shell=True)
+    cmd = "mv %s/feature_table.txt.filtered %s/feature_table.txt" % (cur_out_dir, cur_out_dir)
+    subprocess.check_call(cmd, shell=True)
+
+    print("["+job_id+"]<< Genomic features calculations complete!\n")

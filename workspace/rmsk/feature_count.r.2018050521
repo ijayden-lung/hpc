@@ -1,0 +1,31 @@
+#!/home/biology/opt/R-3.4.1/bin/Rscript
+#PBS -q fat
+#PBS -N featureCounts
+#PBS -l nodes=1:ppn=12
+#PBS -j oe 
+#PBS -l walltime=10:00:00
+#PBS -V
+
+
+library(Rsubread)
+
+args<-commandArgs(T)
+#args = c('/data1/lyk/clean_data/rmsk/tead1.repeatMasker.gtf','/data1/lyk/clean_data/rmsk/table_fc_tead1_prost.tsv','/data1/lyk/clean_data/rmsk/stat_fc_tead1_prost.txt')
+
+files = c('/home/bio-longyk/workspace/liver/STAR/SRR1636809/Aligned.sortedByCoord.out.bam','/home/bio-longyk/workspace/liver/STAR/SRR1636811/Aligned.sortedByCoord.out.bam','/home/bio-longyk/workspace/liver/STAR/SRR1636810/Aligned.sortedByCoord.out.bam','/home/bio-longyk/workspace/liver/STAR/SRR1636812/Aligned.sortedByCoord.out.bam')
+#files=c("/data1/lyk/clean_data/STAR_TRIM/high-1/Aligned.sortedByCoord.out.bam","/data1/lyk/clean_data/STAR_TRIM/high-2/Aligned.sortedByCoord.out.bam","/data1/lyk/clean_data/STAR_TRIM/low-1/Aligned.sortedByCoord.out.bam","/data1/lyk/clean_data/STAR_TRIM/low-2/Aligned.sortedByCoord.out.bam")
+
+fc_PE <- featureCounts(files,annot.ext=args[1],isGTFAnnotationFile=TRUE,GTF.featureType="exon",GTF.attrType="gene_id",useMetaFeatures=TRUE,isPairedEnd=TRUE, countMultiMappingReads=TRUE, fraction=TRUE, requireBothEndsMapped=TRUE,strandSpecific=2, nthreads=12)
+
+write.table(fc_PE$counts,args[2],quote=FALSE,sep="\t",row.names=TRUE,col.names=TRUE)
+write.table(fc_PE$stat,args[3],quote=FALSE,sep="\t")
+
+
+#files=c('/home/liulingjie/prost/star_mapping/SRR536342/Aligned.sortedByCoord.out.bam','/home/liulingjie/prost/star_mapping/SRR536344/Aligned.sortedByCoord.out.bam','/home/liulingjie/prost/star_mapping/SRR536346/Aligned.sortedByCoord.out.bam','/home/liulingjie/prost/star_mapping/SRR536348/Aligned.sortedByCoord.out.bam','/home/liulingjie/prost/star_mapping/SRR536350/Aligned.sortedByCoord.out.bam','/home/liulingjie/prost/star_mapping/SRR536352/Aligned.sortedByCoord.out.bam')
+
+#fc_PE <- featureCounts(files,annot.ext=args[1],isGTFAnnotationFile=TRUE,GTF.featureType="exon",GTF.attrType="gene_id",useMetaFeatures=TRUE,isPairedEnd=TRUE, countMultiMappingReads=TRUE, fraction=TRUE, requireBothEndsMapped=TRUE, nthreads=16)
+
+#write.table(fc_PE$counts,args[2],quote=FALSE,sep="\t")
+#write.table(fc_PE$stat,args[3],quote=FALSE,sep="\t")
+
+

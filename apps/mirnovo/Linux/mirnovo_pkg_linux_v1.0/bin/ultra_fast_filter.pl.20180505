@@ -1,0 +1,65 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Data::Dumper;
+
+my $input = $ARGV[0];
+my $wd = $ARGV[1];
+
+# filter out seqs with less than 3 reads from initial tallied file
+
+my %parameters_hash = ();
+open(PARH, "$wd/parameters.log");
+while(<PARH>){
+       chomp;
+       my @vals = split("\t", $_);
+	if($#vals == 1){
+		$parameters_hash{ $vals[0] } = $vals[1];
+	} else{
+		$parameters_hash{ $vals[0] } = 'NA';
+	}	
+}
+close(PARH);
+print Dumper(\%parameters_hash);
+
+# default
+my $min_depth = 3;
+if( defined($parameters_hash{'ultra_fast_threshold'})){
+	$min_depth = $parameters_hash{'ultra_fast_threshold'};
+	print "min_depth: $min_depth\n";
+} #else{ 
+#	$min_depth = 3;
+#}
+
+`gunzip -c $input > $input.unzipped`;
+
+open(FH, "$input.unzipped");
+open(OUT, ">$input.ultrafast");
+
+my $header = '';
+my $depth = '';
+
+while(<FH>){
+	
+	chomp;
+	my $line = $_;
+
+	if($line =~ /^>/){
+		$header = $line;
+		$depth = $line;
+		$depth =~ s/(.*)_x//;
+	} else{
+		if( $depth >= $min_depth ){
+			print OUT "$header\n";
+			print OUT "$line\n";
+		}
+	}
+}
+
+close(FH);
+close(OUT);
+
+`gzip $input.ultrafast`;
+`rm $input.unzipped`;
+`mv $input.ultrafast.gz $input`;

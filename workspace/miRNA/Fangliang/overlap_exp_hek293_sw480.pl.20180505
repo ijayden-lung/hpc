@@ -1,0 +1,34 @@
+#!/usr/bin/perl -w
+open FILE,"awk '(\$2>0 && \$3>0 && \$4>0 && \$5>0)' Exp_miRNA.tsv |";
+<FILE>;
+my %sw480;
+while(<FILE>){
+	chomp;
+	my ($mirna,$h1,$h2,$l1,$l2) = split /\t/;
+	my $mean = ($h1+$h2+$l1+$l2)/4;
+	$sw480{$mirna} = $mean;
+}
+
+open FILE,'miRmine_HEK293_exp.tsv';
+<FILE>;
+my %hek293;
+while(<FILE>){
+	chomp;
+	s/\"//g;
+	my ($mature,$precursor,$exp) = split /,/;
+	if($exp>0){
+		$hek293{"$mature->$precursor"} = $exp;
+	}
+}
+
+my $num = keys %sw480;
+print "$num\n";
+
+open OUT, '>miRNA_hek293_sw480_overlap.txt';
+foreach my $mirna (keys %sw480){
+	if(exists $hek293{$mirna}){
+		my ($mature,$precursor) = split /\-\>/,$mirna;
+		print OUT "$mature\t$precursor\t$sw480{$mirna}\t$hek293{$mirna}\n";
+	}
+
+}

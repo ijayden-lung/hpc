@@ -1,0 +1,159 @@
+#!/usr/bin/perl 
+use List::Util qw(first max maxstr min minstr reduce shuffle sum);
+use Math::Round;
+
+#####Processing the sample;
+my %hash;
+my %sizeF;
+my $i = 0;
+my $total = 0;
+
+$hash{'human'}->{'hACTlib'} = 16525564;
+$hash{'human'}->{'hREPlib'} = 14078000;
+$hash{'human'}->{'hTFKOlib'} =13888764; 
+$hash{'mouse'}->{'mACTlib'} = 12561092;
+$hash{'mouse'}->{'mREPlib'} = 19369724;
+my $ave = (16525564+14078000+13888764+12561092+19369724)/5;
+while(my($key,$val) = each %hash){
+	while(my($k,$v) = each %$val){
+		$sizeF{$k} = $ave/$v;
+		print "$key\t$k\t$sizeF{$k}\n";
+	}
+}
+
+
+open LIB,'/home/bio-longyk/workspace/CRISPR/hACTlib.csv';
+<LIB>;
+my %lib;
+while(<LIB>){
+	chomp;
+	my ($gene,$target) = split /,/;
+	$lib{'hACTlib'}->{$target} = $gene;
+}
+open LIB,'/home/bio-longyk/workspace/CRISPR/hTFKOlib.csv';
+<LIB>;
+while(<LIB>){
+	chomp;
+	my ($gene,$target) = split /,/;
+	$lib{'hTFKOlib'}->{$target} = $gene;
+}
+open LIB,'/home/bio-longyk/workspace/CRISPR/mACTlib.csv';
+<LIB>;
+while(<LIB>){
+	chomp;
+	my ($gene,$target) = split /,/;
+	$lib{'mACTlib'}->{$target} = $gene;
+}
+open LIB,'/home/bio-longyk/workspace/CRISPR/mREPlib.csv';
+<LIB>;
+while(<LIB>){
+	chomp;
+	my ($gene,$target) = split /,/;
+	$lib{'mREPlib'}->{$target} = $gene;
+}
+open LIB,'/home/bio-longyk/workspace/CRISPR/hREPlib.csv';
+<LIB>;
+while(<LIB>){
+	chomp;
+	my ($gene,$target) = split /,/;
+	$lib{'hREPlib'}->{$target} = $gene;
+}
+
+my %data;
+my @sample;
+foreach my $key (sort keys %hash){
+	my $val = $hash{$key};
+	foreach my $k (sort keys %$val){
+		open DATA,"OUT/$k/gRNA_sorted.txt";
+		push @sample,$k;
+		while(<DATA>){
+			chomp;
+			my($target,$reads) = split;
+			$data{$k}->{$target} = $reads;
+			#$data{$k}->{$target} = $reads*$sizeF{$k};
+		}
+	}
+}
+
+#######Gene Track#######
+my %data2;
+my $len20 = 0;
+my $len21 = 0;
+
+
+while(my ($lib,$gRNA) = each %lib){
+	my $data_ref = $data{$lib};
+	foreach my $key (keys %$gRNA){
+		if (exists $data_ref->{$key}){
+			$len20++;
+			$Target->{$lib}++;
+			$TarMapnum->{$lib} +=  $gRNA->{$key};
+			$data2{$lib}->{$key} = $gRNA->{$key};
+			delete $data{$lib}->{$key};
+		}
+		elsif(exists $data_ref->{"G$key"}){
+			$len21++;
+			$Target->{$lib}++;
+			$TarMapnum->{$lib} +=  $gRNA->{$key};
+			$data2{$lib}->{$key} = $gRNA->{$key};
+			delete $data_ref->{$key};
+		}
+		else{
+			$data2{$lib}->{$key} = 0;
+		}
+	}
+}
+	
+my $key_num = keys %data2;
+my $lib_num = keys %lib;
+print "$key_num\t$lib_num\n";
+print "len20:$len20\tlen21:$len21\n";
+
+while(my($lib,$val) = each %data){
+	foreach my $key (keys %$val){
+		$UnTarget->{$lib}++;
+		$UnTarMapnum->{$lib} +=  $val->{$key};
+	}
+}
+
+open OUT, '>Log_Library.tsv';
+print OUT join "\t","",@sample,"\n";
+my @row = ("Number of traget in library:","Number of target not in library:","MapNum of target in library:","MapNum of target not in library:","Reads per target in library:","Reads per target not in library:");
+print OUT "$row[0]";
+foreach my $sam (@sample){
+	print OUT "\t$Target->{$sam}";
+}
+print OUT "\n";
+print OUT "$row[1]";
+foreach my $sam (@sample){
+	print OUT "\t$UnTarget->{$sam}";
+}
+print OUT "\n";
+print OUT "$row[2]";
+foreach my $sam (@sample){
+	printf OUT ("\t%.0f",$TarMapnum->{$sam});
+}
+print OUT "\n";
+print OUT "$row[3]";
+foreach my $sam (@sample){
+	printf OUT ("\t%.0f",$UnTarMapnum->{$sam});
+}
+print OUT "\n";
+print OUT "$row[4]";
+foreach my $sam (@sample){
+	my $per = $TarMapnum->{$sam}/$Target->{$sam};
+	printf OUT ("\t%.0f",$per);
+}
+print OUT "\n";
+print OUT "$row[5]";
+foreach my $sam (@sample){
+	my $per = $UnTarMapnum->{$sam}/$UnTarget->{$sam};
+	printf OUT ("\t%.0f",$per);
+}
+print OUT "\n";
+print OUT "size factors:";
+foreach my $sam (@sample){
+	printf OUT ("\t%.2f",$sizeF{$sam});
+}
+
+

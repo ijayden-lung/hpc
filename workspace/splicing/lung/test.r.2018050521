@@ -1,0 +1,13 @@
+#!/usr/bin/env Rscript
+
+table=read.table("DESeq2/FC_counts.txt",header=TRUE,row.names=1,sep="\t")
+args<-commandArgs(T)
+
+samples=args[6:length(args)]
+files=args[1:5]
+
+header = names(table)
+header=sub("STAR.","",header)
+header=sub(".Aligned.sortedByCoord.out.bam","",header)
+names(table) = header
+head(table)

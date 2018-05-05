@@ -1,0 +1,3 @@
+#!/bin/bash
+
+infer_experiment.py -i STAR/SRR536352/Aligned.sortedByCoord.out.bam -r ~/apps/RSeQC/hg38.bed -s 2000000

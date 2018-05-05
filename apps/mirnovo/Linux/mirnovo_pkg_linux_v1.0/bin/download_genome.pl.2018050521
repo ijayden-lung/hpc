@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+if(@ARGV == 0){
+    print "[error] Please provide a genome identifier: ./download_genome.pl genome_id\nThe list of all supported genome identifiers can be found at misc/genomes.txt (1st column)\n\n";
+}
+
+my $genome = $ARGV[0];
+
+my %supported_genomes = ();
+open(FH, "../misc/genomes.txt");
+while(<FH>){
+    chomp;
+    my @vals = split(/ /, $_);
+    $supported_genomes{ $vals[0] } = 1;
+}
+close(FH);
+
+if(!defined( $supported_genomes{ $genome } )){
+    die "[error] Please provide a valid genome identifier.\nThe list of all supported genome identifiers can be found at misc/genomes.txt (1st column)\n\n";
+}
+
+my $url = "http://wwwdev.ebi.ac.uk/enright-dev/mirnovo-standalone-pkg/Genome-Annotation-1.0/$genome.zip";
+`cd ../Genome-Annotation-1.0; wget $url; unzip $genome.zip && rm -f $genome.zip`;
+
+print "[done] '$genome' genome was installed succesfully.\n\n";

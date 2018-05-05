@@ -1,0 +1,18 @@
+#!/bin/bash
+#PBS -q cal
+#PBS -N BOWTIE
+#PBS -l nodes=1:ppn=12
+#PBS -j oe
+#PBS -V
+#PBS -l walltime=48:00:00
+
+sizes='hg38.chrom.sizes'
+sample='SH1'
+cd ~/workspace/miRNA/Fangliang/
+
+bowtie -p 12 -q -n 0 -e 80 -l 18 -a -m 5 --best --strata /home/bio-longyk/cnda/bt1_index/hg38 $sample/$sample.fq -S bowtie_out/$sample.sam
+#samtools sort -o bowtie_out/$sample.sorted.bam -@ 12 bowtie_out/$sample.sam
+#samtools index -@ 12 bowtie_out/$sample.sorted.bam
+#rm bowtie_out/$sample.sam
+#bedtools  genomecov -split -bg -ibam bowtie_out/$sample\.sorted.bam -g $sizes >bowtie_out/$sample\.bg
+#/home/bio-ligp/tools/kentUtils/bin/linux.x86_64/bedGraphToBigWig bowtie_out/$sample\.bg $sizes bowtie_out/$sample\.bigwig

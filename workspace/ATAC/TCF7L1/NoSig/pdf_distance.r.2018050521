@@ -1,0 +1,68 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+
+args<-commandArgs(T)
+
+data = read.table(args[1],header=TRUE,sep="\t")
+pdf(args[2])
+
+
+
+ggplot(data=data)+
+geom_density(aes(x=log10(abs(runx2)),color="runx2"))+
+geom_density(aes(x=log10(abs(tcf7l1)),color="tcf7l1"))+
+geom_density(aes(x=log10(abs(tead1)),color="tead1"))+
+theme(axis.title=element_text(size =15),axis.text=element_text(size =15),legend.position=c(0.2,0.9),legend.title=element_blank(),legend.text=element_text(size=10))+
+scale_x_continuous("log10 distance between motif and TSS",breaks=1*(0:6))
+
+data1 = subset(data,runx2 != 'NA' & tcf7l1 != 'NA')
+data2 = subset(data,runx2 != 'NA' & tead1 != 'NA')
+data3 = subset(data,tcf7l1 != 'NA' & tead1 != 'NA')
+data4 = subset(data,runx2 != 'NA' & tcf7l1 != 'NA' & tead1 != 'NA')
+
+
+
+
+ggplot()+
+geom_density(data = data1,aes(x=log10(abs(runx2)),color="runx2&tcf7l1"))+
+geom_density(data=data2,aes(x=log10(abs(runx2)),color="runx2&tead1"))+
+geom_density(data=data4,aes(x=log10(abs(runx2)),color="runx2&tcf7l1&tead1"))+
+theme(axis.title=element_text(size =15),axis.text=element_text(size =15),legend.position=c(0.2,0.9),legend.title=element_blank(),legend.text=element_text(size=10))+
+scale_x_continuous("log10 absolute distance between runx2's motif and TSS",breaks=1*(0:6))
+
+ggplot()+
+geom_density(data = data1,aes(x=log10(abs(tcf7l1)),color="runx2&tcf7l1"))+
+geom_density(data=data3,aes(x=log10(abs(tcf7l1)),color="tcf7l1&tead1"))+
+geom_density(data=data4,aes(x=log10(abs(tcf7l1)),color="runx2&tcf7l1&tead1"))+
+theme(axis.title=element_text(size =15),axis.text=element_text(size =15),legend.position=c(0.2,0.9),legend.title=element_blank(),legend.text=element_text(size=10))+
+scale_x_continuous("log10 absolute distance between tcf7l1's motif and TSS",breaks=1*(0:6))
+
+ggplot()+
+geom_density(data = data2,aes(x=log10(abs(tead1)),color="runx2&tead1"))+
+geom_density(data=data3,aes(x=log10(abs(tead1)),color="tcf7l1&tead1"))+
+geom_density(data=data4,aes(x=log10(abs(tead1)),color="runx2&tcf7l1&tead1"))+
+theme(axis.title=element_text(size =15),axis.text=element_text(size =15),legend.position=c(0.2,0.9),legend.title=element_blank(),legend.text=element_text(size=10))+
+scale_x_continuous("log10 absolute distance between tead1's motif and TSS",breaks=1*(0:6))
+
+
+ggplot()+
+geom_density(data = data2,aes(x=log10(abs(runx2-tead1)),color="abs(runx2-tead1)"))+
+geom_density(data=data3,aes(x=log10(abs(tead1-tcf7l1)),color="abs(tcf7l1-tead1)"))+
+geom_density(data=data1,aes(x=log10(abs(tcf7l1-runx2)),color="abs(runx2-tcf7l1)"))+
+theme(axis.title=element_text(size =15),axis.text=element_text(size =15),legend.position=c(0.15,0.9),legend.title=element_blank(),legend.text=element_text(size=10))+
+scale_x_continuous("log10 absolute motifs distance in overlap genes",breaks=1*(0:6))
+
+
+ggplot()+
+geom_density(data=data,aes(x=log10(abs(random))))+
+theme(axis.title=element_text(size =15),axis.text=element_text(size =15),legend.position=c(0.2,0.9),legend.title=element_blank(),legend.text=element_text(size=10))+
+scale_x_continuous("log 10 random absolute motifs distance",breaks=1*(0:6))
+
+
+#ggplot(data=dat.2,aes(x=dist))+geom_histogram(binwidth=5)+labs(x='Distance between sites')+xlim(-200,200)
+
+
+
+#df <- data.frame(x = c(data$runx2,data$tcf7l1,data$tead1),g = gl(3,labels =c('runx2','tcf7l1','tead1'), length(data$runx2)))
+#ggplot(df, aes(x))+stat_ecdf(geom = "step",pad=FALSE)+scale_x_continuous("Absolute Distance between sites")+scale_y_continuous("Cumulative Fraction of sites",breaks=0.2*(0.20),labels=scales::percent)
+

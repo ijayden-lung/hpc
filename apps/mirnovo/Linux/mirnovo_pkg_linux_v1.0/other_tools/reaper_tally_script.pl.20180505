@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+## - Input arguments: [file] [adapter]
+## - Output file: [file.tallied.gz]
+
+my $file = $ARGV[0];
+my $adapter = $ARGV[1];
+
+print "file: $file\n";
+print "adapter: $adapter\n";
+
+`reaper -i $file -geom no-bc -3pa $adapter -tabu 3/5 -basename $file -tri 20`;
+`tally -i $file.lane.clean.gz -o $file.tallied.gz -tri 20 -l 16 -u 28 --fasta-out -format '>trn_t%T_i%I_x%C%n%R%n'`;
+
+# cleanup auxiliary generated files
+`rm *lane.clean*; rm *lint.gz*; rm *lane.report*; rm *sumstat`;

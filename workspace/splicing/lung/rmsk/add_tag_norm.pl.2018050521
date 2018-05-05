@@ -1,0 +1,62 @@
+#!/usr/bin/perl -w
+
+my ($anno,$table,$out,$read) = @ARGV;
+
+open ANNO,$anno;
+my %hash;
+while(<ANNO>){
+	chomp;
+	my %attr1;
+	my ($chr1,$source1,$feature1,$str1,$end1,$score1,$strand1,$frame1,$attribute1) = split /\t/;
+	$attribute1 =~  s/\s+$//;
+	foreach (split /;/,$attribute1){my ($key,$val) = split;$val =~ s/\;|\"//g;$attr1{$key} = $val;}
+	my ($exon_id,$relation) = ($attr1{'exon_id'}, $attr1{'relation'});
+	$hash{$exon_id} = $relation;
+}
+
+
+my %gene;
+open FILE, $table;
+my $header = <FILE>;
+chomp $header;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $gene = shift @data;
+	$gene{$gene} = \@data;
+}
+
+
+
+############New Normalizing
+my $i=0;
+my $total = 0;
+my @sum;
+foreach my $ele (split /\s+/,$read){
+	my ($uniq,$mult) = split /,/,$ele;
+	$sum[$i] = $uniq+$mult;
+	$total += $sum[$i];
+	$i++;
+}
+my $ave = $total/@sum;
+for(my $i=0;$i<@sum;$i++){
+	$size[$i] = $ave/$sum[$i];
+}
+############New Normalizing
+
+
+open OUT, '>',$out;
+print OUT "$header\tTag\n";
+while(my ($key,$val) = each %gene){
+	print OUT $key;
+	for(my $i=0;$i<@size;$i++){
+		$val->[$i] *= $size[$i];
+		print OUT "\t$val->[$i]";
+	}
+	if($hash{$key} eq "none"){
+		print OUT "\tNo\n";
+	}
+	else{
+		print OUT "\tYes\n";
+	}
+}

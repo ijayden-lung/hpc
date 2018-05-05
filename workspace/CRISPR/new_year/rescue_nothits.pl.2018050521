@@ -1,0 +1,70 @@
+#!/usr/bin/perl -w
+#
+#
+
+my $MinMisMatch = 2;
+
+my %lib;
+open LIB, "/home/bio-longyk/workspace/CRISPR/Library/lib_hKO.csv";
+<LIB>;
+while(<LIB>){
+	chomp;
+	my ($gene,$grna) = (split /,/)[1,6];
+	$lib{$grna} .= "$gene;";
+}
+
+
+
+open FILE,"Norm_RC_hKO_WNTScreen.tsv";
+#open FILE,'test.tsv';
+my $header = <FILE>;
+chomp $header;
+open OUT,">Resuce_Norm_RC_hKO_WNTScreen.tsv";
+print OUT "CIGAR\tLibrary\t$header\n";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	if($data[0] =~ /NotHits/){
+		my ($info) = &rescue($data[1]);
+		if($info ne 0){
+			print OUT join "\t",$info,@data[1,$#data];
+			print OUT "\n";
+		}
+		else{
+			print OUT "*\t*\t$_\n";
+		}
+	}
+	else{
+		print OUT "20M\t$data[1]\t$_\n";
+	}
+}
+
+sub rescue{
+	my ($seq) = @_;
+	my %info;
+	my $multi = 0;
+	my %num;
+	while(my ($grna,$gene) = each %lib){
+		my $mismatch = 0;
+		my $cigar;
+		for(my $i=0;$i<length $seq;$i++){
+			if(substr($seq,$i,1) ne substr($grna,$i,1)){
+				$mismatch++;
+				my $pos = $i+1;
+				$cigar .= "X$pos";
+			}
+			last if $mismatch > $MinMisMatch;
+		}
+		$num{$mismatch}++;
+		$info{$mismatch} = "$cigar\t$grna\t$gene";
+	}
+	if(exists $num{1} && $num{1} == 1){
+		 return $info{1};
+	 }
+	 elsif(exists $num{2} && $num{2} == 1){
+		 return $info{2};
+	 }
+	 else{
+		 return 0;
+	 }
+}

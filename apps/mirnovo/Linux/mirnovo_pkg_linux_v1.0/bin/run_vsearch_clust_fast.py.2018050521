@@ -1,0 +1,256 @@
+#!/usr/bin/env python
+
+from sys import argv
+from sys import exit
+import os.path
+import os
+import subprocess
+import gzip
+import random
+import glob
+import re
+import Queue
+import threading
+import time
+
+"""
+-Runs USEARCH cluster-fast -> produces clusters
+-Names singletone clusters (cont. a single seq) as S_cluster.<>
+-Aligns seqs in each cluster with clustalo -> outp: alignm.<>
+
+Command to run script:
+      python run_usearch_clust_fast.py <zipped_fasta> <perc_identity> <min_read_N>
+
+<zipped_fasta> must have extension .fa.gz and must have been "tallied"
+<perc_identity> (e.g. 0.85): perc_id. of seqs to be grouped in the same cluster
+<min_read_N>
+"""
+
+def gunzip_file(zipped_fname):
+    """USEARCH cluster-fast requires an unzipped input file
+       This function unzippes fasta files with.gz extension
+    """
+    unzipped_fname = zipped_fname[:-3]
+    #low_len and up_len will be hardcoded
+    if os.path.exists(unzipped_fname):
+        print(unzipped_fname + ' already exists')
+        return unzipped_fname
+    else:
+        cmd = 'gunzip %s' % (zipped_fname)
+        subprocess.check_call(cmd, shell=True)
+        return unzipped_fname
+
+# cmd to use: util/usearch -cluster_fast \
+# RawFish_40k.tri40.fa -id 0.95 -centroids RawFish.usearch.fa -uc RawFish.clusters
+def run_usearch_clust_fast(tallied_fname, ident_thr, dir, TALLY_LENGTH_LOWER_THRES, TALLY_LENGTH_UPPER_THRES):
+    """Runs usearch cluster_fast to cluster seqs in FASTA file
+    """
+    out_centr_fname = dir + '/uc_centroids.fa'
+    out_clust_fname = dir  + '/uc_clusters'
+    out_conses_fname = dir + '/uc_cons_seqs.fa'
+    out_multial_fname = dir + '/cluster.'
+    #low_len and up_len will be hardcoded
+    # id threshold= 0.95 hardcoded
+    # LOCAL: replace with local installation
+    #cmd = 'util/usearch -cluster_fast %s -id %f -centroids %s -uc %s -msaout %s -consout %s' % (tallied_fname, float(ident_thr), out_centr_fname,\
+
+    #cmd = 'util/usearch -cluster_fast %s -id %f -centroids %s -uc %s -msaout %s -consout %s -threads 20 -qmask dust >/dev/null ' % (tallied_fname, float(ident_thr), out_centr_fname, out_clust_fname, out_multial_fname, out_conses_fname)
+
+    # BETA: vsearch !!!
+    #cmd = "util/vsearch-1.11.1-linux-x86_64/bin/vsearch --cluster_fast %s --id %f --minseqlength %d --maxseqlength %d --clusters %s --threads %d --qmask dust >/dev/null 2>&1" % (tallied_fname, float(ident_thr), int(TALLY_LENGTH_LOWER_THRES), int(TALLY_LENGTH_UPPER_THRES), out_multial_fname, 20)
+    #cmd = "util/vsearch-1.11.1-linux-x86_64/bin/vsearch --cluster_fast %s --id %f --minseqlength %d --maxseqlength %d --clusters %s --threads %d --qmask dust " % (tallied_fname, float(ident_thr), int(TALLY_LENGTH_LOWER_THRES), int(TALLY_LENGTH_UPPER_THRES), out_multial_fname, 20)
+    cmd = "util/vsearch --cluster_fast %s --id %f --minseqlength %d --maxseqlength %d --clusters %s --threads %d --qmask dust " % (tallied_fname, float(ident_thr), int(TALLY_LENGTH_LOWER_THRES), int(TALLY_LENGTH_UPPER_THRES), out_multial_fname, 20)
+    # dbg:
+    #print(cmd)
+
+    subprocess.check_call(cmd, shell=True)
+    return out_centr_fname, out_clust_fname
+
+
+def find_Nread_clusters(dir, min_read_N, min_num_of_variants):
+    """Find aligned clusters (in dir) with >= min_read_N reads
+       rename them from e.g. cluster.1 to Cluster.1
+       min_read_N (integer):minimum numb. of reads to be incl. in a cluster
+       min_read_N -> min.value 2
+    """
+
+    # depr
+    #cmd = "ls %s -v | grep '^cluster\.[0-9]*$' | while read x ; do grep '^>' -c %s/$x ; done | awk '$1>=%d {print NR-1}' | while read y ; do mv %s/cluster.${y} %s/Cluster.${y} ; done" % (dir, dir, int(min_read_N), dir, dir)
+    #print("cmd: " + cmd)
+    #subprocess.check_call(cmd, shell=True)
+    tmp_cluster_files = glob.glob(dir + "/cluster.*")
+
+
+    for cl in tmp_cluster_files:
+        cur_total_reads_depth = 0
+        #print(cl)
+        variants_cnt = 0
+
+        with open(cl) as clf:
+            for line in clf:
+                line = line.strip()
+
+                if re.match(r'^>', line):
+                    variants_cnt += 1
+                    #print(line)
+                    vals = line.split("_x")
+                    #print(vals)
+                    depth = vals[1]
+                    #depth = depth.replace('x', '')
+                    #print(depth)
+
+                    cur_total_reads_depth += int(depth)
+
+	#print(cur_total_reads_depth)
+
+        if cur_total_reads_depth >= int(min_read_N) and variants_cnt >= int(min_num_of_variants): # exclude singleton clusters and others with low depth
+            new_cl = cl.replace("cluster", "Cluster")
+            #print(new_cl)
+            cmd = "mv %s %s" % (cl, new_cl)
+            subprocess.check_call(cmd, shell=True)
+
+
+
+
+# global variable
+exitFlag = 0
+
+class clustaloMyThread (threading.Thread):
+    def __init__(self, threadID, q):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.q = q
+    def run(self):
+    #    print "Starting " + str(self.threadID)
+        realign_usearch_cluster_seqs(self.threadID, self.q)
+    #    print "Exiting " + str(self.threadID)
+
+
+def realign_usearch_cluster_seqs(threadID, q): #q = and index for the current 'dir'
+    """dir: usearch output directory
+       Finds all cluster files in dir (e.g. Cluster.0, singletones excluded); for each cluster,
+       takes the seqs and realigns them with clustalo; realignments are stored
+       in 'alignm.<>' files
+       ! only clusters with >= min_read_number reads will be realigned
+
+    """
+
+    while not exitFlag:
+        queueLock.acquire()
+        if not workQueue.empty():
+            data_index = q.get()
+            cur_cluster_file = cluster_files[data_index]
+            queueLock.release()
+
+            #print("%s processing %s: %s" % (threadID, data_index, cur_cluster_file))
+
+            cur_alignm_file = cur_cluster_file
+            cur_alignm_file = cur_alignm_file.replace("Cluster", "alignm")
+
+	    # dbg
+	    num_lines = sum(1 for line in open(cur_cluster_file))
+	    if num_lines > 2:
+		    # depr:
+		    #cmd = "util/clustalo --infile=%s --dealign --outfmt=fa --outfile=%s --wrap=100 --threads=4" % (cur_cluster_file, cur_alignm_file)
+		    cmd = "util/muscle -in %s -out %s -maxiters 1 -diags -quiet" % (cur_cluster_file, cur_alignm_file)
+		    #print(cmd)
+		    subprocess.check_call(cmd, shell=True)
+		    cmd = "util/fasta_formatter -i %s -w 100 > %s.temp; mv %s.temp %s" % (cur_alignm_file, cur_alignm_file, cur_alignm_file, cur_alignm_file)
+		    subprocess.check_call(cmd, shell=True)
+	    else:
+	    	    os.rename(cur_cluster_file, cur_alignm_file)
+
+        else:
+            queueLock.release()
+        time.sleep(0.5)
+
+    # depr
+    #cmd = "ls %s | grep '^Cluster\.[0-9]*$' | while read x ; do util/clustalo --infile=%s/${x} --dealign --outfmt=fa --outfile=%s/$(echo $x | sed -e 's/Cluster/alignm/') ; done" % (dir, dir, dir)
+    #subprocess.check_call(cmd, shell=True)
+
+
+
+
+
+
+# deprecated:
+def find_singletone_clusters(dir):
+    """Finds clusters (in dir) with a single seq and renames the cluster file
+       from e.g. cluster.1 to S_cluster.1 (S -> Singletone)
+    """
+    cmd = "ls -v %s/cluster.* | while read x ; do grep '^>' -c $x ; done | awk '$1==1 {print NR-1}' | while read y ; do mv %s/cluster.${y} %s/S_cluster.${y} ; done" % (dir, dir, dir)
+    subprocess.check_call(cmd, shell=True)
+
+
+
+if __name__ == '__main__':
+
+
+    input_fasta = argv[1] # expect COMPRESSED file
+    usearch_ident_thr = argv[2] # e.g. 0.85
+    min_read_N = argv[3]	# e.g. 10
+    usearch_dir = argv[4]
+    min_num_of_variants = argv[5]
+    job_id = argv[6]
+    TALLY_LENGTH_LOWER_THRES = argv[7]
+    TALLY_LENGTH_UPPER_THRES = argv[8]
+
+
+
+    NUM_OF_THREADS = 40
+    dir = usearch_dir
+
+    if input_fasta[-3:] == '.gz':
+        #print('> UNZIPPING ' + input_fasta + "\n")
+        unzipped_file = gunzip_file(input_fasta)
+    else:
+        unzipped_file = input_fasta
+
+
+    print("["+job_id+"]>> Running [vsearch] algorithm...")
+    run_usearch_clust_fast(unzipped_file, usearch_ident_thr, dir, TALLY_LENGTH_LOWER_THRES, TALLY_LENGTH_UPPER_THRES)
+    print("["+job_id+"]<< [vsearch] returned successfully!\n")
+    #print('Please look for results in dir. ', dir)
+
+
+    print("["+job_id+"]>> Retaining only clusters with at least '"+ min_read_N +"' reads and at least '" + min_num_of_variants + "' sequence variants...")
+    find_Nread_clusters(dir, min_read_N, min_num_of_variants)
+    print("["+job_id+"]<< Clusters filtering complete!\n")
+
+    # list all files to apply 'clustalo'
+    global cluster_files
+    cluster_files = glob.glob(dir + "/Cluster.*")
+    queueLock = threading.Lock()
+    workQueue = Queue.Queue(len(cluster_files))
+    threads = []
+
+    #print(cluster_files)
+    #print("-----------")
+
+    print("["+job_id+"]>> Aligning clusters using [muscle]...")
+
+    for threadID in range(0, NUM_OF_THREADS):
+        #print("threadID: "+str(threadID))
+        thread = clustaloMyThread(threadID, workQueue)
+        thread.start()
+        threads.append(thread)
+
+    # Fill the queue
+    queueLock.acquire()
+    for cluster_file_id in range(0, len(cluster_files)):
+    	workQueue.put(cluster_file_id)
+    queueLock.release()
+
+    # Wait for queue to empty
+    while not workQueue.empty():
+    	pass
+
+    # Notify threads it's time to exit
+    exitFlag = 1
+
+    # Wait for all threads to complete
+    for t in threads:
+        t.join()
+    print("["+job_id+"]<< Clusters alignment [muscle] returned successfully!\n")
+
+

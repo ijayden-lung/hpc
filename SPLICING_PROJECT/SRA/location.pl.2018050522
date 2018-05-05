@@ -1,0 +1,43 @@
+#!/usr/bin/perl -w
+#
+use Translation;
+open GTF, 'denov.gtf';
+open OUT, '>tead1.rna';
+my $seq = "";
+my $novo = "";
+while(<GTF>){
+	chomp;
+	my ($chr,$source,$feature,$str,$end,$score,$strand,$frame,$attribute) = split /\t/;
+	my %attr;
+	foreach (split /;/,$attribute){
+		my ($key,$val) = split;
+		$val =~ s/\;|\"//g;
+		$attr{$key} = $val;
+	}
+	#if($attr{'exon_number'} eq ""){
+		open FILE, "/home/bio-longyk/cnda/hg38/$chr.1fa";
+		my $ref = <FILE>;
+		if($strand eq "+"){
+			$fram = substr($ref,$str,$end-$str+1);
+			$seq .= $fram;
+			print OUT ">exon$attr{'exon_number'}\n$fram\n";
+		}
+		else{
+			$fram = reverse substr($ref,$str,$end-$str+1);
+			$fram =~ tr/ATCG/TAGC/;
+			$seq .= $fram;
+		}
+		#}
+
+	if($attr{'exon_number'} eq "17-18"){
+		$novo = substr($ref,$str,$end-$str+1);
+	}
+
+}
+
+#print OUT "$seq\n\n";
+#print OUT "$novo\n\n";
+
+my ($a,$b,$c) = translate_codon($seq);
+print "$a\t$b\t$c\n";
+#translate_codon($novo);

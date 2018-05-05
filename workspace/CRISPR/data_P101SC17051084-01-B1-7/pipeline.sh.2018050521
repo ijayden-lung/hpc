@@ -1,0 +1,18 @@
+#!/bin/bash
+#./scatterplot.r mKO_3K3_target.tsv ScatterPlot_3K3.pdf
+#./scatterplot.r mKO_MEF_target.tsv ScatterPlot_MEF.pdf
+#./scatterplot.r mKO_293R_target.tsv ScatterPlot_293R.pdf
+
+#sed -i s/mKOMEF/mKO3K3/g cdf.r
+#./cdf.r mKO_3K3_target.tsv CDF_3K3.pdf
+#sed -i s/mKO3K3/mKOMEF/g cdf.r
+#./cdf.r mKO_MEF_target.tsv CDF_MEF.pdf
+
+#cp cdf.r cdf.r.bk
+#cp cdf.r.bk cdf.r 
+sed -i s/mKOMEFDay3/mKO293RGFPPos/g cdf.r
+sed -i s/mKOMEFDay9/mKO293RGFPNeg/g cdf.r
+sed -i s/mKOMEFDay15/mKO293Rtotal/g cdf.r
+./cdf.r mKO_293R_target.tsv CDF_293R.pdf
+
+

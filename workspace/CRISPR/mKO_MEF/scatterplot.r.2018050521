@@ -1,0 +1,18 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+data = read.table(args[1],header=TRUE,sep="\t")
+pdf(args[2])
+
+
+
+ggplot(data, aes(x=log2(MEF4thDay1), y=log2(MEF5thDay1)))+geom_point()+labs(x="log2(Day1.1)",y="log2(Day1.2)")+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+
+ggplot(data, aes(x=log2(MEF4thDay10), y=log2(MEF5thDay10)))+geom_point()+labs(x="log2(Day10.1)",y="log2(Day10.2)")+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))+xlim(0,15)+ylim(0,15)
+
+ggplot(data, aes(x=log2(MEF4thDay10/MEF4thDay1), y=log2(MEF5thDay10/MEF5thDay1)))+geom_point()+labs(x="log2(Day10.1/Day1.1)",y="log2(Day10.2/Day1.2)")+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+
+
+

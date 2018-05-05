@@ -1,0 +1,28 @@
+#!/bin/bash
+
+
+#### Default: ACACC GTTTT
+#### ACT,REP: TGTTG GTTTA
+#### TTFKO: GTTGG GTTTA
+
+dir='/home/bio-longyk/workspace/CRISPR/Library'
+cd $dir
+
+#sample=(hACT-CaAp hACT-KPDT hREP-KPDT)
+#mkdir "$dir/OUT/hACT-CaAp"
+#./extract_gRNA.pl fastq/hACT-CaAp.fq.gz  hACT-CaAp TGTTG GTTTA OUT/hACT-CaAp
+#mkdir "$dir/OUT/hACT-KPDT"
+#./extract_gRNA.pl fastq/hACT-KPDT.fq.gz  hACT-KPDT TGTTG GTTTA OUT/hACT-KPDT
+#mkdir "$dir/OUT/hREP-KPDT"
+#./extract_gRNA.pl fastq/hREP-KPDT.fq.gz  hREP-KPDT TGTTG GTTTA OUT/hREP-KPDT
+
+### Do this after finishing mapping job;
+./merge_log.pl $lib $exp 
+./normalize.pl $lib $exp
+
+./generate_ref.pl $lib
+./generate_query.pl $lib $exp
+./retrieve_notHits.pl $lib $exp
+
+#./prepare_RIGER_input.pl
+#./riger.sh

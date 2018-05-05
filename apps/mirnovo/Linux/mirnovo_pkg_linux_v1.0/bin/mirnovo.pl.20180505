@@ -1,0 +1,176 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Getopt::Long qw(GetOptions);
+ 
+my $input_file;
+my $input_genome;
+my $training_model_option;
+my $adapter_seq = '';
+my $disable_genomic_features_option = 'NA';
+my $min_seq_length = 16;
+my $max_seq_length = 28;
+my $min_read_depth = 5;
+my $min_variants = 1;
+my $vsearch_id = 0.9;
+my $ultra_fast_option = 'NA';
+my $ultra_fast_threshold = '3';
+my $only_genomic_features_option = 'NA';
+my $disable_pdf_generation = 0;
+my $print_help;
+my $output_dir_identifier;
+
+
+my $help_str = "Usage:\n$0 -i input_file -g genome -t training_model\n\t\t[-o output_dir_identifier]\n\t\t[-a adapter_sequence | default: '']\n\t\t[-l min_seq_length | default: 16]\n\t\t[-u max_seq_length | default: 28]\n\t\t[-d min_read_depth | default: 5]\n\t\t[-m min_variants | default: 1]\n\t\t[-v vsearch_id | default: 0.9]\n\t\t[--disable-genome]\n\t\t[--genome-only]\n\t\t[--reduce-complexity]\n\t\t[-n tally-threshold | default: 3, enabled only with --reduce-complexity]\n\t\t[--disable-pdf | for faster execution]\n";
+
+GetOptions('i=s' => \$input_file,
+    'g=s' => \$input_genome,
+    't=s' => \$training_model_option,
+    'o=s' => \$output_dir_identifier,
+    'a=s' => \$adapter_seq,
+    'l=s' => \$min_seq_length,
+    'u=s' => \$max_seq_length,
+    'd=s' => \$min_read_depth,
+    'm=s' => \$min_variants,
+    'v=s' => \$vsearch_id,
+    'disable-genome' => \$disable_genomic_features_option,
+    'genome-only' => \$only_genomic_features_option,
+    'reduce-complexity' => \$ultra_fast_option,
+    'n=s' => \$ultra_fast_threshold, 
+    'disable-pdf' => \$disable_pdf_generation,
+    'h|help' => \$print_help,
+) or die "$help_str";
+
+if($print_help){
+    die "$help_str";
+}
+
+# Input sanity check
+if(!$input_file || !(-e $input_file)){
+    die "[error]: please provide an input file: -i input_file\n\n";
+} else{
+    my $chk = `file $input_file`;
+    my @vals = split(/:/, $chk);
+    my $tmp_str = $vals[1];
+    $tmp_str =~ s/^\s+|\s+$//g;
+
+    @vals = split(/ /, $tmp_str);
+    my $file_type = $vals[0];
+
+    #print "file_type: *$file_type*\n";
+    if($file_type ne 'gzip'){
+        die "[error] Unknown input format: please provide a valid gzip file (.gz extension) with the -i (input) argument\n\n";
+    }
+}
+if(!$input_genome){
+    die "[error]: please provide a reference genome: -g genome_index\n";
+} else{
+    my %installed_genomes = ();
+    $installed_genomes {'NA'} = 1;
+    my $dir = '../Genome-Annotation-1.0/';
+
+    opendir(DIR, $dir) or die $!;
+    while (my $file = readdir(DIR)) {
+
+        next unless (-d "$dir/$file" && $file ne '.' && $file ne '..' && $file ne 'tools');
+        $installed_genomes{ $file } = 1
+    }
+    closedir(DIR);
+
+    if(!defined( $installed_genomes{ $input_genome } )){
+        die "[error] Unrecognised reference genome: please use with -g one of the reference genomes installed under Genome-Annotation-1.0/.\n        For more details about installing a reference genome please look at the ../README file.\n\n";
+    }
+}
+if(!$training_model_option){
+    die "[error]: please provide a training model: -t training_model_option\n\n";
+} else{
+
+    my %valid_models = ();
+    open(TF, '../misc/training_models.txt');
+    while(<TF>){
+        chomp;
+        if($_ !~ /^#/){
+            $valid_models{$_} = 1;
+        }
+    }
+    close(TF);
+
+    if(!defined( $valid_models{ $training_model_option } )){
+        die "[error] Unrecognised training model: please use with -t one of the training model options available in the misc/training_models.txt file\n        (please make sure the training model has already been installed prior to run, look at the ../README file for more details).\n\n";
+    }
+
+}
+
+# convert to web-server compatible values
+if($disable_genomic_features_option eq '1'){
+    $disable_genomic_features_option = 'checked';
+}
+if($only_genomic_features_option eq '1'){
+    $only_genomic_features_option = 'checked';
+}
+if($ultra_fast_option eq '1'){
+    $ultra_fast_option = 'checked';
+}
+
+#print "input_file: $input_file\ninput_genome: $input_genome\ntraining_model_option: $training_model_option\nadapter_seq: $adapter_seq\ndisable_genomic_features_option: $disable_genomic_features_option\nmin_seq_length: $min_seq_length\nmax_seq_length: $max_seq_length\nmin_read_depth: $min_read_depth\nmin_variants: $min_variants\nvsearch_id: $vsearch_id\nultra_fast_option: $ultra_fast_option\nultra_fast_threshold: $ultra_fast_threshold\nonly_genomic_features_option: $only_genomic_features_option\ndisable_pdf_generation: $disable_pdf_generation\n";
+
+
+
+my $uuid = $input_file;
+$uuid =~ s/.*\/(.*)\.gz/$1/;
+
+if($output_dir_identifier){
+    $uuid = $output_dir_identifier;
+}
+
+if(-e "../tmp/$uuid"){
+    my @chars = ("A".."Z", "a".."z");
+    my $string;
+    $string .= $chars[rand @chars] for 1..8;
+    $uuid = $uuid."-$string";
+}
+
+
+my $cur_wd = "../tmp/$uuid";
+print "\n-----\n Output dir: ../tmp/$uuid \n-----\n";
+
+`mkdir $cur_wd`;
+`cp $input_file $cur_wd`;
+
+
+# currently static values
+my $email_to_send_results = '';   
+my $classifier_algo = 'randomForest';
+my $merge_samples_option = 'NA';
+my $cdhit_aln_id = 0.85;
+my $cdhit_kmer = 7;
+
+open(FH, ">$cur_wd/parameters.log");
+print FH "input_genome\t$input_genome\n";
+print FH "training_model_option\t$training_model_option\n";
+print FH "adapter_seq\t$adapter_seq\n";
+print FH "classifier_algo\t$classifier_algo\n";
+print FH "merge_samples_option\t$merge_samples_option\n";
+print FH "disable_genomic_features_option\t$disable_genomic_features_option\n";
+print FH "min_seq_length\t$min_seq_length\n";
+print FH "max_seq_length\t$max_seq_length\n";
+print FH "min_read_depth\t$min_read_depth\n";
+print FH "min_variants\t$min_variants\n";
+print FH "vsearch_id\t$vsearch_id\n";
+print FH "email_to_send_results\t$email_to_send_results\n";
+print FH "ultra_fast_option\t$ultra_fast_option\n";
+print FH "ultra_fast_threshold\t$ultra_fast_threshold\n";
+print FH "only_genomic_features_option\t$only_genomic_features_option\n";
+print FH "disable_pdf_generation\t$disable_pdf_generation\n";
+print FH "cdhit_aln_id\t$cdhit_aln_id\n";
+print FH "cdhit_kmer\t$cdhit_kmer\n";
+close(FH);
+
+`echo '' > ../tmp/$uuid/bsub.log`;
+`echo '' > ../tmp/$uuid/bsub.log.clean`;
+`echo '' > ../tmp/$uuid/done`;
+
+`./run_core_mirnovo_pipeline.pl $uuid`;
+
+print "\n-----\n All job progress has been saved to: $cur_wd/bsub.log file. \n\n Results can be found at: $cur_wd/All-Results/ \n-----\n";
