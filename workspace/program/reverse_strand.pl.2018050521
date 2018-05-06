@@ -1,7 +1,0 @@
-#!/usr/bin/perl -w
-
-my $a = <>;
-chomp $a;
-$a =~ tr/AGCT/TCGA/;
-$a = reverse $a;
-print "$a\n";

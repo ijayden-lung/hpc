@@ -1,7 +1,0 @@
-#!/usr/bin/perl -w
-my %hash;
-open FILE,'CombineProst.tsv';
-while(<FILE>){
-	chomp;
-	my ($id) = split;
-	$hash{
