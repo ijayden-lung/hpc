@@ -1,0 +1,11 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+data <- read.table(args[1],header=TRUE)
+pdf(args[2],height=10,width=20)
+
+
+ggplot(data=data,aes(x=sample,y=percent))+geom_bar(stat="identity", position=position_dodge())+theme(axis.text.x = element_text(angle=0, hjust=1, vjust=.5))#+coord_flip()
+
+

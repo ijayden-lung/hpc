@@ -1,0 +1,12 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(ggrepel)
+args<-commandArgs(T)
+pdf(args[2])
+data = read.table(args[1],header=TRUE)
+
+ggplot(data,aes(x=log10(baseMean), y=log2FoldChange))+
+geom_point(aes(colour=Tag),size=1)+labs(x="Log10 Mean ReadCount")+ylim(-10,10)+
+geom_text_repel(aes(label=gene_name),size=4.5, data=subset(data,Rank < 20 | (Rank<264 & log2FoldChange<0)))+
+theme(axis.title=element_text(size =15),axis.text=element_text(size =15),legend.position="none",legend.title=element_blank())+
+geom_hline(yintercept = c(-1,1),linetype="dashed")

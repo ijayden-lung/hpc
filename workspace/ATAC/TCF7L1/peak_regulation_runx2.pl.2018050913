@@ -1,0 +1,89 @@
+#!/usr/bin/perl -w
+#
+my $atac_gene = $ARGV[0];
+
+my %num;
+my %fc;
+my %nearest;
+my %boxplot;
+my %go_gene;
+my %conventer;
+
+open FILE,'DESeq2_mRNA.tsv';
+<FILE>;
+open OUT,">Input_boxplot_$atac_gene.txt";
+print OUT "L2FC\tcondition\n";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	$num{'control'}->{$data[-1]}++;
+	print OUT "$data[3]\tcontrol_$data[-1]\n";
+}
+
+
+
+open FILE,"$atac_gene.targetgene.txt.DESeq2";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	$nearest{$data[16]}->{abs($data[15])} = $data[-1];
+	$fc{$data[16]} = $data[18];
+	$conventer{$data[16]} = $data[0];
+}
+
+
+while(my ($gene,$val) = each %nearest){
+	foreach my $distance (sort{$a<=>$b} keys %$val){
+		$condition = $val->{$distance};
+		if (abs($distance) < 500){
+			$num{'0-0.1k'}->{$condition}++;
+			$go_gene{'0-0.1k'}->{$gene} = '';
+			print OUT "$fc{$gene}\t0-0.1k_$condition\n";
+		}
+		if (abs($distance) < 5000){
+			$num{'0.1k-1k'}->{$condition}++;
+			$go_gene{'0.1k-1k'}->{$gene} = '';
+			print OUT "$fc{$gene}\t0.1k-1k_$condition\n";
+		}
+		elsif(abs($distance)< 50000){
+			$num{'1k-10k'}->{$condition}++;
+			$go_gene{'1k-10k'}->{$gene} = '';
+			print OUT "$fc{$gene}\t1-2k_$condition\n";
+		}
+		elsif(abs($distance)<500000){
+			$num{'10k-100k'}->{$condition}++;
+			$go_gene{'10k-100k'}->{$gene} = '';
+			print OUT "$fc{$gene}\t10k-100k_$condition\n";
+		}
+		else{
+			$num{'100k-'}->{$condition}++;
+			$go_gene{'100k-'}->{$gene} = '';
+			print OUT "$fc{$gene}\t100k-_$condition\n";
+		}
+		last;
+	}
+}
+
+
+open OUT,">Input_barplot_number_$atac_gene.txt";
+print OUT "distance\tcondition\tnumber\n";
+my %sum_num;
+while(my ($key,$val) = each %num){
+	while (my ($key2,$val2) = each %$val){
+		$sum_num{$key} += $val2;
+		print OUT "$key\t$key2\t$val2\n";
+	}
+}
+
+
+open OUT,">Input_barplot_percent_$atac_gene.txt";
+print OUT "distance\tcondition\tpercentage\n";
+while(my ($key,$val) = each %num){
+	while (my ($key2,$val2) = each %$val){
+		my $per = sprintf("%.2f",$val2/$sum_num{$key}*100);
+		print OUT "$key\t$key2\t$per\n";
+	}
+}
+
+system("./barchart.r Input_barplot_number_$atac_gene.txt Input_barplot_percent_$atac_gene.txt Barchart_atac_$atac_gene.pdf");
+#system("rm Input_*");

@@ -1,0 +1,44 @@
+#!/usr/bin/env Rscript
+
+##Load Library
+suppressPackageStartupMessages(library("DESeq2"))
+library("pheatmap")
+library("RColorBrewer")
+
+#args<-commandArgs(T)
+args = c('Day1','Day10','Map_RC_mKO_FEF.tsv','DESeq2_out_neg.txt','DESeq2_summary_FEF.pdf')
+
+pdf(args[5])
+
+ctrl=args[1]
+test=args[2]
+
+cts = read.table(args[3],header=TRUE,sep="\t",row.names=1)
+
+###Rewirte Colum Names
+#header = names(cts)
+#header=sub("STAR.","",header)
+#header=sub(".Aligned.sortedByCoord.out.bam","",header)
+#names(cts) = header
+
+coldata <- data.frame(row.names = colnames( cts ),condition = c(rep(ctrl,2),rep(test,2)))
+dds <- DESeqDataSetFromMatrix(countData = cts,colData = coldata, design = ~ condition)
+###Alternative Step;
+
+dds$condition <- factor(dds$condition, levels=c(ctrl,test))
+dds <- dds[ rowSums(counts(dds)) > 10, ]
+
+##Sample distances
+rld <- rlog(dds, blind = FALSE)
+sampleDists <- dist(t(assay(rld)))
+sampleDistMatrix <- as.matrix( sampleDists )
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+pheatmap(sampleDistMatrix,
+clustering_distance_rows = sampleDists,
+clustering_distance_cols = sampleDists,
+col = colors)
+
+plotPCA(rld)
+
+

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./extract_tk1.pl TK1TK1/Cb31_1.clean.fq.gz TK1TK1/Cb31_2.clean.fq.gz

@@ -1,0 +1,106 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+data = read.table(args[1],header=TRUE,sep="\t")
+data2 = read.table(args[2],header=TRUE,sep="\t")
+pdf(args[3])
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+a=ggplot(data, aes(x=log2(Ctr1), y=log2(Ctr2),color=tag))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+b=ggplot(data, aes(x=log2(Ctr1), y=log2(Ctr3),color=tag))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+c=ggplot(data, aes(x=log2(Ctr2), y=log2(Ctr3),color=tag))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+a=ggplot(data, aes(x=log2(Bpa1), y=log2(Bpa2),color=tag))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+b=ggplot(data, aes(x=log2(Bpa1), y=log2(Bpa3),color=tag))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+c=ggplot(data, aes(x=log2(Bpa2), y=log2(Bpa3),color=tag))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+a=ggplot(data, aes(x=log2(Cb31), y=log2(Cb32),color=tag))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+b=ggplot(data, aes(x=log2(Cb31), y=log2(Cb33),color=tag))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+c=ggplot(data, aes(x=log2(Cb32), y=log2(Cb33),color=tag))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+a=ggplot(data, aes(x=log2(Sw11), y=log2(Sw12),color=tag))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+b=ggplot(data, aes(x=log2(Sw11), y=log2(Sw13),color=tag))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+c=ggplot(data, aes(x=log2(Sw12), y=log2(Sw13),color=tag))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+a=ggplot(data2, aes(x=log2(Ctr1), y=log2(Ctr2)))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+b=ggplot(data2, aes(x=log2(Ctr1), y=log2(Ctr3)))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+c=ggplot(data2, aes(x=log2(Ctr2), y=log2(Ctr3)))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+a=ggplot(data2, aes(x=log2(Bpa1), y=log2(Bpa2)))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+b=ggplot(data2, aes(x=log2(Bpa1), y=log2(Bpa3)))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+c=ggplot(data2, aes(x=log2(Bpa2), y=log2(Bpa3)))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+a=ggplot(data2, aes(x=log2(Cb31), y=log2(Cb32)))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+b=ggplot(data2, aes(x=log2(Cb31), y=log2(Cb33)))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+c=ggplot(data2, aes(x=log2(Cb32), y=log2(Cb33)))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+a=ggplot(data2, aes(x=log2(Sw11), y=log2(Sw12)))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+b=ggplot(data2, aes(x=log2(Sw11), y=log2(Sw13)))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+c=ggplot(data2, aes(x=log2(Sw12), y=log2(Sw13)))+geom_point()+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+

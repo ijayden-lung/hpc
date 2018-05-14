@@ -1,0 +1,15 @@
+#!/usr/bin/env Rscript
+library(grid)
+library(ggplot2)
+args<-commandArgs(T)
+data = read.table(args[1],header=T)
+pdf(args[2],width=12,height=12)
+
+#df <- data.frame(x = c(data$total1,data$total2,data$total3,data$GFPpos1,data$GFPpos2,data$GFPpos3,data$GFPneg1,data$GFPneg2),g = gl(8,labels =c('total1','total2','total3','GFP+1','GFP+2','GFP+3','GFP-1','GFP-2'), length(data$library)))
+
+#df <- data.frame(x = c((data$total1+data$total2+data$total3)/3,(data$GFPpos1+data$GFPpos2+data$GFPpos3)/3,(data$GFPneg1+data$GFPneg2)/2),g = gl(3,labels =c('total','GFP+','GFP-'), length(data$library)))
+
+#df <- data.frame(x = c((data$total1+data$total2+data$total3)/3,data$library),g = gl(2,labels =c('total','library'), length(data$library)))
+
+df <- data.frame(x = c(data$MEF4thDay1,data$MEF5thDay1,data$MEF4thDay10,data$MEF5thDay10),g = gl(4,labels =c('Day1.1','Day1.2','Day10.1','Day10.2'), length(data$MEF4thDay1)))
+ggplot(df, aes(log10(x),colour = g))+stat_ecdf(geom = "step",pad=FALSE,size=1.5)+scale_x_continuous("log10 Number of reads per sgRNA",limits=c(0,6))+scale_y_continuous("Cumulative percentage of mKO library",breaks=0.1*(0:10),labels=scales::percent)+theme(axis.title=element_text(size =30),axis.text=element_text(size =15),legend.position=c(0.1,0.9),legend.title=element_blank(),legend.text=element_text(size=20))

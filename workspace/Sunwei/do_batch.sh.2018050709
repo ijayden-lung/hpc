@@ -1,0 +1,55 @@
+#!/bin/bash
+
+#./extract_tk1.pl TK1TK1/Cb31_1.clean.fq.gz TK1TK1/Cb31_2.clean.fq.gz
+sample=(Ctr1 Ctr2 Ctr3 Bpa1 Bpa2 Bpa3 Cb31 Cb32 Cb33 Sw11 Sw12 Sw13)
+lib=TK3TK3
+typ=(Individual Union)
+echo sample$'\t'mapNum$'\t'totalNum$'\t'percent >Log_$lib
+for sam in ${sample[*]}
+do
+	fq1=$lib/$sam\_1.clean.fq.gz
+	fq2=$lib/$sam\_2.clean.fq.gz
+	log=`./extract_tk3.pl $fq1 $fq2 $sam $lib`
+	echo $sam$'\t'$log >>Log_$lib
+done
+
+
+./normalize1.pl $lib Individual
+./normalize.pl $lib Union
+
+
+./scatterplot.r Individual_Norm_RC_$lib.tsv Union_Norm_RC_$lib.tsv Scatterplot_$lib.pdf
+
+for tp in ${typ[*]}
+do
+	cond1=Ctr
+	cond2=Bpa
+	./input_deseq2.pl $lib $tp $cond1 $cond2
+	./deseq2.r $cond1 $cond2 Input_$tp\_$cond1\_$cond2\_$lib.tsv DESeq2_$tp\_$cond1\_$cond2\_$lib.tsv DESeq2_$tp\_$cond1\_$cond2\_$lib.pdf
+
+	cond1=Ctr
+	cond2=Cb3
+	./input_deseq2.pl $lib $tp $cond1 $cond2
+	./deseq2.r $cond1 $cond2 Input_$tp\_$cond1\_$cond2\_$lib.tsv DESeq2_$tp\_$cond1\_$cond2\_$lib.tsv DESeq2_$tp\_$cond1\_$cond2\_$lib.pdf
+
+	cond1=Ctr
+	cond2=Sw1
+	./input_deseq2.pl $lib $tp $cond1 $cond2
+	./deseq2.r $cond1 $cond2 Input_$tp\_$cond1\_$cond2\_$lib.tsv DESeq2_$tp\_$cond1\_$cond2\_$lib.tsv DESeq2_$tp\_$cond1\_$cond2\_$lib.pdf
+
+	cond1=Bpa
+	cond2=Cb3
+	./input_deseq2.pl $lib $tp $cond1 $cond2
+	./deseq2.r $cond1 $cond2 Input_$tp\_$cond1\_$cond2\_$lib.tsv DESeq2_$tp\_$cond1\_$cond2\_$lib.tsv DESeq2_$tp\_$cond1\_$cond2\_$lib.pdf
+
+	cond1=Bpa
+	cond2=Sw1
+	./input_deseq2.pl $lib $tp $cond1 $cond2
+	./deseq2.r $cond1 $cond2 Input_$tp\_$cond1\_$cond2\_$lib.tsv DESeq2_$tp\_$cond1\_$cond2\_$lib.tsv DESeq2_$tp\_$cond1\_$cond2\_$lib.pdf
+
+	cond1=Cb3
+	cond2=Sw1
+	./input_deseq2.pl $lib $tp $cond1 $cond2
+	./deseq2.r $cond1 $cond2 Input_$tp\_$cond1\_$cond2\_$lib.tsv DESeq2_$tp\_$cond1\_$cond2\_$lib.tsv DESeq2_$tp\_$cond1\_$cond2\_$lib.pdf
+done
+

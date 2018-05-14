@@ -1,0 +1,90 @@
+#!/usr/bin/perl -w
+my ($file1,$file2,$sample,$out_dir) = @ARGV;
+
+open FILE1,"zcat $file1 |";
+my $total = 0;
+my $map1 = 0;
+my $map2 = 0;
+my $map3 = 0;
+my %indiv;
+my %union1;
+my %union2;
+while(<FILE1>){
+	if($.%4==2){	
+		chomp;
+		$total++;
+		my $pre = substr($_,30,3);
+		my $y1 = substr($_,33,3);
+		my $mid = substr($_,36,3);
+		my $y2 = substr($_,39,3);
+		my $suf = substr($_,42,3);
+		my $pre2 = substr($_,-6,3);
+		my $c1 = substr($_,-3,3);
+		
+		if(($pre eq "CTG")+($mid eq "TTC")+($suf eq "CAG")+($pre2 eq "GTG") > 2){
+			$indiv{'y1'}->{$y1}++;
+			$indiv{'y2'}->{$y2}++;
+			$indiv{'c1'}->{$c1}++;
+			$union1{$.} = "$y1\_$y2\_$c1";
+			$map1++;
+		}
+		
+		#print "$_\n";
+		#print "$pre\t$y1\t$mid\t$y2\t$suf\t$pre2\t$c1\n";
+		#last if $total>10;
+	}
+}
+
+open FILE2,"zcat $file2 |";
+while(<FILE2>){
+	if($.%4==2){	
+		chomp;
+		my $pre = substr($_,25,3);
+		my $g1 = substr($_,28,3);
+		my $mid = substr($_,31,3);
+		my $y4 = substr($_,34,3);
+		my $suf = substr($_,37,3);
+		my $pre2 = substr($_,79,3);
+		my $y3 = substr($_,82,3);
+		my $suf2 = substr($_,85,3);
+		
+		if(($pre eq "CGC")+($mid eq "GAT")+($suf eq "AGG")+($pre2 eq "CAC")+($suf2 eq "TGC") > 2){
+			$g1 = reverse $g1;
+			$g1 =~ tr/ATCG/TAGC/;
+			$y4 = reverse $y4;
+			$y4 =~ tr/ATCG/TAGC/;
+			$y3 = reverse $y3;
+			$y3 =~ tr/ATCG/TAGC/;
+			$indiv{'g1'}->{$g1}++;
+			$indiv{'y4'}->{$y4}++;
+			$indiv{'y3'}->{$y3}++;
+			if(exists $union1{$.}){
+				$union2{"$union1{$.}\_$y3\_$y4\_$g1"}++;
+				$map3++;
+			}
+			$map2++;
+		}
+		
+		#print "$_\n";
+		#print "$pre\t$g1\t$mid\t$y4\t$suf\t$pre2\t$y3\t$suf2\n";
+		#last if $total>10;
+	}
+}
+
+
+
+my $per = sprintf("%.2f",$map3/$total*100);
+print "$map3\t$total\t$per\n";
+
+open OUT,">$out_dir/Union_RC_$sample.tsv";
+print OUT "kmer\treadCounts\n";
+foreach my $key (sort{$union2{$b}<=>$union2{$a}} keys %union2){
+	print OUT "$key\t$union2{$key}\n";
+}
+open OUT,">$out_dir/Individual_RC_$sample.tsv";
+print OUT "kmer\treadCounts\tTag\n";
+while(my ($key,$val) = each %indiv){
+	foreach my $kmer (sort{$val->{$b}<=>$val->{$a}} keys %$val){
+		print OUT "$key\_$kmer\t$val->{$kmer}\t$key\n";
+	}
+}

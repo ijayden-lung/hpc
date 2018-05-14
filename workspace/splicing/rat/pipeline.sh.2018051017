@@ -1,0 +1,13 @@
+#!/bin/bash
+
+mkdir WIG
+#perl select_gene.pl
+sample=(RM-ES-P28-1 RM-MEF-P13-1)
+perl  get_genelist_bam.pl "rES_1" "STAR/RM-ES-P28-1/Aligned.sortedByCoord.out.bam"
+perl  get_genelist_bam.pl "rMEF_1" "STAR/RM-MEF-P13-1/Aligned.sortedByCoord.out.bam"
+
+for sam in ${sample[*]}
+do
+	#bam2wig.py -i WIG/$sam.sorted.bam -s ~/apps/RSeQC/hg38.chrom.sizes -o WIG/$sam
+	#sed -i "1i\track type=wiggle_0 name='$sam'" WIG/$sam.wig	
+done

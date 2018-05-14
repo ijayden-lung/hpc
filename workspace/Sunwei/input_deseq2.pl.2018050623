@@ -1,0 +1,35 @@
+#!/usr/bin/perl -w
+
+my ($lib,$type,$cond1,$cond2) = @ARGV;
+
+open FILE,"$type\_RC_$lib.tsv";
+my $header = <FILE>;
+chomp $header;
+my @header = split /\t/,$header;
+my @deseq;
+for(my $i=0;$i<@header;$i++){
+	if($header[$i] =~ /$cond1/){
+		push @deseq,$i;
+	}
+}
+for(my $i=0;$i<@header;$i++){
+	if($header[$i] =~ /$cond2/){
+		push @deseq,$i;
+	}
+}
+
+open OUT,">Input_$type\_$cond1\_$cond2\_$lib.tsv";
+print OUT "$header[0]";
+foreach my $index (@deseq){
+	print OUT "\t$header[$index]";
+}
+print OUT "\n";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	print OUT "$data[0]";
+	foreach my $index (@deseq){
+		print OUT "\t$data[$index]";
+	}
+	print OUT "\n";
+}

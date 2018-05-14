@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#./extract_tk1.pl TK1TK1/Cb31_1.clean.fq.gz TK1TK1/Cb31_2.clean.fq.gz
+sample=(Ctr1 Ctr1 Ctr3 Bpa1 Bpa2 Bpa3 Cb31 Cb32 Cb33 Sw11 Sw12 Sw13)
+lib=TK1TK1
+touch Log_TK1TK1
+for sam in ${sample[*]}
+do
+	fq1=$lib/$sam\_1.clean.fq.gz
+	fq2=$lib/$sam\_2.clean.fq.gz
+	log=`./extract_tk1.pl $fq1 $fq2 $sam $lib`
+	echo $log >Log_TK1TK1
+done

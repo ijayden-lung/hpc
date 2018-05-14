@@ -1,0 +1,32 @@
+#!/usr/bin/perl -w
+#
+open OUT,">Summary.tsv";
+print OUT "\tUp(FDR<5%)\tDown(FDR<5%)\tUp(FDR<10%)\tDown(FDR<10%\tUp(FDR<15%)\tDown(FDR<15%))\n";
+for my $file (glob "DESeq2*tsv"){
+	open FILE, $file;
+	<FILE>;
+	my $up15=0;
+	my $dn15=0;
+	my $up10=0;
+	my $dn10=0;
+	my $up05=0;
+	my $dn05=0;	
+	my $sample = substr($file,7,-4);
+	while(<FILE>){
+		chomp;
+		my ($gene,$baseMean,$l2fc,undef,undef,$pval,$padj) = split; 
+		if($padj ne "NA" && $padj < 0.15){
+			$up15++ if $l2fc>0;
+			$dn15++ if $l2fc<0;
+			if($padj < 0.1){
+				$up10++ if $l2fc>0;
+				$dn10++ if $l2fc<0;
+				if($padj < 0.05){
+					$up05++ if $l2fc>0;
+					$dn05++ if $l2fc<0;
+				}
+			}
+		}
+	}		
+	print OUT "$sample\t$up05\t$dn05\t$up10\t$dn10\t$up15\t$dn15\n";
+}

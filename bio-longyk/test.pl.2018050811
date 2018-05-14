@@ -1,0 +1,4 @@
+#!/usr/bin/perl
+
+$a = localtime();
+print "$a\n";

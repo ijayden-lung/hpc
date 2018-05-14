@@ -1,0 +1,11 @@
+#!/usr/bin/perl -w
+
+open FILE,"FC_annotation.txt";
+open OUT,">mm10_bg.txt";
+print OUT "gene\tlength\n";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$length) = (split)[1,-1];
+	print OUT "$gene\t$length\n";
+}

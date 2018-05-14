@@ -1,0 +1,89 @@
+#!/usr/bin/perl -w
+my ($file1,$file2,$sample,$out_dir) = @ARGV;
+
+open FILE1,"zcat $file1 |";
+my $total = 0;
+my $map1 =0;
+my $map2 = 0;
+my $map3 = 0;
+my $map4 = 0;
+my %hash;
+while(<FILE1>){
+	if($.%4==2){	
+		chomp;
+		$total++;
+		my $pre = substr($_,30,3);
+		my $y1 = substr($_,33,3);
+		my $mid = substr($_,36,3);
+		my $y2 = substr($_,39,3);
+		my $suf = substr($_,42,3);
+		my $pre2 = substr($_,-6,3);
+		my $c1 = substr($_,-3,3);
+		
+		if(($pre eq "CTG") + ($mid eq "TTC") + ($suf eq "CAG") > 1){
+			$hash{'y1'}->{$y1}++;
+			$hash{'y2'}->{$y2}++;
+			$map1++;
+		}
+		if($pre2 eq "GTG"){
+			$hash{'c1'}->{$c1}++;
+			$map2++;
+		}
+		
+		#print "$_\n";
+		#print "$pre\t$y1\t$mid\t$y2\t$suf\t$pre2\t$c1\n";
+		#last if $total>10;
+	}
+}
+
+open FILE2,"zcat $file2 |";
+while(<FILE2>){
+	if($.%4==2){	
+		chomp;
+		my $pre = substr($_,25,3);
+		my $g1 = substr($_,28,3);
+		my $mid = substr($_,31,3);
+		my $y4 = substr($_,34,3);
+		my $suf = substr($_,37,3);
+		my $pre2 = substr($_,79,3);
+		my $y3 = substr($_,82,3);
+		my $suf2 = substr($_,85,3);
+		
+		if(($pre eq "CGC") + ($mid eq "GAT") + ($suf eq "AGG") > 1){
+			$g1 = reverse $g1;
+			$g1 =~ tr/ATCG/TAGC/;
+			$y4 = reverse $y4;
+			$y4 =~ tr/ATCG/TAGC/;
+			$hash{'g1'}->{$g1}++;
+			$hash{'y4'}->{$y4}++;
+			$map4++;
+		}
+		if($pre2 eq "CAC" || $suf2 eq "TGC") {
+			$y3 = reverse $y3;
+			$y3 =~ tr/ATCG/TAGC/;
+			$hash{'y3'}->{$y3}++;
+			$map3++;
+		}
+		
+		#print "$_\n";
+		#print "$pre\t$g1\t$mid\t$y4\t$suf\t$pre2\t$y3\t$suf2\n";
+		#last if $total>10;
+	}
+}
+
+
+
+print "$map1\t$map2\t$map3\t$map4\t$total\n";
+
+
+
+
+
+
+while(my ($key,$val) = each %hash){
+	open OUT,">$out_dir/RC_$sample\_$key.tsv";
+	print OUT "kmer\treadCounts\n";
+	foreach my $kmer (sort{$val->{$b}<=>$val->{$a}} keys %$val){
+		print OUT "$kmer\t$val->{$kmer}\n";
+	}
+}

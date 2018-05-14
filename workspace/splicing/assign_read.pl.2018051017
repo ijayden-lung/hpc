@@ -1,0 +1,82 @@
+#!/usr/bin/perl -w
+
+my $mouseHeader = `samtools view -H mouse/WIG/MEF_1.sorted.bam`;
+my $ratHeader = `samtools view -H rat/WIG/MEF_1.sorted.bam`;
+
+
+open MOU,"samtools view mouse/WIG/MEF_1.sorted.bam |";
+my %mouseScore;
+my %mouseRead;
+while(<MOU>){
+	chomp;
+	my ($read,$AS) = (split /\t/)[0,-3];
+	my ($score) = (split /:/,$AS)[2];
+	$mouseScore{$read} = $score;
+	$mouseRead{$read} .= "$_\n";
+}
+
+
+
+my $mouseRead = 0;
+my $ratRead =   0;
+my $comRead = 0;
+open A2M,">A2M_MEF_1.sam";
+open A2R,">A2R_MEF_1.sam";
+open C2M,">C2M_MEF_1.sam";
+open C2R,">C2R_MEF_1.sam";
+print A2M $mouseHeader;
+print A2R $ratHeader;
+
+
+my $onlyRat;
+open RAT,"samtools view rat/WIG/MEF_1.sorted.bam |";
+my %ratScore;
+my %ratRead;
+while(<RAT>){
+	chomp;
+	my ($read,$AS) = (split /\t/)[0,-3];
+	my ($score) = (split /:/,$AS)[2];
+	$ratScore{$read} = $score;
+	$ratRead{$read} .= "$_\n";
+	if(!exists $mouseScore{$read}){
+		print A2R "$ratRead{$read}";
+		$ratRead++;
+		$onlyRat++;
+	}
+}
+
+
+my $onlyMou;
+while(my ($read,$score) = each %mouseScore){
+	if(exists $ratScore{$read}){
+		if($score > $ratScore{$read}){
+			print A2M "$mouseRead{$read}";
+			$mouseRead++;
+		}
+		elsif($score < $ratScore{$read}){
+			print A2R "$ratRead{$read}";
+			$ratRead++;
+		}
+		else{
+			print C2M "$mouseRead{$read}";
+			print C2R "$ratRead{$read}";
+			$comRead++;
+		}
+	}
+	else{
+		print A2M "$mouseRead{$read}";
+		$mouseRead++;
+		$onlyMou++;
+	}
+}
+
+print "Assign2Mouse\t$mouseRead\nAssign2Rat\t$ratRead\nCommon\t$comRead\n";
+print "onlyRat\t$onlyRat\nonlyMouse\t$onlyMou\n";
+
+
+system("samtools sort A2M_MEF_1.sam -O bam -o A2M_MEF_1.sorted.bam");
+system("samtools sort A2R_MEF_1.sam -O bam -o A2R_MEF_1.sorted.bam");
+system("samtools index A2M_MEF_1.sorted.bam");
+system("samtools index A2R_MEF_1.sorted.bam");
+system("rm *sam")
+

@@ -1,0 +1,4 @@
+#!/bin/bash
+a=Hello
+b=World
+echo $a$'\t'$b.

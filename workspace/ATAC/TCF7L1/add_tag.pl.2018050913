@@ -1,0 +1,20 @@
+#!/usr/bin/perl -w
+
+open FILE,'CSC_HighvsLow.deg.ATAC.txt';
+open OUT,'>CSC_geneName_miRNA.tsv';
+print OUT "miRNA\tbaseMean\tL2FC\tpadj\tRank\tTag\n";
+<FILE>;
+my $i = 0;
+while(<FILE>){
+	chomp;
+	$i++;
+	my ($mirna,$basemean,$l2fc,$l2fcse,$stat,$pval,$padj) = split;
+	if($padj ne "NA" && $padj < 0.05){
+		print OUT  "$mirna\t$basemean\t$l2fc\t$padj\t$i\tHigh\n" if $l2fc > 0;
+		print OUT  "$mirna\t$basemean\t$l2fc\t$padj\t$i\tLow\n" if $l2fc < 0;
+	}
+	else{
+		print OUT "$mirna\t$basemean\t$l2fc\t$padj\t$i\tNo\n";
+	}
+}
+

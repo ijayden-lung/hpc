@@ -1,0 +1,59 @@
+#!/usr/bin/perl 
+use List::Util qw(first max maxstr min minstr reduce shuffle sum);
+use Math::Round;
+
+
+print "Start readCount Normalization\n";
+
+#####Processing the sample;
+my ($lib,$type) = @ARGV;
+
+my %depth;
+my %sizeF;
+my $total = 0;
+my @sample;
+my %data;
+foreach my $file (glob "$lib/$type\_RC_*.tsv"){
+	open FILE,$file;
+	my $sample = (split /\_|\./,$file)[-2];
+	while(<FILE>){
+		chomp;
+		my ($gene,$readNum) = split;
+		$data{$gene}->{$sample} = $readNum;
+		$total += $readNum;
+		$depth{$sample} += $readNum;
+	}
+	push @sample,$sample;
+}
+
+my $ave = $total/@sample;
+while(my($sample,$val) = each %depth){
+	$sizeF{$sample} = $ave/$val;
+	print "$sample\t$sizeF{$sample}\n";
+}
+
+my %norm;
+my %normSum;
+while(my ($key,$val) = each %data){
+	while(my ($sample,$readNum) = each %$val){
+		$norm{$key}->{$sample} = $readNum * $sizeF{$sample};
+		$normSum{$key} += $readNum * $sizeF{$sample};
+	}
+}
+
+
+open OUT,">$type\_RC_$lib.tsv";
+open OUT2, ">$type\_Norm_RC_$lib.tsv";
+print OUT join "\t",'kmer',@sample;
+print OUT2 join "\t",'kmer',@sample;
+foreach my $key (sort{$normSum{$b} <=> $normSum{$a}} keys %normSum){
+	next if ($normSum{$key}/@sample < 10);
+	print OUT "\n$key";
+	print OUT2 "\n$key";
+	foreach my $sample (@sample){
+		printf OUT ("\t%d",$data{$key}->{$sample});
+		printf OUT2 ("\t%.2f",$norm{$key}->{$sample});
+	}
+}
+
+print "Finish readCount Normalization\n";

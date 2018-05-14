@@ -1,0 +1,12 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(ggrepel)
+args<-commandArgs(T)
+pdf(args[2])
+data = read.table(args[1],header=TRUE)
+
+ggplot(data,aes(x=log10(baseMean), y=L2FC))+
+geom_point(aes(colour=Tag),size=1)+labs(x="Log10 Mean ReadCount", y="Log2(High/Low)")+ylim(-10,10)+
+theme(axis.title=element_text(size =15),axis.text=element_text(size =20),legend.title=element_blank())+
+#theme(axis.title=element_text(size =15),axis.text=element_text(size =15),legend.position="none",legend.title=element_blank())+
+geom_hline(yintercept = c(-1.2,1.2),linetype="dashed")

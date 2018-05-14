@@ -1,0 +1,55 @@
+#!/usr/bin/env Rscript
+library(DESeq2)
+library("RColorBrewer")
+library("pheatmap")
+###################  ATAC counts  ########
+
+cts <- read.table('Input_deseq2_atac.txt',head=TRUE,row.names=1)
+header=names(cts)
+header=sub('../mapping/','',header)
+header=sub('.dup.sort.bam','',header)
+names(cts) = header
+
+coldata <- data.frame(row.names = colnames( cts ),condition = c(rep("High",4),rep("Low",4)))
+
+
+dds <- DESeqDataSetFromMatrix(countData = cts, colData = coldata,design= ~ condition)
+dds$condition <- factor(dds$condition, levels=c("Low","High"))
+dds <- dds[ rowSums(counts(dds)) > 10, ]
+
+##Sample distances
+rld <- rlog(dds, blind = FALSE)
+sampleDists <- dist(t(assay(rld)))
+sampleDistMatrix <- as.matrix( sampleDists )
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+pheatmap(sampleDistMatrix,
+clustering_distance_rows = sampleDists,
+clustering_distance_cols = sampleDists,
+col = colors)
+plotPCA(rld)
+
+dds <- DESeq(dds)
+
+res <- results(dds, contrast=c("condition","High","Low"), alpha=0.01,lfcThreshold=1)
+summary(res)
+
+
+resOrdered <- res[order(res$padj),]   ####Alternative Step;
+write.table(file="CSC_HighvsLow.deg.ATAC.txt", sep="\t", quote =FALSE,row.names =TRUE,col.names=TRUE)
+
+
+
+pdf('CSC_Diff_ATAC_MAplot.pdf')
+plotMA(res)
+
+#ggmaplot(res, main = expression("HIGH vs LOW")
+#		fdr = 0.05, fc = 3, size = 0.4,
+#		palette = c("#B31B21", "#1465AC", "darkgray"),
+#		legend = "top", top = 0, select.top.method='fc',
+#		font.label = c("bold", 10),
+#		font.legend = "bold",
+#		font.main = "bold",
+#		ggtheme = ggplot2::theme_bw(), xlab='Log2 mean reads count')
+#dev.off()
+
