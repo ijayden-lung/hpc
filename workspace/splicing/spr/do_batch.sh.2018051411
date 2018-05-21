@@ -1,0 +1,21 @@
+#!/bin/bash
+#PBS -q cal
+#PBS -N STAR
+#PBS -l nodes=1:ppn=12
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+
+cd ~/workspace/splicing/spr/STAR/
+fq1=
+fq2=
+
+echo 'starting mapping with STAR'
+STAR --twopassMode Basic --runThreadN 12 --genomeDir /home/bio-longyk/cnda/STAR_INDEX/mm10v92len100  --readFilesIn $fq1 $fq2 --outSAMtype BAM SortedByCoordinate --outSAMattrIHstart 0  --outFilterMultimapScoreRange 0  --alignEndsType EndToEnd  --readFilesCommand zcat --outFilterIntronMotifs RemoveNoncanonicalUnannotated --outSAMstrandField intronMotif 
+
+####INDEX for sorted bam file
+echo 'generating index with samtools'
+samtools index -@ $threads Aligned.sortedByCoord.out.bam
+
+######Gene Abundance
+
+

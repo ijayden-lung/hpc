@@ -1,0 +1,15 @@
+#!/bin/bash
+
+
+#mageck test -k sample.txt -t HL60.final,KBM7.final -c HL60.initial,KBM7.initial  -n demo
+# or
+#mageck test -k sample.txt -t 2,3 -c 0,1  -n demo
+
+mageck test -k RC_mKO_FEF_hete0.tsv -t FEF1D28,FEF2D28 -c FEF1D1,FEF2D1 -n HETE0
+Rscript HETE0.R
+mageck test -k RC_mKO_FEF_hete1.tsv -t FEF1D28,FEF2D28 -c FEF1D1,FEF2D1 -n HETE1
+Rscript HETE1.R
+mageck test -k RC_mKO_FEF_homo0.tsv -t FEF1D28,FEF2D28 -c FEF1D1,FEF2D1 -n HOMO0
+Rscript HOMO0.R
+mageck test -k RC_mKO_FEF_homo1.tsv -t FEF1D28,FEF2D28 -c FEF1D1,FEF2D1 -n HOMO1
+Rscript HOMO1.R

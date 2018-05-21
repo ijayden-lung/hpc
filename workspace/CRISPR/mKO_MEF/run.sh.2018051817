@@ -1,0 +1,8 @@
+#!/bin/bash
+
+
+#mageck test -k sample.txt -t HL60.final,KBM7.final -c HL60.initial,KBM7.initial  -n demo
+# or
+#mageck test -k sample.txt -t 2,3 -c 0,1  -n demo
+
+mageck test -k RC_mKO_MEF.tsv -t MEF4thDay10,MEF5thDay10 -c MEF4thDay1,MEF5thDay1  -n MEF

@@ -1,0 +1,73 @@
+#!/usr/bin/perl -w
+
+
+my %mouse;
+open MOU,"samtools view mouse.bam | ";
+while(<MOU>){
+	chomp;
+	my ($grna) = split;
+	$mouse{$grna}++;
+}
+
+
+my %rat;
+my $homo=0;
+my $mouspe=0;
+my $ratspe=0;
+my %homo;
+my %mouspe;
+my %ratspe;
+open RAT,"samtools view rat.bam | ";
+while(<RAT>){
+	chomp;
+	my ($grna) = split;
+	$rat{$grna}++;
+	if(!exists $mouse{$grna}){
+		$ratspe++;
+		$ratspe{$grna} = '';
+	}
+}
+
+
+
+while(my ($grna,$num) = each %mouse){
+	if(exists $rat{$grna}){
+		$homo++;
+		$homo{$grna}++;
+	}
+	else{
+		$mouspe++;
+		$mouspe{$grna} = '';
+	}
+}
+
+
+open FILE,"../RC_mKO_FEF.tsv";
+my $header = <FILE>;
+open OUT1,">RC_mKO_FEF_homo.tsv";
+open OUT2,">RC_mKO_FEF_mouse.tsv";
+open OUT3,">RC_mKO_FEF_rat.tsv";
+open OUT4,">RC_mKO_FEF_unmap.tsv";
+print OUT1 $header;
+print OUT2 $header;
+print OUT3 $header;
+print OUT4 $header;
+while(<FILE>){
+	chomp;
+	my ($grna) = split;
+	if(exists $homo{$grna}){
+		print OUT1 "$_\n";
+	}
+	elsif(exists $mouspe{$grna}){
+		print OUT2 "$_\n";
+	}
+	elsif(exists $ratspe{$grna}){
+		print OUT3 "$_\n";
+	}
+	else{
+		print OUT4 "$_\n";
+	}
+}
+
+
+print "$homo\t$mouspe\t$ratspe\n";

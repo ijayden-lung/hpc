@@ -1,0 +1,15 @@
+#!/bin/bash
+
+mkdir WIG
+#perl select_gene.pl
+sample=(high_1 high_2 low_1 low_2)
+perl  get_genelist_bam.pl "high_1" "/home/bio-longyk/workspace/splicing/colon/STAR/high1/Aligned.sortedByCoord.out.bam"
+perl  get_genelist_bam.pl "high_2" "/home/bio-longyk/workspace/splicing/colon/STAR/high2/Aligned.sortedByCoord.out.bam"
+perl  get_genelist_bam.pl "low_1" "/home/bio-longyk/workspace/splicing/colon/STAR/low1/Aligned.sortedByCoord.out.bam"
+perl  get_genelist_bam.pl "low_2" "/home/bio-longyk/workspace/splicing/colon/STAR/low2/Aligned.sortedByCoord.out.bam"
+
+for sam in ${sample[*]}
+do
+	#bam2wig.py -i WIG/$sam.sorted.bam -s ~/apps/RSeQC/hg38.chrom.sizes -o WIG/$sam
+	#sed -i "1i\track type=wiggle_0 name='$sam'" WIG/$sam.wig	
+done

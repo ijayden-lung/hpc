@@ -1,0 +1,30 @@
+#!/usr/bin/perl -w
+
+my %hash;
+my @sample;
+for my $file (glob "STAR/*/gene_abund.tab"){
+	open FILE,$file;
+	<FILE>;
+	my ($sample) = (split /\//,$file)[1];
+	push @sample,$sample;
+	while(<FILE>){
+		chomp;
+		my ($gene_id,$gene_name,$fpkm) = (split)[0,1,-2];
+		if($gene_id =~ /^ENSG/){
+			$hash{"$gene_id\t$gene_name"}->{$sample} = $fpkm;
+		}
+	}
+}
+
+
+open OUT, ">FPKM_colon.tsv";
+print OUT join("\t","gene_id","gene_name",@sample),"\n";
+while(my ($gene,$val) = each %hash){
+	print OUT "$gene";
+	foreach my $sam (@sample){
+		print OUT "\t$val->{$sam}";
+	}
+	print OUT "\n";
+}
+
+

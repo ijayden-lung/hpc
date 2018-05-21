@@ -1,0 +1,33 @@
+#!/usr/bin/perl -w
+my %deseq2;
+open DES,"/home/bio-longyk/workspace/splicing/colon/DESeq2/DESeq2_geneName.txt";
+while(<DES>){
+	chomp;
+	my ($gene_id,$gene_name) = split;
+	$deseq2{$gene_name} = $_;
+}
+
+open DES,"/home/bio-longyk/workspace/miRNA/Fangliang/DESeq2_geneName_miRNA.tsv";
+while(<DES>){
+	chomp;
+	my ($gene_name) = split;
+	$gene_name = substr($gene_name,0,-3);
+	$gene_name = lc $gene_name;
+	$deseq2{$gene_name} = "$gene_name\t$_";
+}
+open POS,"WNTpos.gene_summary.txt";
+open OUT,">DESeq2_WNTpos.gene_summary.txt";
+while(<POS>){
+	chomp;
+	my ($gene_name) = split;
+	print OUT "$_\t";
+	if(exists $deseq2{$gene_name}){
+		print OUT "$deseq2{$gene_name}\n";
+	}
+	else{
+		print OUT "NA\n";
+	}
+}
+
+
+

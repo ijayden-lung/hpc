@@ -1,0 +1,23 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N STAR
+#PBS -l nodes=1:ppn=18
+#PBS -o ${out}
+#PBS -j oe 
+#PBS -l walltime=06:00:00
+
+mkdir ${inp}
+cd $inp
+
+echo 'starting mapping with STAR'
+STAR --twopassMode Basic --runThreadN 18 --genomeDir /home/bio-longyk/cnda/STAR_INDEX/hg38v92len100  --readFilesIn $fq1 $fq2 --outSAMtype BAM SortedByCoordinate --outSAMattrIHstart 0  --outFilterMultimapScoreRange 0  --alignEndsType EndToEnd  --readFilesCommand zcat --outFilterIntronMotifs RemoveNoncanonicalUnannotated --outSAMstrandField intronMotif 
+
+####INDEX for sorted bam file
+echo 'generating index with samtools'
+samtools index -@ 18 Aligned.sortedByCoord.out.bam
+
+######Gene Abundance
+echo 'Stringtie'
+stringtie --fr -p 18 -G ~/cnda/ensembl/hg38.ensemblv92.nopsuedo.gtf -o out.gtf -A gene_abund.tab -C cov_refs.gtf Aligned.sortedByCoord.out.bam 
+
+

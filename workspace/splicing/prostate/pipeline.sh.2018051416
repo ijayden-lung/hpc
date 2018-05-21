@@ -1,0 +1,16 @@
+#!/bin/bash
+mkdir WIG
+#perl select_gene.pl
+sample=(GS689_1 GS689_2 GS689_3 PC3E_1 PC3E_2 PC3E_3)
+perl  get_genelist_bam.pl "GS689_1" "/home/bio-longyk/workspace/splicing/prostate/STAR/SRR536342/Aligned.sortedByCoord.out.bam"
+perl  get_genelist_bam.pl "GS689_2" "/home/bio-longyk/workspace/splicing/prostate/STAR/SRR536344/Aligned.sortedByCoord.out.bam"
+perl  get_genelist_bam.pl "GS689_3" "/home/bio-longyk/workspace/splicing/prostate/STAR/SRR536346/Aligned.sortedByCoord.out.bam"
+perl  get_genelist_bam.pl "PC3E_1" "/home/bio-longyk/workspace/splicing/prostate/STAR/SRR536348/Aligned.sortedByCoord.out.bam"
+perl  get_genelist_bam.pl "PC3E_2" "/home/bio-longyk/workspace/splicing/prostate/STAR/SRR536350/Aligned.sortedByCoord.out.bam"
+perl  get_genelist_bam.pl "PC3E_3" "/home/bio-longyk/workspace/splicing/prostate/STAR/SRR536352/Aligned.sortedByCoord.out.bam"
+
+for sam in ${sample[*]}
+do
+	#bam2wig.py -i WIG/$sam.sorted.bam -s ~/apps/RSeQC/hg38.chrom.sizes -o WIG/$sam
+	#sed -i "1i\track type=wiggle_0 name='$sam'" WIG/$sam.wig	
+done
