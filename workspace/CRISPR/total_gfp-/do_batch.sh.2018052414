@@ -1,0 +1,53 @@
+#!/bin/bash
+
+nodes=1
+ppn=12
+threads=$[$nodes*$ppn]
+lib='hKO'
+exp='WNTScreen'
+
+cat >star.sh <<EOF
+#!/bin/bash
+#PBS -q ser
+#PBS -N CRISPR
+#PBS -l nodes=1:ppn=1
+#PBS -o \${out}
+#PBS -j oe 
+#PBS -l walltime=01:00:00
+
+#mkdir \$inp
+cd \$inp
+perl ~/workspace/CRISPR/total_gfp-/extract_gRNA.pl \$fq1 \$lib
+
+EOF
+
+dir=/home/bio-longyk/workspace/CRISPR/total_gfp-
+cd $dir
+:<<BL
+for i in ~/workspace/CRISPR/total_gfp-/*.fastq.gz
+do
+	sam=${i%%.*}
+	sam=${sam##*\/}
+	sam=${sam%%\_*}
+	echo $sam
+	inp=$dir/OUT/$sam
+	out=log_$sam
+	fq1=$i
+	qsub -v inp=$inp,out=$out,fq1=$fq1,lib=$lib star.sh
+done
+BL
+
+### Do this after finishing mapping job;
+#./merge_log.pl $lib $exp 
+#./normalize.pl $lib $exp
+#./revise_total.pl
+#mageck test -k Map_Norm_RC_hKO_WNTScreen_neg.tsv -t GFP-1,GFP-2 -c Baseline1,Baseline2,Baseline3 -n WNT- --pdf-report --normcounts-to-file --control-sgrna control_sgrna --norm-method none
+mageck test -k Map_Norm_RC_hKO_WNTScreen_pos.tsv -t GFP+1,GFP+2,GFP+3 -c Baseline1,Baseline2,Baseline3 -n WNT+ --pdf-report --normcounts-to-file --control-sgrna control_sgrna --norm-method none
+
+
+
+
+#./generate_ref.pl $lib
+#./generate_query.pl $lib $exp
+#./retrieve_notHits.pl $lib $exp
+

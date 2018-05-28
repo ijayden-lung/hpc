@@ -1,0 +1,26 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N STAR
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+
+cd ~/workspace/CRISPR/mKO_FEF/species_specific/
+
+echo 'starting mapping with STAR'
+#STAR --twopassMode Basic --runThreadN 12 --genomeDir /home/bio-longyk/cnda/STAR_INDEX/mm10v92len100  --readFilesIn Query_mKO_FEF.fa --outSAMtype BAM SortedByCoordinate --outSAMattrIHstart 0  --outFilterMultimapScoreRange 0  --alignEndsType EndToEnd --outFilterMismatchNmax 2 --alignIntronMax 1
+
+#bowtie -p 18 -f -n 2 -l 20 --best ~/cnda/bt1_index/mm10 --al aligned_mm10.fa --un unaligned_mm10.fa mKO.fa >mouse.sam
+#bowtie -p 18 -f -n 2 -l 20 --best ~/cnda/bt1_index/rn6 --al aligned_rn6.fa --un unaligned_rn6.fa mKO.fa >rat.sam
+./assign_grna.pl
+
+
+
+####INDEX for sorted bam file
+echo 'generating index with samtools'
+#samtools index -@ $threads Aligned.sortedByCoord.out.bam
+
+######Gene Abundance
+
+
+

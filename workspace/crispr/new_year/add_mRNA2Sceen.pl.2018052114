@@ -1,0 +1,58 @@
+#!/usr/bin/perl -w
+
+my %hek293;
+open HEK,"hek293_fpkm.tsv";
+<HEK>;
+while(<HEK>){
+	chomp;
+	my ($gene_id,$gene_name,undef,$ctrl,$test) = split;
+	$hek293{$gene_name} = "$ctrl\t$test"
+
+}
+my %deseq2;
+open DES,"/home/bio-longyk/workspace/splicing/colon/FPKM_colon_merge.tsv";
+<DES>;
+while(<DES>){
+	chomp;
+	my ($gene_id,$gene_name,$high1,$high2,$low1,$low2) = split;
+	my $high = ($high1+$high2)/2;
+	my $low = ($low1+$low2)/2;
+	$deseq2{$gene_name} = "$gene_id\t$high\t$low";
+}
+
+open DES,"/home/bio-longyk/workspace/miRNA/Fangliang/miR.RPM.csv";
+<DES>;
+while(<DES>){
+	chomp;
+	my ($gene_name,$high1,$high2,$low1,$low2) = split /,/;
+	$gene_name = substr($gene_name,0,-3);
+	$gene_name = lc $gene_name;
+	my $high = ($high1+$high2)/2/22;
+	my $low = ($low1+$low2)/2/22;
+	$deseq2{$gene_name} = "$gene_name\t$high\t$low";
+}
+open POS,"WNTneg.gene_summary.txt";
+open OUT,">DESeq2_WNTneg.gene_summary.txt";
+my $header = <POS>;
+chomp $header;
+print OUT "$header\tgene_name\tgene_id\tSW480_high\tSW480_low\tHEK293_test\tHEK293_ctrl\n";
+while(<POS>){
+	chomp;
+	my ($gene_name) = split;
+	print OUT "$_\t$gene_name\t";
+	if(exists $deseq2{$gene_name}){
+		print OUT "$deseq2{$gene_name}\t";
+	}
+	else{
+		print OUT "NA\tNA\tNA\t";
+	}
+	if(exists $hek293{$gene_name}){
+		print OUT "$hek293{$gene_name}\n";
+	}
+	else{
+		print OUT "NA\tNA\n";
+	}
+}
+
+
+

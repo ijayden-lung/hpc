@@ -1,0 +1,65 @@
+#!/usr/bin/perl -w
+my %conventer;
+open FILE,'/home/bio-longyk/cnda/ensembl2refSeq.txt';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($ensembl,$refSeq,$symbol) = split;
+	if(defined $symbol){
+		$conventer{$symbol} = $ensembl;
+	}
+}
+
+my %deseq2;
+open BOX,'>boxplot_miRNA.tsv';
+print BOX "gene_id\tl2fc\tmiRNA\n";
+open FILE,'DESeq2_Results.tsv';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my $sig = "No";
+	my ($ensembl_id,$mean,$l2fc,$stat,$pval,$padj) = split;
+	next if $padj eq "NA";
+	if($padj <= 0.05){
+		if($l2fc > 0){
+			$sig = "High";
+		}
+		elsif($l2fc < 0){
+			$sig = "Low";
+		}
+	}
+	$deseq2{$ensembl_id} = "$mean\t$l2fc\t$sig";
+	print BOX "all_$ensembl_id\t$l2fc\tall\n";
+}
+
+my %miRNA;
+open FILE,'miRWalk_miR-148a-5p_Targets.csv';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($mirna,undef,$targetName,undef,$refSeq)  =split /,/;
+	if(exists $conventer{$targetName}){
+		my $ensembl = $conventer{$targetName};
+		if(exists $deseq2{$ensembl}){
+			my (undef,$l2fc) = split /\t/,$deseq2{$ensembl};
+			print BOX "$mirna\_$ensembl\t$l2fc\t$mirna\n";
+			$miRNA{$mirna}->{$ensembl} = "$targetName\t$deseq2{$ensembl}";
+		}
+	}
+}
+
+
+while (my ($mirna,$val) = each %miRNA){
+	open OUT,">$mirna\_predictedGene_DE.tsv";
+	print OUT "gene_id\tgene_name\tmean\tl2fc\tsig\n";
+	while(my ($gene,$val2) = each %$val){
+		print OUT "$gene\t$val2\n";
+	}
+}
+
+
+system("./boxplot.r BoxPlot_miRNA.pdf boxplot_miRNA.tsv");
+while (my ($mirna,$val) = each %miRNA){
+	print "drawing maplot for $mirna\n";
+	system("./maplot.r MAPlot_$mirna.pdf $mirna\_predictedGene_DE.tsv");
+}

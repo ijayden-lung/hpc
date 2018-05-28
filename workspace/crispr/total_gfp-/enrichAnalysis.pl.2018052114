@@ -1,0 +1,65 @@
+#!/usr/bin/perl -w
+open CONTROL,'mKO_293R.tsv';
+<CONTROL>;
+my %control;
+my %high;
+my %low;
+while(<CONTROL>){
+	chomp;
+	my ($sgRNA,$gene,$h1,$h2,$h3,$l1,$l2,$lib,$c1,$c2,$c3) = split;
+	$control{"$sgRNA\t$gene"} = ($c1+$c2+$c3)/3+1;
+	$high{"$sgRNA\t$gene"} = ($h1+$h2+$h3)/3+1;
+	$low{"$sgRNA\t$gene"} = ($l1+$l2)/2+1;
+}
+
+
+my %enrichHigh;
+my %geneCountHigh;
+while(my ($target,$readC) = each %control){
+	my $readH = $high{$target};
+	my (undef,$gene) = split /\t/,$target;
+	if($readC + $readH > 60){
+		$geneCountHigh{$gene}++;
+		$enrichHigh{$target} = log($readH/$readC)/log(2);
+	}
+}
+my $i = 0;
+open OUT,'>hKO_enrich_positive.tsv';
+print OUT "Construct\tGeneSymbol\tNormalizedScore\tConstruct Rank\n";
+open OUT2,'>hKO_Single_Enrich_Positive.tsv';
+print OUT2 "Construct\tGeneSymbol\tControl\tHigh\tLog2FC\n";
+foreach my $target (sort{$enrichHigh{$b}<=>$enrichHigh{$a}} keys %enrichHigh){
+	my (undef,$gene) = split /\t/,$target;
+	if ($geneCountHigh{$gene} >1){
+		$i++;
+		print OUT "$target\t$enrichHigh{$target}\t$i\n" ;
+	}
+	else{
+		print OUT2 "$target\t$control{$target}\t$high{$target}\t$enrichHigh{$target}\n";
+	}
+}
+my %enrichLow;
+my %geneCountLow;
+while(my ($target,$readC) = each %control){
+	my $readL = $low{$target};
+	my (undef,$gene) = split /\t/,$target;
+	if($readC + $readL > 30){
+		$geneCountLow{$gene}++;
+		$enrichLow{$target} = log($readL/$readC)/log(2);
+	}
+}
+$i = 0;
+open OUT,'>hKO_enrich_negetive.tsv';
+print OUT "Construct\tGeneSymbol\tNormalizedScore\tConstruct Rank\n";
+open OUT2,'>hKO_Single_Enrich_Negative.tsv';
+print OUT2 "Construct\tGeneSymbol\tControl\tHigh\tLog2FC\n";
+foreach my $target (sort{$enrichLow{$b}<=>$enrichLow{$a}} keys %enrichLow){
+	my (undef,$gene) = split /\t/,$target;
+	if ($geneCountLow{$gene} >1){
+		$i++;
+		print OUT "$target\t$enrichLow{$target}\t$i\n" ;
+	}
+	else{
+		print OUT2 "$target\t$control{$target}\t$low{$target}\t$enrichLow{$target}\n";
+	}
+}

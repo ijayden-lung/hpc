@@ -1,0 +1,7 @@
+#!/usr/bin/env Rscript
+library("pheatmap")
+
+args<-commandArgs(T)
+
+data <-as.matrix(read.table(args[1],header=TRUE,row.names=1))
+pheatmap(data, cellwidth = 6, cellheight = 1, fontsize=3, fontsize_row=1,main=args[2],clustering_distance_rows="manhattan",clustering_distance_cols="manhattan",filename=args[3])

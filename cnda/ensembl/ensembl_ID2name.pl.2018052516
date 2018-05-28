@@ -1,0 +1,11 @@
+#!/usr/bin/perl 
+#
+open FILE, "awk '(\$3 == \"gene\") {print}' hg38.ensemblv92.nopsuedo.gtf |";
+open FILE2, ">hg38_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	$data[9] =~ s/\"|\;//g;
+	$data[13] =~ s/\"|\;//g;
+	print FILE2 "$data[9]\t$data[13]\t$data[6]\n";
+}

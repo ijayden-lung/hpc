@@ -1,0 +1,43 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+pdf(file=args[2])
+
+
+
+data = read.table(args[1],header=TRUE,row.names=1)
+#reg<-glm(log2(mKO3K3Day15.2) ~ log2(mKO3K3Day15.1),data,na.action = na.omit)
+#summary(reg)
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=log2(mKO293RGFPPos.1), y=log2(mKO293RGFPPos.2)))+geom_point()+xlim(0,12)+ylim(0,12)
+b<-ggplot(data, aes(x=log2(mKO293RGFPPos.1), y=log2(mKO293RGFPPos.3)))+geom_point()+xlim(0,12)+ylim(0,12)
+c<-ggplot(data, aes(x=log2(mKO293RGFPPos.2), y=log2(mKO293RGFPPos.3)))+geom_point()+xlim(0,12)+ylim(0,12)
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=log2(mKO293RGFPNeg.1), y=log2(mKO293RGFPNeg.2)))+geom_point()+xlim(0,12)+ylim(0,12)
+b<-ggplot(data, aes(x=log2(mKO293RGFPNeg.1), y=log2(mKO293RGFPNeg.3)))+geom_point()+xlim(0,12)+ylim(0,12)
+c<-ggplot(data, aes(x=log2(mKO293RGFPNeg.2), y=log2(mKO293RGFPNeg.3)))+geom_point()+xlim(0,12)+ylim(0,12)
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=log2(mKO293Rtotal.1), y=log2(mKO293Rtotal.2)))+geom_point()+xlim(0,12)+ylim(0,12)
+b<-ggplot(data, aes(x=log2(mKO293Rtotal.1), y=log2(mKO293Rtotal.3)))+geom_point()+xlim(0,12)+ylim(0,12)
+c<-ggplot(data, aes(x=log2(mKO293Rtotal.2), y=log2(mKO293Rtotal.3)))+geom_point()+xlim(0,12)+ylim(0,12)
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))

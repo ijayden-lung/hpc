@@ -1,0 +1,37 @@
+#!/bin/bash
+
+ #### Default: ACACC GTTTT
+ #### some ACT,REP: TGTTG GTTTA
+ #### TTFKO: GTTGG GTTTA
+
+lib=mKO
+exp=MEF
+
+dir='/home/bio-longyk/workspace/CRISPR/mKO_MEF_depeletion/'
+sample=(MEF4thDay1 MEF5thDay1 MEF4thDay10 MEF5thDay10)
+mkdir "$dir/OUT"
+for sam in ${sample[*]}
+do
+	mkdir "$dir/OUT/$sam"
+	echo "mapping $sam"
+	#./extract_gRNA.pl clean_data/$sam.fq.gz $lib ACACC GTTTT OUT/$sam
+done
+
+
+
+
+
+### Do this after finishing mapping job;
+#./merge_log.pl $lib $exp 
+#./normalize.pl $lib $exp
+
+#./generate_ref.pl $lib
+./generate_query.pl $lib $exp
+./retrieve_notHits.pl $lib $exp
+
+#./prepare_RIGER_input.pl $lib MEF4th MEF4thDay1 MEF4thDay10
+#./prepare_RIGER_input.pl $lib MEF5th MEF5thDay1 MEF5thDay10
+#./riger.sh
+
+
+

@@ -1,0 +1,102 @@
+#!/usr/bin/perl -w
+my $Threshold = 0.01;
+my $offset = -log($Threshold)/log(10)-0.5;
+my $ScoreThre = -log($Threshold)/log(10)/2;
+
+open OUT,">MEF_HETE1_essentiality.txt";
+print OUT "gene\tcycle_fef\tcycle_mef\tcolor\tanno\n";
+
+open HETE,"HETE1.gene_summary.txt";
+<HETE>;
+my %fef;
+while(<HETE>){
+	chomp;
+	my ($gene,$neg_score,$neg_goodsgrna,$pos_score,$pos_goodsgrna) = (split)[0,2,6,8,12];
+	if($neg_score < $pos_score){
+		$fef{$gene} = log($neg_score)/log(10) if $neg_score < $Threshold;	
+	}
+	else{
+		$fef{$gene} = -log($pos_score)/log(10) if $pos_score < $Threshold;
+	}
+}
+
+open HOMO,"HOMO1.gene_summary.txt";
+<HOMO>;
+while(<HOMO>){
+	chomp;
+	my ($gene,$neg_score,$neg_goodsgrna,$pos_score,$pos_goodsgrna) = (split)[0,2,6,8,12];
+	if(exists $fef{$gene}){
+		if($fef{$gene}<0 && $fef{$gene} < log($neg_score)/log(10)){
+			$fef{$gene} -= log($neg_score)/log(10);
+		}
+		elsif($fef{$gene}>0 && $fef{$gene} > -log($pos_score)/log(10)){
+			$fef{$gene} += log($pos_score)/log(10);
+		}
+	}
+}
+
+open MEF,"MEF.gene_summary.txt";
+<MEF>;
+my %mef;
+while(<MEF>){
+	chomp;
+	my ($gene,$neg_score,$neg_goodsgrna,$pos_score,$pos_goodsgrna) = (split)[0,2,6,8,12];
+	if($neg_score < $pos_score){
+		$mef{$gene} = log($neg_score)/log(10) if $neg_score < $Threshold;
+	}
+	else{
+		$mef{$gene} = -log($pos_score)/log(10) if $pos_score < $Threshold;;
+	}
+}
+
+
+
+my %important;
+
+while(my ($gene,$score) = each %fef){
+	next if (!exists $mef{$gene});
+	if($score >$ScoreThre && $mef{$gene}>0){
+		#if($score >2.5 || $mef{$gene}>2.5){
+			print OUT "$gene\t$score\t$mef{$gene}\tyellow\t$gene\n";
+			#}
+			#else{
+			#print OUT "$gene\t$score\t$mef{$gene}\tyellow\tna\n";
+			#}
+	}
+	elsif($score <-$ScoreThre && $mef{$gene}>0){
+		#if($score <-2.5 || $mef{$gene}>2.5){
+			print OUT "$gene\t$score\t$mef{$gene}\tblue\t$gene\n";
+			$important{$gene} = '';
+			#}
+			#else{
+			#print OUT "$gene\t$score\t$mef{$gene}\tblue\tna\n";
+			#}
+	}
+	elsif($score <-$ScoreThre && $mef{$gene}<0){
+		#if($score <-2.5 || $mef{$gene}<-2.5){
+			print OUT "$gene\t$score\t$mef{$gene}\tred\t$gene\n";
+			#}
+		#else{
+			#print OUT "$gene\t$score\t$mef{$gene}\tred\tna\n";
+			#}
+	}
+	elsif($score >$ScoreThre && $mef{$gene}<0){
+		#if($score >2.5 || $mef{$gene}<-2.5){
+			print OUT "$gene\t$score\t$mef{$gene}\tgreen\t$gene\n";
+			#}
+			#else{
+			#print OUT "$gene\t$score\t$mef{$gene}\tgreen\tna\n";
+			#}
+	}
+}
+
+open FILE,"HETE1.sgrna_summary.txt";
+<FILE>;
+open OUT, ">Important.sgrna_summary.txt";
+while(<FILE>){
+	chomp;
+
+
+
+
+system("./scatterplot.r MEF_HETE1_essentiality.txt MEF_HETE1_essentiality.pdf");

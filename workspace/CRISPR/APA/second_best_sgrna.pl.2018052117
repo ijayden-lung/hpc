@@ -1,0 +1,52 @@
+#!/usr/bin/perl -w
+#
+open FILE,"BASE.sgrna_summary.txt";
+<FILE>;
+my %rank;
+my %gene;
+my %data;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$baseline,$library,$l2fc) = (split)[0,1,5,4,6];
+	$gene{$gene}++;
+	$rank{$gene}->{$sgrna} = $gene{$gene} if $gene{$gene} <=2;
+	$data{$gene}->{$sgrna} = "$sgrna\t$gene\t$baseline\t$library\t$l2fc";
+}
+
+my %family;
+open FILE,"APA3_Gene_List";
+while(<FILE>){
+	chomp;
+	$family{$_} = '';
+}
+
+my %second_best_sgrna;
+while(my ($gene,$val) = each %rank){
+	foreach my $sgrna (sort{$val->{$b}<=>$val->{$a}} keys %$val){
+		foreach my $fam (keys %family){
+			if($gene =~ /^$fam/){
+				$second_best_sgrna{$sgrna} = $gene;
+				last;
+			}
+			else{
+				$second_best_sgrna{$sgrna} = 'others';
+			}
+		}
+		last;
+	}
+}
+		
+
+open FILE,"BASE.sgrna_summary.txt";
+<FILE>;
+open OUT2, ">APA3_WNTKO.tsv";
+print OUT2 "sgrna\tgene\tbaseline\tlibrary\tl2fc\tfamily\n";
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$baseline,$library,$l2fc) = (split)[0,1,5,4,6];
+	if(exists $second_best_sgrna{$sgrna}){
+		print OUT2 "$sgrna\t$gene\t$baseline\t$library\t$l2fc\t$second_best_sgrna{$sgrna}\n";
+	}
+}
+
+system("./maplot.r APA3_WNTKO.tsv MAPlot_APA3.pdf");

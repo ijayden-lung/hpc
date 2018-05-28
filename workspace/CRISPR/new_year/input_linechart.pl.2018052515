@@ -1,0 +1,59 @@
+#!/usr/bin/perl -w
+
+my %position;
+open FILE,"hKO.sam";
+while(<FILE>){
+	chomp;
+	my ($sgrna,$strand,$chr,$pos) = split;
+	$position{$sgrna} = "$strand:$chr:$pos";
+}
+
+
+my %strand;
+open FILE,"/home/bio-longyk/cnda/ensembl/hg38_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$strand) = split;
+	$strand{$gene_name} = $strand;
+}
+open FILE,"/home/bio-longyk/cnda/miRNA/hsa_id2name.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$strand) = split;
+	$strand{$gene_name} = $strand;
+}
+
+my %important;
+=pod
+open FILE,"Invalid.gene_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$posrank) = (split)[0,-3];
+	if($posrank<=12){
+		$important{$gene} ='';
+	}
+}
+=cut
+
+open FILE,"invalid_gene.list";
+while(<FILE>){
+	chomp;
+	$important{$_}  = '';
+}
+open OUT, ">Top_Invalid.sgrna_summary.txt";
+print OUT "position\tsgrna\tgene\tbaseline1\tbaseline2\tGFPpos1\tGFPpos2\n";
+open FILE,"WNT+.sgrna_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$control_count,$treat_count) = split;
+	my ($control1,$control2) = split /\//,$control_count;
+	my ($treat1,$treat2) = split /\//,$treat_count;
+	if(exists $important{$gene}){
+		print OUT "$position{$sgrna}\t$sgrna\t$gene($strand{$gene})\t$control1\t$control2\t$treat1\t$treat2\n";
+	}
+}
+
+system("./linechart.r Top_Invalid.sgrna_summary.txt Top_Invalid.sgrna_summary.pdf");
+

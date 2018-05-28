@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w
+
+open FILE,'union_gfp+.txt';
+open OUT,'>union_gfp+_sorted.tsv';
+my %hash;
+while(<FILE>){
+	chomp;
+	my ($score) = (split /\t/)[-1];
+	$hash{$_} = $score;
+}
+
+foreach my $key (sort{$hash{$b}<=>$hash{$a}} keys %hash){
+	print OUT "$key\n";
+}

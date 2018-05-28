@@ -1,0 +1,23 @@
+#!/usr/bin/perl -w
+
+my %family;
+open FILE,"APA_Gene_List";
+while(<FILE>){
+	chomp;
+	$family{$_} = '';
+}
+open FILE,"U1_Gene_List";
+while(<FILE>){
+	chomp;
+	$family{$_} = '';
+}
+open FILE,"Exosome_Gene_List";
+while(<FILE>){
+	chomp;
+	$family{$_} = '';
+}
+
+open FILE,"BASE.gene_summary.txt";
+while(<FILE>){
+	chomp;
+

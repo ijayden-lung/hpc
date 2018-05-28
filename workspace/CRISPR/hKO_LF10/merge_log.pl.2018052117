@@ -1,0 +1,32 @@
+#!/usr/bin/perl -w
+#
+my %hash;
+my @sample;
+my %hash2;
+foreach my $file (glob 'OUT/*/log'){
+	my $sam = (split /\//,$file)[1];
+	print "$sam\n";
+	push @sample,$sam;
+	open FILE,$file;
+	my $i=0;
+	while(<FILE>){
+		chomp;
+		$i++;
+		my ($row,$num,$per)  = split /\t/;
+		$hash{$row}->{$sam} = "$num, $per%";
+		$hash2{$row} = $i;
+	}
+}
+
+open OUT,'>Log_hKO_library.tsv';
+print OUT "\t";
+print OUT join "\t", @sample;
+print OUT "\n";
+foreach my $row (sort{$hash2{$a}<=>$hash2{$b}} keys %hash2){
+	my $val = $hash{$row};
+	print OUT "$row";
+	foreach my $sam (@sample){
+		print OUT "\t$val->{$sam}";
+	}
+	print OUT "\n";
+}

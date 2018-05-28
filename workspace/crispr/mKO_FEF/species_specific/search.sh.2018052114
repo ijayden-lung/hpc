@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N BLASTN
+#PBS -l nodes=2:ppn=12
+#PBS -j oe 
+#PBS -l walltime=06:00:00
+
+
+cd ~/workspace/CRISPR/mKO_FEF/species_specific/
+blastn -db /home/bio-longyk/apps/ncbi-blast-2.7.1+/DATABASE/rn6 -query Query_mKO_FEF.fa  -evalue 1e-3 -word_size 8 -outfmt 6  -num_threads 24 > BlastResult_rn6.txt 

@@ -1,0 +1,10 @@
+#!/usr/bin/perl 
+#
+open FILE, "awk '(\$3 == \"miRNA_primary_transcript\") {print}' hsa.gff3.txt |";
+open FILE2, ">hsa_id2name.txt";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my ($id,$name) = (split /=|;/,$data[-1])[1,-1];
+	print FILE2 "$id\t$name\t$data[6]\n";
+}

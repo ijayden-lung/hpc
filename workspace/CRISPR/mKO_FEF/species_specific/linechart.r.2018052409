@@ -1,0 +1,31 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+args<-commandArgs(T)
+
+
+
+
+data = read.table(args[1],header=TRUE)
+pdf(args[2],width=10)
+
+
+
+plotgenes=data$gene
+
+
+header = names(data)
+sample=header[5:8]
+sub = subset(data,data$gene=="Emid1")
+count=as.vector(as.matrix(sub[5:8]))
+similar=sub$similarity
+df = data.frame(sgrna=rep(sub$position,4),
+				sample=rep(sample,each=4),
+				count=count,similar=rep(sub$similarity,4))
+
+ggplot(data=df,aes(x=sample,y=count,group=sgrna,color=sgrna))+
+geom_line(aes(linetype=similar))+
+geom_point(size=3)+
+scale_y_log10("Read Counts",breaks = scales::trans_breaks("log10", function(x) 10^x),labels = scales::trans_format("log10", scales::math_format(10^.x)))+
+labs(x="")+
+theme_bw()+
+theme(panel.grid =element_blank(),axis.title=element_text(size=20),axis.text=element_text(size=15),legend.title=element_blank())

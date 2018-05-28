@@ -1,0 +1,38 @@
+#!/usr/bin/perl 
+#
+
+my %lib;
+open LIB,'../mACTlib.csv';
+<LIB>;
+while(<LIB>){
+	chomp;
+	my ($gene,$target) = split /,/;
+	$lib{$target} = $gene;
+}
+
+open FILE,'OUT/mACTlib/gRNA_sorted.txt';
+my %data;
+my $mapNum = 0;
+my $unMapNum = 0;
+my $mapTar = 0;
+my $unMapTar = 0;
+while(<FILE>){
+	chomp;
+	my ($target,$count) = split;
+	my $new = substr($target,1);
+	print "$new\n";
+	if(exists $lib{$target} || exists $lib{$new}){	
+		$mapNum += $count;
+		$mapTar++;
+		$data{$target} = $count;
+	}
+	else{
+		$unMapTar++;
+		$unMapNum += $count;
+	}
+}
+
+
+my $libNum = keys %lib;
+
+print "$mapTar\t$mapNum\n$unMapTar\t$unMapNum\n$libNum\n";

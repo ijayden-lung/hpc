@@ -1,0 +1,28 @@
+#!/usr/bin/env Rscript
+
+
+lambda = 1
+
+header = "moi=";
+for(moi in 2:10){
+	header = paste(header,moi)
+}
+print(header)
+c = c(6,6.2,6.4,6.6,6.8,7,7.2,7.4,7.6,7.8,8,8.2,8.4,8.6,8.8,9,9.2,9.4,9.6,9.8,10)
+for (lambda in c){
+	a = paste("lambda=",lambda,sep='')
+	for (moi in 2:10){
+		A = 0
+		B = 0
+		for (i in 1:moi){
+			A = A + i*dpois(i, lambda = lambda)
+			B = B + i*dpois(i, lambda = lambda/2)
+		}
+		ratio=A/B
+		a = paste(a,round(ratio,2))
+	}
+	print(a)
+}
+
+
+

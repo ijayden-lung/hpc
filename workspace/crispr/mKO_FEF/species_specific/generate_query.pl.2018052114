@@ -1,0 +1,28 @@
+#!/usr/bin/perl -w
+
+print "Start blast query for mm10 and rn6\n";
+my ($lib,$exp,$dir) = @ARGV;
+if(!defined $dir){
+	$dir = '.';
+}
+if(!defined $exp){
+	$exp = 'FEF';
+}
+if(!defined $lib){
+	$lib = 'mKO';
+}
+open FILE,"../Map_RC_$lib\_$exp.tsv";
+<FILE>;
+open OUT, ">Query_$lib\_$exp.fa";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $grna = shift @data;
+	print OUT "\>$grna\n$grna\n";
+}
+
+system("blastn -db /home/bio-longyk/apps/ncbi-blast-2.7.1+/DATABASE/mm10 -query Query_$lib\_$exp.fa  -evalue 1e-3 -word_size 8 -outfmt 6  > BlastResult_mm10.txt");
+system("blastn -db /home/bio-longyk/apps/ncbi-blast-2.7.1+/DATABASE/rn6 -query Query_$lib\_$exp.fa  -evalue 1e-3 -word_size 8 -outfmt 6  > BlastResult_rn6.txt");
+
+
+print "Finish blast query for mm10 and rn6\n";

@@ -1,0 +1,37 @@
+#!/usr/bin/perl -w
+
+
+my %family;
+open FILE,"Exosome_New_list";
+while(<FILE>){
+	chomp;
+	my ($gene) = (split)[-1];
+	$family{$gene} = '';
+}
+open FILE,"U1_New_list";
+while(<FILE>){
+	chomp;
+	my ($gene) = (split)[-1];
+	$family{$gene} = '';
+}
+open FILE,"APA_New_list";
+while(<FILE>){
+	chomp;
+	my ($gene) = (split)[-1];
+	$family{$gene} = '';
+}
+
+
+open FILE,"../Library/lib_hKO-NP.csv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my (undef,$gene) = split /,/;
+	if(exists $family{$gene}){
+		delete $family{$gene};
+	}
+}
+
+foreach my $key (keys %family){
+	print "$key\n";
+}

@@ -1,0 +1,39 @@
+#!/bin/bash
+
+nodes=1
+ppn=12
+threads=$[$nodes*$ppn]
+
+cat >star.sh <<EOF
+#!/bin/bash
+#PBS -q ser
+#PBS -N CRISPR
+#PBS -l nodes=1:ppn=1
+#PBS -o \${out}
+#PBS -j oe 
+#PBS -l walltime=01:00:00
+
+mkdir \$inp
+cd \$inp
+perl ~/workspace/CRISPR/script/extract_gRNA.pl \$fq1
+
+EOF
+
+cd ~/workspace/CRISPR/new_year/
+dir='~/workspace/CRISPR/new_year'
+for i in ~/workspace/CRISPR/new_year/*1.fq.gz
+do
+	sam=${i%%.*}
+	sam=${sam##*\/}
+	sam=${sam%%\_*}
+	echo $sam
+	inp=/home/bio-longyk/workspace/CRISPR/new_year/OUT/$sam
+	out=log_$sam
+	fq1=$i
+	qsub -v inp=$inp,out=$out,fq1=$fq1 star.sh
+done
+
+./processSample.pl
+./merge_log.pl
+./prepare_RIGER_input.pl
+./riger.sh

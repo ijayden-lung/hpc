@@ -1,0 +1,67 @@
+#!/usr/bin/perl -w
+
+open FILE,'Norm_RC_hKO_WNTScreen.tsv';
+<FILE>;
+open OUT1, ">Map_Norm_RC_hKO_WNTScreen_pos.tsv";
+open OUT2, ">Map_Norm_RC_hKO_WNTScreen_neg.tsv";
+open OUT3, ">Map_Norm_RC_hKO_WNTScreen.tsv";
+#print OUT "sgRNA\tGene\tGFP+1\tGFP+2\tGFP-1\tGFP-2\tBaseline1\tBaseline2\tLibrary\tTag\n";
+print OUT1 "sgRNA\tgene\tGFP+1\tGFP+2\tBaseline1\tBaseline2\n";
+print OUT2 "sgRNA\tgene\tGFP-1\tGFP-2\tBaseline1\tBaseline2\n";
+print OUT3 "sgRNA\tgene\tGFP+1\tGFP+2\tGFP-1\tGFP-2\tBaseline1\tBaseline2\tLibrary\n";
+
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $total4sum  =0;
+	my $total5sum = 0;
+	for(my $i=7;$i<19;$i+=2){
+		$total4sum += $data[$i];
+	}
+	for(my $i=8;$i<19;$i+=2){
+		$total5sum += $data[$i];
+	}
+
+	my $total4 = sprintf("%.0f",$total4sum / 6);
+	my $total5 = sprintf("%.0f",$total5sum / 6);
+	my ($gene) = split /;/,$data[1];
+	$data[1] = $gene;
+	#print OUT join "\t",@data[0..5],$total4,$total5,$data[-1];
+	next if $data[1] eq "NotHits";
+	print OUT2 "$data[0]\t$data[1]\t$data[4]\t$data[5]\t$total4\t$total5\n" if ($data[4]+$data[5]+$total4+$total5) > 20;
+	print OUT1 "$data[0]\t$data[1]\t$data[2]\t$data[3]\t$total4\t$total5\n" if ($data[2]+$data[3]+$total4+$total5) > 20;
+	print OUT3 "$data[0]\t$data[1]\t$data[2]\t$data[3]\t$data[4]\t$data[5]\t$total4\t$total5\t$data[6]\n";
+=pod
+	if($data[1] eq "APC"){
+		print OUT "\tAPC\n";
+	}
+	elsif($data[1] eq "CSNK1A1"){
+		print OUT "\tCSNK1A1\n";
+	}
+	if($data[1] eq "CREBBP"){
+		print OUT "\tCREBBP\n";
+	}
+	elsif($data[1] eq "BCL9"){
+		print OUT "\tBCL9\n";
+	}
+	elsif($data[1] eq "CTNNB1"){
+		print OUT "\tCTNNB1\n";
+	}
+	elsif($data[1] eq "DOT1L"){
+		print OUT "\tDOT1L\n";
+	}
+	elsif($data[1] eq "MLLT10"){
+		print OUT "\tMLLT10\n";
+	}
+	elsif($data[1] eq "LRP6"){
+		print OUT "\tLRP6\n";
+	}
+	elsif($data[1] eq "TFAP4"){
+		print OUT "\tTFAP4\n";
+	}
+	else{
+        print OUT "\tOthers\n";
+	}
+=cut
+}
+

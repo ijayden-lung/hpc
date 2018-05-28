@@ -1,0 +1,8 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+
+pdf('MAPlotGeCKO.pdf')
+data = read.table('GeCKO_whole.tsv',header=TRUE,row.names=1)
+ggplot(data, aes(x=log10((C1+C2+H1+H2)/4), y=log2((H1+H2)/(C1+C2))))+geom_point()+labs(x = "Log10 Mean ReadCount",y = "Log2(High/Control")
+ggplot(data, aes(x=log10((C1+C2+L1+L2)/4), y=log2((L1+L2)/(C1+C2))))+geom_point()+labs(x = "Log10 Mean ReadCount",y = "Log2(Low/Control")

@@ -1,0 +1,38 @@
+#!/usr/bin/perl -w
+
+my %position;
+open FILE,"hKO.sam";
+while(<FILE>){
+	chomp;
+	my ($sgrna,$strand,$chr,$pos) = split;
+	$position{$sgrna} = "$strand:$chr:$pos";
+}
+
+
+my %important;
+open FILE,"WNT+.gene_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$posrank) = (split)[0,-3];
+	if($posrank<=12){
+		$important{$gene} ='';
+	}
+}
+
+
+open OUT, ">Top_WNT+.sgrna_summary.txt";
+print OUT "position\tsgrna\tgene\tBaeline1\tBaseline2\tGFPpos1\tGFPpos2\n";
+open FILE,"WNT+.sgrna_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$control_count,$treat_count) = split;
+	my ($control1,$control2) = split /\//,$control_count;
+	my ($treat1,$treat2) = split /\//,$treat_count;
+	if(exists $important{$gene}){
+		print OUT "$position{$sgrna}\t$sgrna\t$gene\t$control1\t$control2\t$treat1\t$treat2\n";
+	}
+}
+
+system("./linechart.r Top_WNT+.sgrna_summary.txt Top_WNT+.sgrna_summary.pdf");

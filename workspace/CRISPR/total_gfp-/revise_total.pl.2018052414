@@ -1,0 +1,21 @@
+#!/usr/bin/perl -w
+
+open FILE,'Norm_RC_hKO_WNTScreen.tsv';
+<FILE>;
+open OUT1, ">Map_Norm_RC_hKO_WNTScreen_pos.tsv";
+open OUT2, ">Map_Norm_RC_hKO_WNTScreen_neg.tsv";
+open OUT3, ">Map_Norm_RC_hKO_WNTScreen.tsv";
+#print OUT "sgRNA\tGene\tGFP+1\tGFP+2\tGFP-1\tGFP-2\tBaseline1\tBaseline2\tLibrary\tTag\n";
+print OUT1 "sgRNA\tgene\tGFP+1\tGFP+2\tGFP+3\tBaseline1\tBaseline2\tBaseline3\n";
+print OUT2 "sgRNA\tgene\tGFP-1\tGFP-2\tBaseline1\tBaseline2\tBaseline3\n";
+print OUT3 "sgRNA\tgene\tGFP+1\tGFP+2\tGFP+3\tGFP-1\tGFP-2\tBaseline1\tBaseline2\t\tBaseline3\tLibrary\n";
+
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$pos1,$pos2,$pos3,$neg1,$neg2,$lib,$tot1,$tot2,$tot3) = split;
+	 ($gene) = split /;/,$gene;
+	next if $gene eq "NotHits";
+	print OUT1 "$sgrna\t$gene\t$pos1\t$pos2\t$pos3\t$tot1\t$tot2\t$tot3\n" if ($pos1+$pos2+$pos3+$tot1+$tot2+$tot3) > 30;
+	print OUT2 "$sgrna\t$gene\t$neg1\t$neg2\t$tot1\t$tot2\t$tot3\n" if ($neg1+$neg2+$tot1+$tot2+$tot3) > 25;
+	print OUT3 "$sgrna\t$gene\t$pos1\t$pos2\t$pos3\t$neg1\t$neg2\t$tot1\t$tot2\t$tot3\t$lib\n";
+}

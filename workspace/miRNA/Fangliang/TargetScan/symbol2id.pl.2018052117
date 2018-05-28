@@ -1,0 +1,33 @@
+#!/usr/bin/perl -w
+my %symbol2id;
+open FILE,'/home/bio-longyk/cnda/ensembl/hg38_ID2Name.txt';
+while(<FILE>){
+	chomp;
+	my ($id,$symbol) = split;
+	$symbol2id{$symbol} = $id;
+}
+
+my $mirna = 'miR-138-5p';
+open FILE,"TargetScan7.1__$mirna.predicted_targets.txt";
+<FILE>;
+open OUT,">$mirna.txt";
+#print OUT "ensg\n";
+my $i =0;
+my %target;
+while(<FILE>){
+	chomp;
+	my ($symbol) = split;
+	print OUT "$symbol\n";
+	if(exists $symbol2id{$symbol}){
+		$target{$symbol2id{$symbol}} = '';
+	}
+	else{
+		$i++;
+	}
+}
+
+foreach my $gene (keys %target){
+	#print OUT "$gene\n";
+}
+
+print "$i\n";

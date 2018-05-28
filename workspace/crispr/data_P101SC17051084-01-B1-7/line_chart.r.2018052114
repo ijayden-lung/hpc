@@ -1,0 +1,8 @@
+#!/usr/bin/env Rscript
+pdf("LineChart4.pdf")
+read.table("per4",header=TRUE,sep="\t") -> data
+plot(data$perR,data$perL, xlab = "Percentage of Reads", ylab = "percentage of Mapped gRNA",col="red",bg="yellow")
+sp=spline(data$perR,data$perL)
+#lines(sp,col="red",type="l")
+lines(data$perR,data$perL,col="red",type="l")
+

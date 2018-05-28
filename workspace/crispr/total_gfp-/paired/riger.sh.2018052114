@@ -1,0 +1,6 @@
+#!/bin/bash
+java -jar ~/apps/rigerj/target/rigerj-2.0.1-assembly.jar  -inputFile hKO_Enrich_Low1.tsv -scoringMethod SecondBestRank -outputFile hKO_enrich_low1_SBR.txt
+java -jar ~/apps/rigerj/target/rigerj-2.0.1-assembly.jar  -inputFile hKO_Enrich_Low2.tsv -scoringMethod SecondBestRank -outputFile hKO_enrich_low2_SBR.txt
+java -jar ~/apps/rigerj/target/rigerj-2.0.1-assembly.jar  -inputFile hKO_Enrich_High2.tsv -scoringMethod SecondBestRank -outputFile hKO_enrich_high2_SBR.txt
+java -jar ~/apps/rigerj/target/rigerj-2.0.1-assembly.jar  -inputFile hKO_Enrich_High1.tsv -scoringMethod SecondBestRank -outputFile hKO_enrich_high1_SBR.txt
+java -jar ~/apps/rigerj/target/rigerj-2.0.1-assembly.jar  -inputFile hKO_Enrich_High3.tsv -scoringMethod SecondBestRank -outputFile hKO_enrich_high3_SBR.txt

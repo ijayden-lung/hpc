@@ -1,0 +1,49 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+pdf(args[2])
+
+
+
+data = read.table(args[1],header=TRUE,row.names=1)
+#reg<-glm(log2(mKOMEFDay15.2) ~ log2(mKOMEFDay15.1),data,na.action = na.omit)
+#summary(reg)
+
+
+
+
+
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=log2(mKOMEFDay3.1), y=log2(mKOMEFDay3.2)))+geom_point()+xlim(0,12)+ylim(0,12)
+b<-ggplot(data, aes(x=log2(mKOMEFDay3.1), y=log2(mKOMEFDay3.3)))+geom_point()+xlim(0,12)+ylim(0,12)
+c<-ggplot(data, aes(x=log2(mKOMEFDay3.2), y=log2(mKOMEFDay3.3)))+geom_point()+xlim(0,12)+ylim(0,12)
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=log2(mKOMEFDay9.1), y=log2(mKOMEFDay9.2)))+geom_point()+xlim(0,12)+ylim(0,12)
+b<-ggplot(data, aes(x=log2(mKOMEFDay9.1), y=log2(mKOMEFDay9.3)))+geom_point()+xlim(0,12)+ylim(0,12)
+c<-ggplot(data, aes(x=log2(mKOMEFDay9.2), y=log2(mKOMEFDay9.3)))+geom_point()+xlim(0,12)+ylim(0,12)
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=log2(mKOMEFDay15.1), y=log2(mKOMEFDay15.2)))+geom_point()+xlim(0,12)+ylim(0,12)
+b<-ggplot(data, aes(x=log2(mKOMEFDay15.1), y=log2(mKOMEFDay15.3)))+geom_point()+xlim(0,12)+ylim(0,12)
+c<-ggplot(data, aes(x=log2(mKOMEFDay15.2), y=log2(mKOMEFDay15.3)))+geom_point()+xlim(0,12)+ylim(0,12)
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))

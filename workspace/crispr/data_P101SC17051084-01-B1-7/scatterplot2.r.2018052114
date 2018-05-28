@@ -1,0 +1,38 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+pdf(args[2])
+
+
+
+data = read.table(args[1],header=TRUE,row.names=1)
+data = data[data$mKO3T3Day3.1>10,]
+data = data[data$mKO3T3Day3.2>10,]
+data = data[data$mKO3T3Day3.3>10,]
+data = data[data$mKO3T3Day9.1>10,]
+data = data[data$mKO3T3Day9.2>10,]
+data = data[data$mKO3T3Day9.3>10,]
+data = data[data$mKO3T3Day15.1>10,]
+data = data[data$mKO3T3Day15.2>10,]
+data = data[data$mKO3T3Day15.3>10,]
+
+
+
+
+
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=log2(mKO3T3Day15.1/mKO3T3Day3.1), y=log2(mKO3T3Day15.2/mKO3T3Day3.2)))+geom_point()
+b<-ggplot(data, aes(x=log2(mKO3T3Day15.1/mKO3T3Day3.1), y=log2(mKO3T3Day15.3/mKO3T3Day3.3)))+geom_point()
+c<-ggplot(data, aes(x=log2(mKO3T3Day15.2/mKO3T3Day3.2), y=log2(mKO3T3Day15.3/mKO3T3Day3.3)))+geom_point()
+d<-ggplot(data, aes(x=log2(mKO3T3Day9.2/mKO3T3Day15.2), y=log2(mKO3T3Day9.3/mKO3T3Day15.3)))+geom_point()
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 1))
+print(d, vp = vplayout(2, 2))
+

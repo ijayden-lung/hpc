@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N STAR
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=02:00:00
+#PBS -l mem=200G
+
+cd /home/bio-longyk/workspace/data_P101SC17051084-01-B1-7/
+STAR --runThreadN 18 --runMode genomeGenerate --genomeDir genomeMouDir --genomeFastaFiles mouse_genome.fa  --genomeSAindexNbases 11 --limitGenomeGenerateRAM 96270568490

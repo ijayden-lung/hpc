@@ -1,0 +1,35 @@
+#!/usr/bin/perl -w
+my $Threshold = 0.005;
+my $offset = -log($Threshold)/log(10)-0.5;
+
+open OUT,">MEF_HETE1_essentiality.txt";
+print OUT "gene\tcycle_fef\tcycle_mef\tcolor\tanno\n";
+
+open HETE,"HETE1.gene_summary.txt";
+<HETE>;
+while(<HETE>){
+	chomp;
+	my ($gene,$neg_score,$neg_goodsgrna,$pos_score,$pos_goodsgrna) = (split)[0,2,6,8,12];
+	if($neg_score < $Threshold){
+		my $cycle_score = log($neg_score)/log(10)+$offset;
+		print OUT "$gene\t$neg_goodsgrna\t$cycle_score\tblue\t";
+		if($neg_score<$Threshold/10){
+			print OUT "$gene\n";
+		}
+		else{
+			print OUT "na\n";
+		}
+	}
+	if($pos_score < $Threshold){
+		my $cycle_score = -log($pos_score)/log(10)-$offset;
+		$pos_goodsgrna += rand(1);
+		print OUT "$gene\t$pos_goodsgrna\t$cycle_score\tyellow\t";
+		if($pos_score<$Threshold/10){
+			print OUT "$gene\n";
+		}
+		else{
+			print OUT "na\n";
+		}
+	}
+}
+
