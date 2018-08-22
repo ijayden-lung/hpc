@@ -1,0 +1,33 @@
+#!/usr/bin/perl -w
+my %ort;
+my %id2name;
+open ORT,"/home/bio-longyk/cnda/ortholog/mouse2rat.txt";
+while(<ORT>){
+	chomp;
+	my ($mouse_id,$mouse_name,$rat_id,$rat_name,$ort_type) = split;
+	next if $ort_type !~ /one2one/;
+	$ort{$mouse_id} = $rat_id;
+	$id2name{$mouse_id} = $mouse_name;
+}
+
+
+my %mouse_length;
+open MOU,"/home/bio-longyk/workspace/splicing/F0/FC_annotation_mm10.txt";
+<MOU>;
+while(<MOU>){
+	chomp;
+	my ($id,$length) = (split)[1,-1];
+	$mouse_length{$id} = $length;
+}
+
+my %rat_length;
+open RAT ,"/home/bio-longyk/workspace/splicing/F0/FC_annotation_rn6.txt";
+<RAT>;
+while(<RAT>){
+	chomp;
+	my ($id,$length) = (split)[1,-1];
+	$rat_length{$id} = $length;
+}
+
+print "$mouse_length{'ENSMUSG00000043789'}\n";
+print "$rat_length{'ENSRNOG00000055518'}\n";

@@ -1,0 +1,60 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N Bowtie
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=01:00:00
+
+
+nodes=1
+ppn=12
+threads=$[$nodes*$ppn]
+lib='hKO'
+exp='WNTScreen'
+
+cat >star.sh <<EOF
+#!/bin/bash
+#PBS -q ser
+#PBS -N CRISPR
+#PBS -l nodes=1:ppn=1
+#PBS -o \${out}
+#PBS -j oe 
+#PBS -l walltime=01:00:00
+
+mkdir \$inp
+cd \$inp
+perl ~/workspace/CRISPR/new_year/extract_gRNA.pl \$fq1 \$lib
+
+EOF
+
+cd ~/workspace/CRISPR/new_year/
+dir='~/workspace/CRISPR/new_year'
+<<BL
+for i in ~/workspace/CRISPR/new_year/*1.fq.gz
+do
+	sam=${i%%.*}
+	sam=${sam##*\/}
+	sam=${sam%%\_*}
+	echo $sam
+	inp=/home/bio-longyk/workspace/CRISPR/new_year/OUT/$sam
+	out=log_$sam
+	fq1=$i
+	qsub -v inp=$inp,out=$out,fq1=$fq1,lib=$lib star.sh
+done
+BL
+
+
+### Do this after finishing mapping job;
+#./merge_log.pl $lib $exp 
+#./normalize.pl $lib $exp
+#./revise_total.pl
+
+#./generate_ref.pl $lib
+#bowtie -p 18 -f -n 2 -l 23 --best ~/cnda/bt1_index/hg38 --al aligned_hKO.fa --un unaligned_hKO.fa hKO.fa >hKO.sam
+./input_linechart.pl
+linechart.r Top_WNT+.sgrna_summary.txt Top_WNT+.sgrna_summary.pdf
+#./generate_query.pl $lib $exp
+#./retrieve_notHits.pl $lib $exp
+
+#./prepare_RIGER_input.pl
+#./riger.sh

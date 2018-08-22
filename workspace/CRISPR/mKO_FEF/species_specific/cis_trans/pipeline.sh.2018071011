@@ -1,0 +1,47 @@
+#!/bin/bash
+
+####Merge rn6 mm10 count data and normalize the gene length
+mm10="mm10_par_count.tsv";
+rn6="rn6_par_count.tsv"
+merge="ReadCount_par.txt"
+#./merge_par_mouse_rat.pl $mm10 $rn6 $merge
+
+
+ctrl="mm10"
+trea="rn6"
+deseq="DESeq2_par.txt"
+norm="norm_par.txt";
+pdf="DESeq2_par.pdf"
+rld="Rld_par.txt"
+ctrl_num=2
+trea_num=2
+#./deseq2.r $ctrl $trea $merge $deseq $pdf $rld $ctrl_num $trea_num $norm
+
+
+####Merge rn6 mm10 count data and normalize the gene length
+mm10="mm10_hyb_count.tsv";
+rn6="rn6_hyb_count.tsv"
+merge="ReadCount_hyb.txt"
+#./merge_hyb_mouse_rat.pl $mm10 $rn6 $merge
+
+
+ctrl="mm10"
+trea="rn6"
+deseq="DESeq2_hyb.txt"
+norm="norm_hyb.txt";
+pdf="DESeq2_hyb.pdf"
+rld="Rld_hyb.txt"
+ctrl_num=4
+trea_num=4
+#./deseq2.r $ctrl $trea $merge $deseq $pdf $rld $ctrl_num $trea_num $norm
+
+
+#./calculate_cis.pl
+qval_cutoff=0.05
+#./cis_trans_sorter_v3.pl DESeq2_par.txt DESeq2_hyb.txt qval_cis_norm_par_hyb.txt Cis_reg_$qval_cutoff.txt Log_Cis_reg_$qval_cutoff.txt $qval_cutoff
+#./scatterplot.r Cis_reg_0.05.txt Log_Cis_reg_0.05.txt Cis_reg_0.05.pdf
+
+./maplot_F0.pl ../Input_gobp_important1.txt ../Input_gobp_important3.txt Cis_reg_0.05.txt ReadCount_hyb.txt Import3_Cis_reg_0.05.txt Log_Import3_Cis_reg_0.05.txt
+./scatterplot2.r Import3_Cis_reg_0.05.txt Log_Import3_Cis_reg_0.05.txt Import3_Cis_reg_0.05.pdf
+./maplot_F0.pl ../Input_gobp_important2.txt ../Input_gobp_important4.txt Cis_reg_0.05.txt  ReadCount_hyb.txt  Import4_Cis_reg_0.05.txt Log_Import4_Cis_reg_0.05.txt
+./scatterplot2.r Import4_Cis_reg_0.05.txt Log_Import4_Cis_reg_0.05.txt Import4_Cis_reg_0.05.pdf

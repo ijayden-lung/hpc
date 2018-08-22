@@ -1,0 +1,16 @@
+#!/usr/bin/perl -w
+#
+#
+my ($gene) = @ARGV;
+my %peak;
+open FILE,"$gene.targetgene.txt.DESeq2";
+while(<FILE>){
+	chomp;
+	my (undef,$chr,$motif_str,$motif_end,$peak_str,$peak_end) = split;
+	$peak{"$chr:$peak_str-$peak_end"}++;
+}
+
+open OUT,">motifNum_$gene.txt";
+foreach my $key (sort{$peak{$b}<=>$peak{$a}} keys %peak){
+	print OUT "$key\t$peak{$key}\n";
+}

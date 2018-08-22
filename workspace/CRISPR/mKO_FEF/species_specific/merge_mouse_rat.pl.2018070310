@@ -1,0 +1,82 @@
+#!/usr/bin/perl -w
+
+my %ort;
+my %ort_rev;
+my %id2name;
+open ORT,"/home/bio-longyk/cnda/ortholog/mouse2rat.txt";
+while(<ORT>){
+	chomp;
+	my ($mouse_id,$mouse_name,$rat_id,$rat_name,$ort_type) = split;
+	next if $ort_type !~ /one2one/;
+	$ort{$mouse_id} = $rat_id;
+	$ort_rev{$rat_id} = $mouse_id;
+	$id2name{$mouse_id} = $mouse_name;
+}
+
+
+my %mouse_length;
+open MOU,"/home/bio-longyk/workspace/splicing/F0/FC_annotation_mm10.txt";
+<MOU>;
+while(<MOU>){
+	chomp;
+	my ($id,$length) = (split)[1,-1];
+	$mouse_length{$id} = $length;
+}
+
+my %rat_length;
+open RAT ,"/home/bio-longyk/workspace/splicing/F0/FC_annotation_rn6.txt";
+<RAT>;
+while(<RAT>){
+	chomp;
+	my ($id,$length) = (split)[1,-1];
+	$rat_length{$id} = $length;
+}
+
+
+my %mouse_sf;
+my %rat_sf;
+while(my ($mouse_id,$rat_id) = each %ort){
+	next if (!exists $mouse_length{$mouse_id} || !exists $rat_length{$rat_id});
+	my $ave = ($mouse_length{$mouse_id}+$rat_length{$rat_id})/2;
+	$mouse_sf{$mouse_id} = $ave/$mouse_length{$mouse_id};
+	$rat_sf{$rat_id} = $ave/$rat_length{$rat_id};
+}
+
+
+my %mouse_count;
+my %mouse_count_norm;
+open MOU,"mm10_count.tsv";
+<MOU>;
+while(<MOU>){
+	chomp;
+	my ($id,$count1,$count2) = split;
+	next if !exists $ort{$id} || !exists $rat_length{$ort{$id}};
+	$count1_norm = sprintf("%.0f",$count1*$mouse_sf{$id});
+	$count2_norm = sprintf("%.0f",$count2*$mouse_sf{$id});
+	$mouse_count{$id} = "$count1\t$count2";
+	$mouse_count_norm{$id} = "$count1_norm\t$count2_norm";
+}
+
+
+my %rat_count;
+my %rat_count_norm;
+open RAT,"rn6_count.tsv";
+<RAT>;
+while(<RAT>){
+	chomp;
+	my ($id,$count1,$count2) = split;
+	next if !exists $ort_rev{$id} || !exists $mouse_length{$ort_rev{$id}};
+	$count1_norm = sprintf("%.0f",$count1*$rat_sf{$id});
+	$count2_norm = sprintf("%.0f",$count2*$rat_sf{$id});
+	$rat_count{$id} = "$count1\t$count2";
+	$rat_count_norm{$id} = "$count1_norm\t$count2_norm";
+}
+
+print "$mouse_count_norm{'ENSMUSG00000033813'}\n";
+
+open OUT,">ReadCount_mouse_rat.txt";
+print OUT "gene_name\tmouse_id\trat_id\tmouse_length\trat_length\tmef_1\tmef_2\tref_1\tref_2\tmef_1_norm\tmef_2_norm\tref_1_norm\tref_2_norm\n";
+while(my ($mouse_id,$rat_id) = each %ort){
+	next if !exists $mouse_count{$mouse_id} || !exists $rat_count{$rat_id};
+	print OUT "$id2name{$mouse_id}\t$mouse_id\t$rat_id\t\t$mouse_length{$mouse_id}\t$rat_length{$rat_id}\t$mouse_count{$mouse_id}\t$rat_count{$rat_id}\t$mouse_count_norm{$mouse_id}\t$rat_count_norm{$rat_id}\n";
+}

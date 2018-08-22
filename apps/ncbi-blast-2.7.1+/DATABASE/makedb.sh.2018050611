@@ -1,3 +1,0 @@
-#!/bin/bash
-
-makeblastdb -in hKO.fa -title hKO -dbtype nucl -out hKO

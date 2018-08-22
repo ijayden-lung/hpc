@@ -1,0 +1,37 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(ggrepel)
+library(grid)
+
+args<-commandArgs(T)
+
+pdf(args[3],width=12)
+data = read.table(args[1],header=TRUE)
+data2=read.table(args[2],header=TRUE)
+
+a<-ggplot(data, aes(x=hyb_l2fc, y=par_l2fc))+
+geom_point(aes(color=Category),size=1)+
+scale_color_manual(values=c(CONSERVED="grey45",UNDEFINED="black",CIS="cyan",TRANS="darkgreen",C_PLUS_T="red",COMPENSATORY="darkgoldenrod3",C_MINUS_T="yellow4",T_MINUS_C="slateblue4"))+
+#geom_hline(yintercept=0)+
+#geom_vline(xintercept=0)+
+theme_bw()+
+theme(legend.position="none")+
+#geom_text_repel(aes(label=gene),size=3, data=subset(data,anno!="na"))+
+labs(x=expression(log[2](F1[mouse]/F1[rat])),y=expression(log[2](F0[mouse]/F0[rat])))
+
+b<-ggplot(data2,aes(x=Category,y=Percent,fill=Category))+
+geom_bar(stat="identity")+ 
+coord_flip()+
+scale_fill_manual("legend",values=c(CONSERVED="grey45",UNDEFINED="black",CIS="cyan",TRANS="darkgreen",C_PLUS_T="red",COMPENSATORY    ="darkgoldenrod3",C_MINUS_T="yellow4",T_MINUS_C="slateblue4"))+
+geom_text(aes(label = Percent, vjust = 0, hjust = 0, show_guide = FALSE))+ 
+ylim(min(data2$Percent, 0)*1.1, max(data2$Percent)*1.1)+
+theme_bw()+
+labs(x="")+
+theme(legend.position="none")
+		
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))

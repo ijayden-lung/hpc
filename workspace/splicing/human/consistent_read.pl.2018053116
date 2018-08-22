@@ -1,0 +1,38 @@
+#!/usr/bin/perl -w
+
+my %read;
+open FILE,"zcat ipsc_1.fastq.gz |";
+while(<FILE>){
+	chomp;
+	my ($read) = split;
+	my $seq = <FILE>;
+	my $name = <FILE>;
+	my $qual =<FILE>;
+	chomp $seq;
+	chomp $name;
+	chomp $qual;
+	$read{$read} = "$_\n$seq\n$name\n$qual";
+}
+
+open FILE, "zcat ipsc_2.fastq.gz | ";
+open OUT1,">ipsc_1.fq";
+open OUT2,">ipsc_2.fq";
+while(<FILE>){
+	chomp;
+	my ($read) = split;
+	my $seq = <FILE>;
+	my $name = <FILE>;
+	my $qual =<FILE>;
+	chomp $seq;
+	chomp $name;
+	chomp $qual;
+	if(exists $read{$read}){
+		print OUT1 "$read{$read}\n";
+		print OUT2 "$_\n$seq\n$name\n$qual\n";
+	}
+}
+
+
+system("gzip ipsc_1.fq");
+system("gzip ipsc_2.fq");
+system("rm ipsc_*.fastq.gz");

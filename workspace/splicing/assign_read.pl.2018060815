@@ -1,0 +1,101 @@
+#!/usr/bin/perl -w
+#PBS -q fatser
+#PBS -N assign
+#PBS -l nodes=1:ppn=1
+#PBS -j oe 
+#PBS -l walltime=48:00:00
+
+#sample=(RM-ES-P28-1  RM-ES-P28-2  RM-ES-P28-3  RM-MEF-P13-1  RM-MEF-P13-2  RM-MEF-P14-1  RM-MEF-P14-2)
+my $sample= "RM-ES-P28-1";
+my $dir = "/home/bio-longyk/workspace/splicing";
+#my ($sample,$dir) = @ARGV;
+
+my $sam1 =  "$dir/mouse/STAR/$sample/Aligned.sortedByCoord.out.bam";
+my $sam2 =  "$dir/rat/STAR/$sample/Aligned.sortedByCoord.out.bam";
+
+my $mouseHeader = `samtools view -H $sam1`;
+my $ratHeader = `samtools view -H $sam2`;
+
+
+open MOU,"samtools view $sam1 |";
+my %mouseScore;
+my %mouseRead;
+while(<MOU>){
+	chomp;
+	my ($read,$AS) = (split /\t/)[0,-3];
+	my ($score) = (split /:/,$AS)[2];
+	$mouseScore{$read} = $score;
+	$mouseRead{$read} .= "$_\n";
+}
+
+
+
+my $mouseRead = 0;
+my $ratRead =   0;
+my $comRead = 0;
+open A2M,">$dir/mouse/assign/A2M_$sample.sam";
+open A2R,">$dir/rat/assign/A2R_$sample.sam";
+open C2M,">$dir/mouse/common/C2M_$sample.sam";
+open C2R,">$dir/rat/common/C2R_$sample.sam";
+print A2M $mouseHeader;
+print A2R $ratHeader;
+
+
+my $onlyRat;
+open RAT,"samtools view $sam2 |";
+my %ratScore;
+my %ratRead;
+while(<RAT>){
+	chomp;
+	my ($read,$AS) = (split /\t/)[0,-3];
+	my ($score) = (split /:/,$AS)[2];
+	$ratScore{$read} = $score;
+	$ratRead{$read} .= "$_\n";
+	if(!exists $mouseScore{$read}){
+		print A2R "$ratRead{$read}";
+		$ratRead++;
+		$onlyRat++;
+	}
+}
+
+
+my $onlyMou;
+while(my ($read,$score) = each %mouseScore){
+	if(exists $ratScore{$read}){
+		if($score > $ratScore{$read}){
+			print A2M "$mouseRead{$read}";
+			$mouseRead++;
+		}
+		elsif($score < $ratScore{$read}){
+			print A2R "$ratRead{$read}";
+			$ratRead++;
+		}
+		else{
+			print C2M "$mouseRead{$read}";
+			print C2R "$ratRead{$read}";
+			$comRead++;
+		}
+	}
+	else{
+		print A2M "$mouseRead{$read}";
+		$mouseRead++;
+		$onlyMou++;
+	}
+}
+
+print "Assign2Mouse\t$mouseRead\nAssign2Rat\t$ratRead\nCommon\t$comRead\n";
+print "onlyRat\t$onlyRat\nonlyMouse\t$onlyMou\n";
+
+
+system("samtools sort $dir/mouse/assign/A2M_$sample.sam -O bam -o $dir/mouse/assign/A2M_$sample.sorted.bam");
+system("samtools sort $dir/rat/assign/A2R_$sample.sam -O bam -o $dir/rat/assign/A2R_$sample.sorted.bam");
+system("samtools index $dir/mouse/assign/A2M_$sample.sorted.bam");
+system("samtools index $dir/rat/assign/A2R_$sample.sorted.bam");
+system("samtools sort $dir/mouse/common/C2M_$sample.sam -O bam -o $dir/mouse/common/C2M_$sample.sorted.bam");
+system("samtools sort $dir/rat/common/C2R_$sample.sam -O bam -o $dir/rat/common/C2R_$sample.sorted.bam");
+system("samtools index $dir/mouse/common/C2M_$sample.sorted.bam");
+system("samtools index $dir/rat/common/C2R_$sample.sorted.bam");
+system("rm $dir/rat/assign/*sam");
+system("rm $dir/mouse/assign/*sam");
+system("rm $dir/rat/common/*sam");
+system("rm $dir/mouse/common/*sam");

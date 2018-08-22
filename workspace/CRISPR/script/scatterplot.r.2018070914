@@ -1,0 +1,21 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+pdf(paste("Scatterplot_",args[1],"_",args[2],".pdf",sep=''))
+data = read.table(paste("RC_",args[1],"_",args[2],".tsv",sep=''),header=TRUE,row.names=1)
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+fit = lm(log2(NC1+1) ~ log2(NC2+1),data=data)
+
+a<-ggplot(data, aes(x=log2(NC1), y=log2(NC2)))+geom_point()+theme_bw()
+
+b<-ggplot()+annotate("text", x = 1, y = 1, size=10, label =signif(summary(fit)$adj.r.squared, 4))+theme_bw()+
+theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.text = element_blank(),axis.ticks = element_blank())+labs(x='',y='')
+
+print(a, vp = vplayout(2, 1))
+print(b, vp = vplayout(1, 2))

@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+
+use Time::HiRes qw/time/;
+my $time1 = time();
+my ($sample,$dir) = @ARGV;
+
+my $sam1 =  "$dir/mouse/common/C2M_$sample.sorted.bam";
+my $sam2 =  "$dir/rat/assign/A2R_$sample.sorted.bam";
+
+my $ratHeader = `samtools view -H $sam2`;
+open A2R,">$dir/rat/assign/A2R_$sample.sam";
+open C2R,">$dir/rat/common/C2R2_$sample.sam";
+print A2R $ratHeader;
+print C2R $ratHeader;
+my %com;
+open MOU,"samtools view -f 67 -F 256 $sam1 | awk '{print \$1}' |";
+while(<MOU>){
+	chomp;
+	$com{$_} = '';
+}
+
+
+open RAT,"samtools view $sam2 |";
+while(<RAT>){
+	chomp;
+	my ($read) = split;
+	if(exists $com{$read}){
+		print C2R "$_\n";
+	}
+	else{
+		print A2R "$_\n";
+	}
+}
+
+system("samtools sort $dir/rat/assign/A2R_$sample.sam -O bam -o $dir/rat/assign/A2R_$sample.sorted.bam");
+system("samtools index $dir/rat/assign/A2R_$sample.sorted.bam");
+system("samtools sort $dir/rat/common/C2R2_$sample.sam -O bam -o $dir/rat/common/C2R2_$sample.sorted.bam");
+system("samtools index $dir/rat/common/C2R2_$sample.sorted.bam");
+system("rm $dir/rat/assign/*sam");
+system("rm $dir/rat/common/*sam");
+
+my $time2 = time();
+my $time = $time2-$time1;
+print "Time use: $time s\n";

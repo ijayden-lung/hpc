@@ -1,0 +1,14 @@
+#!/home/bio-longyk/apps/R-3.5.0/bin/Rscript
+library(esATAC)
+conclusion <- 
+	atacPipe2(
+		case=list(fastqInput1 = system.file(package="esATAC", "extdata", "chr20_1.1.fq.gz"),
+				fastqInput2 = system.file(package="esATAC", "extdata", "chr20_2.1.fq.gz")), 
+		control=list(fastqInput1 = system.file(package="esATAC", "extdata", "chr20_1.2.fq.bz2"),
+				fastqInput2 = system.file(package="esATAC", "extdata", "chr20_2.2.fq.bz2")),
+
+		refdir <- "/home/bio-longyk/workspace/ATAC/esATAC/hg38_bt2_index",
+		
+		genome = "hg38")
+	
+

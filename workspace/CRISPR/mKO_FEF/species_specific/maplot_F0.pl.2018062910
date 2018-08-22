@@ -1,0 +1,6 @@
+#!/usr/bin/perl -w
+#
+open FILE,"Input_gobp_important3.txt";
+while(<FILE>){
+	chomp;
+

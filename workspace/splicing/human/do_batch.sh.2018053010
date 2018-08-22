@@ -1,0 +1,45 @@
+#!/bin/bash
+
+nodes=1
+ppn=36
+threads=$[$nodes*$ppn]
+cat >star.sh << EOF
+#!/bin/bash
+#PBS -q fat
+#PBS -N STAR
+#PBS -l nodes=$nodes:ppn=$ppn
+#PBS -o \${out}
+#PBS -j oe 
+#PBS -l walltime=06:00:00
+
+mkdir \${inp}
+cd \$inp
+
+echo 'starting mapping with STAR'
+STAR --twopassMode Basic --runThreadN $threads --genomeDir /home/bio-longyk/cnda/STAR_INDEX/hg38v92len100  --readFilesIn \$fq1 --outSAMtype BAM SortedByCoordinate --outSAMattrIHstart 0  --outFilterMultimapScoreRange 0  --alignEndsType EndToEnd  --readFilesCommand zcat --outFilterIntronMotifs RemoveNoncanonicalUnannotated --outSAMstrandField intronMotif 
+
+####INDEX for sorted bam file
+echo 'generating index with samtools'
+samtools index -@ $threads Aligned.sortedByCoord.out.bam
+
+######Gene Abundance
+
+#python -m HTSeq.scripts.count --mode=union -s reverse -r pos  -f bam  Aligned.sortedByCoord.out.bam /home/lyk/data1/cnda/ensembl/hg38.ensemblv89.nopsuedo.gtf  >htseq.reverse.count 
+
+
+echo 'Stringtie'
+stringtie --fr -e -p $threads -G ~/cnda/ensembl/hg38.ensemblv92.nopsuedo.gtf -o out.gtf -A gene_abund.tab -C cov_refs.gtf Aligned.sortedByCoord.out.bam 
+stringtie --fr -p $threads -G ~/cnda/ensembl/hg38.ensemblv92.nopsuedo.gtf -o assembl.gtf Aligned.sortedByCoord.out.bam 
+EOF
+
+dir=/home/bio-longyk/workspace/splicing/human
+sample=('hues64' 'cd184' 'cd56ect' 'cd56mes')
+for sam in ${sample[*]}
+do
+	inp=$dir/STAR/$sam
+	out=log_$sam
+	fq1=$dir/${sam}.fastq.gz
+	qsub -v inp=$inp,out=$out,fq1=$fq1,sam=$sam star.sh
+
+done
+

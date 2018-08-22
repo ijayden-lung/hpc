@@ -1,0 +1,19 @@
+#!/usr/bin/perl -w
+#
+my %ori;
+open FILE,"rn6.ensemblv92.nopsuedo.gtf.bk";
+while(<FILE>){
+	chomp;
+	my ($gene_id) = (split)[9];
+	$ori{$gene_id} = '';
+}
+
+
+open FILE,"rn6.ensemblv92.nopsuedo.gtf";
+while(<FILE>){
+	chomp;
+	my ($gene_id) = (split)[9];
+	if(!exists $ori{$gene_id}){
+		print "$_\n";
+	}
+}

@@ -1,0 +1,16 @@
+#!/usr/bin/perl -w
+
+my %hash1 = ('ATCACG'=>'low_old','CGATGT'=>'high_old','TTAGGC'=>'hES',
+			'TGACCA'=>'Hd','ACAGTG'=>'mES','GCCAAT'=>'mEF',
+			'GGCTAC'=>'NC1','CTTGTA'=>'NC2','AGTCAA'=>'SC',
+			'AGTTCC'=>'SD','ATGTCA'=>'SE','CCGTCC'=>'SF');
+
+
+for my $file (glob "*/*2.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[4];
+	system("mv $file $hash1{$index}_2.clean.fq.gz");
+}
+for my $file (glob "*/*1.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[4];
+	system("mv $file $hash1{$index}_1.clean.fq.gz");
+}

@@ -1,0 +1,64 @@
+#!/usr/bin/env Rscript
+
+
+args<-commandArgs(T)
+#args = c('high','low','DESeq2/FC_counts.txt','DESeq2/DESeq2_out.txt','DESeq2/DESeq2_summary.pdf')
+
+pdf(args[5])
+
+ctrl=args[1]
+test=args[2]
+
+cts = read.table(args[3],header=TRUE,sep="\t",row.names=1)
+
+###Rewirte Colum Names
+header = names(cts)
+header=sub("assign.","",header)
+header=sub(".sorted.bam","",header)
+names(cts) = header
+
+header
+##Load Library
+suppressPackageStartupMessages(library("DESeq2"))
+library("pheatmap")
+library("RColorBrewer")
+
+
+coldata <- data.frame(row.names = colnames( cts ),condition = c(rep(ctrl,3),rep(test,4)))
+dds <- DESeqDataSetFromMatrix(countData = cts,colData = coldata, design = ~ condition)
+###Alternative Step;
+
+dds$condition <- factor(dds$condition, levels=c(test,ctrl))
+dds <- dds[ rowSums(counts(dds)) > 10, ]
+
+##Sample distances
+rld <- rlog(dds, blind = FALSE)
+sampleDists <- dist(t(assay(rld)))
+sampleDistMatrix <- as.matrix( sampleDists )
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+pheatmap(sampleDistMatrix,
+clustering_distance_rows = sampleDists,
+clustering_distance_cols = sampleDists,
+col = colors)
+
+plotPCA(rld)
+
+
+##Running the differential expression pipeline
+dds <- DESeq(dds)
+
+res <- results(dds,alpha=0.01,lfcThreshold=1, altHypothesis="greaterAbs")
+summary(res)
+
+#resLFC <- lfcShrink(dds, coef=2, res=res)
+#res <- resLFC
+
+resOrdered <- res[order(res$padj),]   ####Alternative Step;
+write.table(resOrdered, args[4],quote=FALSE,sep="\t",col.names=NA,row.names=TRUE )
+
+plotDispEsts(dds)
+hist(res$padj[res$baseMean>5], breaks=100,col="skyblue", border="slateblue")
+plotMA(res)
+
+

@@ -1,0 +1,58 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+data = read.table(args[1],header=TRUE)
+pdf(args[2],width=12)
+
+plotgenes = unique(data$gene)
+i=0
+for (Gene in plotgenes){
+	header = names(data)
+	sample=header[6:9]
+	sub = subset(data,data$gene == Gene)
+	sub1 = subset(sub,sub$celltype == "fef")
+	count=as.vector(as.matrix(sub1[6:9]))
+	similar=sub1$similarity
+	sgrnanum=nrow(sub1)
+	df1 = data.frame(sgrna=rep(sub1$position,4),
+					sample=rep(sample,each=sgrnanum),
+					count=count,similar=rep(sub1$similarity,4))
+
+	sub2 = subset(sub,sub$celltype == "mef")
+	count=as.vector(as.matrix(sub2[6:9]))
+	similar=sub2$similarity
+	sgrnanum=nrow(sub2)
+	df2 = data.frame(sgrna=rep(sub2$position,4),
+					sample=rep(sample,each=sgrnanum),
+					count=count,similar=rep(similar,4))
+
+
+	if(i%%2 == 0){
+		grid.newpage()
+		pushViewport(viewport(layout = grid.layout(2, 2)))
+		vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+	}
+
+	a<-ggplot(data=df1,aes(x=sample,y=count,group=sgrna,color=sgrna))+
+	geom_line()+
+	geom_point(aes(shape=similar),size=3)+
+	scale_y_log10("Read Counts",breaks = scales::trans_breaks("log10", function(x) 10^x),labels = scales::trans_format("log10", scales::math_format(10^.x)))+
+	labs(x="",title=paste("sgRNA in ",Gene," in FEF"))+
+	theme_bw()+
+	theme(panel.grid =element_blank(),axis.title=element_text(size=20),axis.text=element_text(size=15),legend.title=element_blank(),plot.title = element_text(size=20,face = "bold",hjust = 0.5))
+
+
+	b<-ggplot(data=df2,aes(x=sample,y=count,group=sgrna,color=sgrna))+
+	geom_line()+
+	geom_point(size=3)+
+	scale_y_log10("Read Counts",breaks = scales::trans_breaks("log10", function(x) 10^x),labels = scales::trans_format("log10", scales::math_format(10^.x)))+
+	labs(x="",title=paste("sgRNA in ",Gene," in MEF"))+
+	theme_bw()+
+	theme(panel.grid =element_blank(),axis.title=element_text(size=20),axis.text=element_text(size=15),legend.title=element_blank(),plot.title = element_text(size=20,face = "bold",hjust = 0.5))
+
+	print(a,vp = vplayout(i%%2+1, 1))
+	print(b,vp = vplayout(i%%2+1, 2))
+	i=i+1
+}

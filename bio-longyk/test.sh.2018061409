@@ -1,0 +1,23 @@
+#!/bin/bash
+
+bak_to_dir_par="/home/bio-longyk/.bak/"
+
+
+#echo '' >abc
+find ~ -depth  -name "*\.pl" -or -name "*\.r" -or -name "*\.sh" -or -name "*\.py" | grep -E -v "workspace|Downloads" | while read line
+#find ~ -depth  -name "*\.src" | while read line
+do
+	echo $line
+
+	bak_dir=${line%/*}
+	bak_dir=${bak_dir#*/}
+	bak_dir=${bak_dir#*/}
+	bak_dir=${bak_dir#*/}
+	bak_dir="${bak_to_dir_par}${bak_dir}"
+	file=${line##*/}
+	bak_file="${bak_dir}/${file}.$(date +%Y%m%d%H)"
+
+	if [ ! -d $bak_dir ];then
+		mkdir -p $bak_dir
+	fi
+done

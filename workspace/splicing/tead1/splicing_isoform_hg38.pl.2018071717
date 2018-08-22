@@ -1,0 +1,65 @@
+#!/usr/bin/perl -w
+my ($sample) = @ARGV;
+my %hash;
+open FILE,"samtools view -q 255  STAR/$sample/Aligned.sortedByCoord.out.bam |";
+while(<FILE>){
+	chomp;
+	my ($name,$flag,$cigar) = (split)[0,1,5];
+	if($cigar =~ /2371N/){
+		$hash{$name}->{4} = '';
+		$hash{$name}->{5} = '';
+	}
+	if($cigar =~ /2523N/){
+		$hash{$name}->{4} = '';
+		$hash{$name}->{6} = '';
+	}
+	if($cigar =~ /16574N/){
+		$hash{$name}->{4} = '';
+		$hash{$name}->{7} = '';
+	}
+	if($cigar =~ /17393N/){
+		$hash{$name}->{4} = '';
+		$hash{$name}->{8} = '';
+	}
+	if($cigar =~ /89N/){
+		$hash{$name}->{5} = '';
+		$hash{$name}->{6} = '';
+	}
+	if($cigar =~ /14140N/){
+		$hash{$name}->{5} = '';
+		$hash{$name}->{7} = '';
+	}
+	if($cigar =~ /14959N/){
+		$hash{$name}->{5} = '';
+		$hash{$name}->{8} = '';
+	}
+	if($cigar =~ /13988N/){
+		$hash{$name}->{6} = '';
+		$hash{$name}->{7} = '';
+	}
+	if($cigar =~ /14807N/){
+		$hash{$name}->{6} = '';
+		$hash{$name}->{8} = '';
+	}
+	if($cigar =~ /807N/){
+		$hash{$name}->{7} = '';
+		$hash{$name}->{8} = '';
+	}
+}
+
+
+my %isoform;
+while(my ($key,$val) = each %hash){
+	my $iso = '';
+	foreach my $exon (sort keys %$val){
+		$iso .= $exon;
+	}
+	$isoform{$iso}++;
+}
+
+open OUT,">isoform_$sample.txt";
+foreach my $key (sort keys %isoform){
+	$val = $isoform{$key};
+	print OUT "$key\t$val\n" if $key =~ /4/ && $key =~ /8/;
+}
+

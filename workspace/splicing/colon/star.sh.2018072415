@@ -1,0 +1,22 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N STAR
+#PBS -l nodes=1:ppn=18
+#PBS -o ${out}
+#PBS -j oe 
+#PBS -l walltime=06:00:00
+
+if [ ! -d ${inp} ];then
+	mkdir -p ${inp}
+fi
+cd $inp
+
+echo 'starting mapping with STAR'
+STAR --runThreadN 18 --genomeDir ~/cnda/STAR_INDEX/GFP  --readFilesIn $fq1 $fq2   --alignEndsType EndToEnd  --readFilesCommand zcat
+#bowtie -p 18 -q -n 3 -l 23 --best ~/cnda/bt1_index/gfp --al -1 $fq1 -2 $fq2  -S >gfp.sam
+
+
+####INDEX for sorted bam file
+echo 'generating index with samtools'
+#samtools index -@ 18 Aligned.sortedByCoord.out.bam
+

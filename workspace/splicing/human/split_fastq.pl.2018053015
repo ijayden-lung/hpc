@@ -1,0 +1,25 @@
+#!/usr/bin/perl -w
+
+open FILE,"zcat /home/bio-longyk/workspace/splicing/human/cd56ect.fastq.gz |";
+open OUT1,">/home/bio-longyk/workspace/splicing/human/cd56ect_1.fastq";
+open OUT2,">/home/bio-longyk/workspace/splicing/human/cd56ect_2.fastq";
+while(<FILE>){
+	chomp;
+	if($.%4==1 || $.%4==3){
+		$_ =~ s/length=202$/length=101/;
+		print OUT1 "$_\n";
+		print OUT2 "$_\n";
+	}
+	else{
+		my $read1 = substr($_,0,100);
+		my $read2 = substr($_,101,201);
+		print OUT1 "$read1\n";
+		print OUT2 "$read2\n";
+	}
+}
+
+system("gzip cd56ect_1.fastq");
+system("gzip cd56ect_2.fastq");
+
+
+

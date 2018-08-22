@@ -1,0 +1,84 @@
+#!/usr/bin/perl -w
+#
+my %important_gene;
+open FILE,"Input_gobp_important3.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	$important_gene{$_} = '';
+}
+
+my %ortholog;
+my %mouse_gene;
+my %rat_gene;
+open ORT,"/home/bio-longyk/cnda/ortholog/mouse2rat.txt";
+<ORT>;
+my %mouse_id2name;
+open ERR,">Ortholog_mouse_rat_remove.txt";
+while(<ORT>){
+	chomp;
+	my ($mouse_id,$mouse_name,$rat_id,$rat_name,$ortholog_type) = split;
+	next if !exists $important_gene{$mouse_id};
+	if($ortholog_type !~ "one2one"){
+		print ERR "$mouse_id $mouse_name is $ortholog_type\n";# if $old ne $mouse_id;
+		delete $important_gene{$mouse_id};
+	}
+	else{
+		$mouse_gene{$mouse_id} = $mouse_name;
+		$ortholog{$mouse_id} = $rat_id;
+		$rat_gene{$rat_id} = $rat_name;
+	}
+}
+
+open FILE,"/home/bio-longyk/cnda/ensembl/mm10_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($id,$name) = split;
+	$mouse_id2name{$id} = $name;
+}
+
+foreach my $id (keys %important_gene){
+	if(!exists $mouse_gene{$id}){
+		print ERR "$id $mouse_id2name{$id} has no rat ortholog gene\n";
+	}
+}
+
+my $mouse_num = keys %mouse_gene;
+my $rat_num = keys %rat_gene;
+print "$mouse_num\t$rat_num\n";
+
+open MOUCOUNT,"mm10_count.tsv";
+my %mouse_count;
+while(<MOUCOUNT>){
+	chomp;
+	my ($id,$f0_1,$f0_2) = split;
+	if(exists $mouse_gene{$id}){
+		$mouse_count{$id} = "$f0_1\t$f0_2";
+		delete $mouse_gene{$id};
+	}
+}
+
+
+while(my ($key,$val) = each %mouse_gene){
+	print "$key\t$val\n";
+}
+
+open RATCOUNT,"rn6_count.tsv";
+my %rat_count;
+while(<RATCOUNT>){
+	chomp;
+	my ($id,$f0_1,$f0_2) = split;
+	if(exists $rat_gene{$id}){
+		$rat_count{$id} = "$f0_1\t$f0_2";
+	}
+}
+
+open OUT,">Ortholog_mouse_rat_fpkm.txt";
+print OUT "gene_name\tmouse_id\trat_id\tmef_1\tmef_2\tref_1\tref_2\n";
+while(my ($mouse_id,$mouse_count) = each %mouse_count){
+	my $rat_id = $ortholog{$mouse_id};
+	my $rat_count = $rat_count{$rat_id};
+	print OUT "$mouse_id2name{$mouse_id}\t$mouse_id\t$rat_id\t$mouse_count\t$rat_count\n";
+	#print OUT "$mouse_id2name{$mouse_id}\t$mouse_count\t$rat_count\n";
+}
+

@@ -1,0 +1,29 @@
+#!/home/bio-longyk/apps/R-3.5.0/bin/Rscript
+#PBS -q ser
+#PBS -N esATAC
+#PBS -l nodes=1:ppn=1
+#PBS -j oe 
+#PBS -l walltime=24:00:00
+
+library(magrittr)
+library(BSgenome.Hsapiens.UCSC.hg38)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+library(org.Hs.eg.db)
+library(R.utils)
+library(esATAC)
+
+options(atacConf=setConfigure("refdir","/home/bio-longyk/workspace/ATAC/esATAC/hg38_bt2_index"))
+options(atacConf=setConfigure("genome","hg38"))
+
+conclusion <- 
+	atacPipe2(
+		case=list(fastqInput1 = system.file(package="esATAC", "extdata", "chr20_1.1.fq.gz"),
+				fastqInput2 = system.file(package="esATAC", "extdata", "chr20_2.1.fq.gz")), 
+		control=list(fastqInput1 = system.file(package="esATAC", "extdata", "chr20_1.2.fq.bz2"),
+				fastqInput2 = system.file(package="esATAC", "extdata", "chr20_2.2.fq.bz2")),
+		refdir <- "/home/bio-longyk/workspace/ATAC/esATAC/hg38_bt2_index",
+		#motifPWM = getMotifPWM(motif.file = system.file("extdata", "CTCF.txt", package="esATAC"), is.PWM = FALSE),
+		motifs = getMotifInfo(motif.file = system.file("extdata", "CustomizedMotif.txt", package="esATAC")),
+		genome = "hg38")
+	
+

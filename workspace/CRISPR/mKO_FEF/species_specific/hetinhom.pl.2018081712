@@ -1,0 +1,32 @@
+#!/usr/bin/perl -w
+my %het;
+open FILE,"MEF_HETE_essentiality.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$col,$anno) = (split)[0,-2,-1];
+	$het{$gene} = "$col\t$anno";
+}
+
+open FILE,"MEF_HOMO_essentiality.txt";
+open OUT,">HETEinHOMO.txt";
+my $header = <FILE>;
+print OUT $header;
+while(<FILE>){
+	chomp;
+	my ($gene,$c1,$c2,$col,$anno) = split;
+	if(exists $het{$gene}){
+		print OUT "$gene\t$c1\t$c2\t$het{$gene}\n" if $het{$gene} !~ /redundancy/;
+		delete $het{$gene};
+	}
+	else{
+		#print OUT "$gene\t$c1\t$c2\tna\tna\n";
+	}
+}
+
+while(my ($gene,$val) = each %het){
+	#print "$gene\t$val\n" if $val !~ /na/;
+}
+
+
+system("./scatterplot4.r HETEinHOMO.txt HETEinHOMO.pdf homo");

@@ -1,0 +1,20 @@
+#!/usr/bin/env Rscript
+library(grid)
+library(ggplot2)
+args<-commandArgs(T)
+#data = read.table(paste("Input_mageck_RC_",args[1],"_",args[2],".tsv",sep=''),header=TRUE,row.names=1)
+data = read.table(args[3],header=TRUE,row.names=1)
+pdf(paste("CDF_",args[1],"_",args[2],".pdf",sep=''))
+
+colNum = ncol(data)
+sampleNum = colNum-1
+
+
+df <- data.frame(x = c(data$NC1,data$NC2,data$SC,data$SD,data$SE,data$SF),g = gl(sampleNum, labels =c('NC1','NC2','SC','SD','SE','SF'),length(data$NC1)))
+#df <- data.frame(x = c(data$NCold1,data$NCold2,data$NCnew1,data$NCnew2,data$SC,data$SD,data$SE,data$SF),g = gl(sampleNum, labels =c('NCold1','NCold2','NCnew1','NCnew2','SC','SD','SE','SF'),length(data$NCold1)))
+
+ggplot(df, aes(log10(x),colour = g))+stat_ecdf(geom = "step",pad=FALSE,size=1)+scale_x_continuous("log10 Number of reads per sgRNA",limits=c(0,5))+scale_y_continuous("Cumulative percentage",breaks=0.1*(0:10),labels=scales::percent)+
+theme_bw()+
+theme(axis.title=element_text(size =20),axis.text=element_text(size =15),legend.position=c(0.1,0.8),legend.title=element_blank(),legend.text=element_text(size=20))
+
+

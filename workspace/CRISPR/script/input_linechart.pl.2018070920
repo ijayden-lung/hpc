@@ -1,0 +1,75 @@
+#!/usr/bin/perl -w
+
+my ($lib,$exp,$dir) = @ARGV;
+
+my %position;
+open FILE,"/home/bio-longyk/workspace/CRISPR/Library/$lib.sam";
+while(<FILE>){
+	chomp;
+	my ($sgrna,$strand,$chr,$pos) = split;
+	$position{$sgrna} = "$strand:$chr:$pos";
+}
+
+
+my %strand;
+open FILE,"/home/bio-longyk/cnda/ensembl/hg38_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$strand) = split;
+	$strand{$gene_name} = $strand;
+}
+open FILE,"/home/bio-longyk/cnda/miRNA/hsa_id2name.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$strand) = split;
+	$strand{$gene_name} = $strand;
+}
+
+my %positive;
+my %negative;
+my $pos_count=0;
+my $neg_count=0;
+open FILE,"$exp.gene_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$neg_num,$pos_num) = (split)[0,6,12];
+	if($pos_num>1 && $pos_count<12){
+		$positive{$gene} ='';
+		$pos_count++;
+	}
+	if($neg_num>1 && $neg_count<12){
+		$negative{$gene} ='';
+		$neg_count++;
+	}
+}
+
+
+open FILE,"$exp.normalized.txt ";
+my $header = <FILE>;
+open OUT1, ">Positive_$exp.normalized.txt";
+open OUT2, ">Negative_$exp.normalized.txt";
+print OUT1 "position\t$header";
+print OUT2 "position\t$header";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	if(exists $positive{$data[1]}){
+		print OUT1 "$position{$data[0]}\t$data[0]\t$data[1]($strand{$data[1]})";
+		for(my$i=2;$i<@data;$i++){
+			$data[$i]++;
+			print OUT1 "\t$data[$i]";
+		}
+		print OUT1 "\n";
+	}
+	if(exists $negative{$data[1]}){
+		print OUT2 "$position{$data[0]}\t$data[0]\t$data[1]($strand{$data[1]})";
+		for(my$i=2;$i<@data;$i++){
+			$data[$i]++;
+			print OUT2 "\t$data[$i]";
+		}
+		print OUT2 "\n";
+	}
+}
+
+

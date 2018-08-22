@@ -1,0 +1,18 @@
+#!/bin/bash
+
+####Merge rn6 mm10 count data and normalize the gene length
+mm10="mm10_par_count.tsv";
+rn6="rn6_par_count.tsv"
+merge="ReadCount_par.txt"
+./merge_mouse_rat.pl $mm10 $rn6 $merge
+
+
+ctrl="mm10"
+trea="rn6"
+deseq="DESeq2_par.txt"
+pdf="DESeq2_par.pdf"
+rld="Rld_par.txt"
+ctrl_num=2
+trea_num=2
+./deseq2.r $ctrl $trea $merge $deseq $pdf $rld $ctrl_num $trea_num
+

@@ -1,0 +1,72 @@
+#!/usr/bin/perl -w
+my %ensg;
+open FILE,"/home/bio-longyk/cnda/ensembl/rn6_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($id,$name) = split;
+	$ensg{$id} = $name;
+}
+
+my %length;
+open FILE,"rat/DESeq2/FC_annotation.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($id,$length) = (split)[1,-1];
+	$length{$id} = $length;
+}
+
+my %hash;
+my %depth;
+open FILE,"rat/DESeq2/FC_counts.txt";
+my $header = <FILE>;
+chomp $header;
+my @head = split /\t/,$header;
+my @sample;
+for(my $i=1;$i<5;$i++){
+	my ($sam) = (split /\./,$head[$i])[1];
+	push @sample,$sam;
+}
+
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $id = shift @data;
+	for(my $i=0;$i<4;$i++){
+		$hash{$id}->{$sample[$i]} = $data[$i];
+		$depth{$sample[$i]} += $data[$i];
+	}
+}
+
+
+my @sample2 = qw/Hyb_rES1 Hyb_rES2 Hyb_rES3 Hyb_rEF1 Hyb_rEF2 Hyb_rEF3 Hyb_rEF4/;
+open FILE,"rat/DESeq2/FC_assign_counts.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $id = shift @data;
+	for(my $i=0;$i<@data;$i++){
+		$hash{$id}->{$sample2[$i]} = $data[$i];
+		$depth{$sample2[$i]} += $data[$i];
+	}
+}
+
+push @sample,@sample2;
+open OUT,">rat_es_ef.fpkm";
+print OUT "gene_id\tgene_name";
+foreach my $sam (@sample){
+	print OUT "\t$sam";
+}
+print OUT "\n";
+while(my ($id,$val) = each %hash){
+	print OUT "$id\t$ensg{$id}";
+	foreach my $sam (@sample){
+		my $fpkm = $val->{$sam}/$length{$id}/$depth{$sam}*1e9;
+		printf OUT ("\t%.2f",$fpkm);
+	}
+	print OUT "\n";
+}
+
+
+

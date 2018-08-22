@@ -1,6 +1,0 @@
-#!/bin/bash
-
-for i in *tar.gz
-do
-	tar -xvzf $i
-done

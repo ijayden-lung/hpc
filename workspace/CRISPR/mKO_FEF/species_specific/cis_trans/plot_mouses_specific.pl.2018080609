@@ -1,0 +1,41 @@
+#!/usr/bin/perl -w
+
+my %ort;
+open ORT,"ReadCount_hyb.txt";
+while(<ORT>){
+	chomp;
+	my ($mouse_id,$mouse_name,$rat_id,$rat_name) = split;
+	$ort{$mouse_id} = $mouse_name;
+}
+
+my %mouse;
+open FILE,"mouse_specific_gene.txt";
+while(<FILE>){
+	chomp;
+	my ($id,$par_mouse,$par_rat,$hyb_mouse,$hyb_rat) = split;
+	if($par_mouse > 20 && $hyb_mouse <20){
+		$mouse{$ort{$id}}= "par";
+	}
+	elsif($par_mouse < 20 && $hyb_mouse >20){
+		$mouse{$ort{$id}}= "hyb";
+	}
+	elsif($par_mouse > 20 && $hyb_mouse >20){
+		$mouse{$ort{$id}}= "both";
+	}
+}
+
+
+open FILE,"../MEF_HETE_essentiality.txt";
+open OUT,">MEF_HETE_essentiality.txt";
+my $header = <FILE>;
+print OUT $header;
+while(<FILE>){
+	chomp;
+	my ($gene,$fef,$mef,$color,$anno) = split;
+	if(exists $mouse{$gene}){
+		print OUT "$gene\t$fef\t$mef\t$color\t$gene\n";
+	}
+	else{
+		print OUT "$gene\t$fef\t$mef\t$color\tna\n";
+	}
+}

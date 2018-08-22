@@ -1,6 +1,0 @@
-#!/bin/tcsh
-
-set wd = $1
-#sed -e '/null\sdevice/,+3d' -e '/null/,+3d' -e '/device/,+3d' -e '/^[ \t]*1/,+3d' $wd/bsub.log > $wd/bsub.log.clean
-sed '/__sed start__/,/__sed end__/d' $wd/bsub.log > $wd/bsub.log.clean
-

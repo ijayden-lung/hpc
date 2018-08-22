@@ -1,0 +1,73 @@
+#!/usr/bin/perl -w
+my $Threshold = 1;
+
+my %strand;
+my %ensg;
+open FILE,"/home/bio-longyk/cnda/ensembl/mm10_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$strand) = split;
+	$strand{$gene_name} = $strand;
+	$ensg{$gene_name} = $gene_id;
+}
+
+my %exp;
+open FILE,"/home/bio-longyk/workspace/splicing/mouse_es_ef.fpkm";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($id,$name,$pef1,$pef2,$pes1,$pes2,$hes1,$hes2,$hes3,$hef1,$hef2,$hef3,$hef4) = split;
+	$exp{$name}->{'pmef'} = ($pef1+$pef2)/2;
+	$exp{$name}->{'hmef'} = ($hef1+$hef2+$hef3+$hef4)/4;
+}
+open FILE,"/home/bio-longyk/workspace/splicing/rat_es_ef.fpkm";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($id,$name,$pef1,$pef2,$pes1,$pes2,$hes1,$hes2,$hes3,$hef1,$hef2,$hef3,$hef4) = split;
+	$exp{$name}->{'pref'} = ($pef1+$pef2)/2;
+	$exp{$name}->{'href'} = ($hef1+$hef2+$hef3+$hef4)/4;
+}
+
+
+open HETE,"../mle_HETE0.gene_summary.txt";
+<HETE>;
+my %fef;
+while(<HETE>){
+	chomp;
+	my ($gene,$beta) = (split)[0,2];
+	$fef{$gene} = $beta;	
+}
+
+open MEF,"../mle_MEF.gene_summary.txt";
+<MEF>;
+my %mef;
+while(<MEF>){
+	chomp;
+	my ($gene,$beta) = (split)[0,2];
+	$mef{$gene} = $beta;
+}
+
+
+
+
+open OUT,">HETE_exp_similarity.txt";
+print OUT "gene_id\tgene_name\tquadrant\tmef_score\tfef_score\tmouse_par\tmouse_hyb\trat_par\trat_hyb\t%id. query\t%id. target\n";
+
+while(my ($gene,$score_fef) = each %fef){
+	next if (!exists $mef{$gene});
+	my $score_mef = $mef{$gene};
+	if($score_fef>0.6 && $score_mef>0.6 && $score_fef*$score_mef>$Threshold){
+		print OUT "$ensg{$gene}\t$gene\t1\t$score_mef\t$score_fef\t$exp{$gene}->{'pmef'}\t$exp{$gene}->{'hmef'}\t$exp{$gene}->{'pref'}\t$exp{$gene}->{'href'}\n";
+	}
+	elsif($score_fef<-0.6 && $score_mef>0.6 && $score_fef*$score_mef<-$Threshold){
+		print OUT "$ensg{$gene}\t$gene\t2\t$score_mef\t$score_fef\t$exp{$gene}->{'pmef'}\t$exp{$gene}->{'hmef'}\t$exp{$gene}->{'pref'}\t$exp{$gene}->{'href'}\n";
+	}
+	elsif($score_fef<-0.6 && $score_mef<-0.6 && $score_fef*$score_mef>$Threshold){
+		print OUT "$ensg{$gene}\t$gene\t3\t$score_mef\t$score_fef\t$exp{$gene}->{'pmef'}\t$exp{$gene}->{'hmef'}\t$exp{$gene}->{'pref'}\t$exp{$gene}->{'href'}\n";
+	}
+	elsif($score_fef>0.6 && $score_mef<-0.6 && $score_fef*$score_mef<-$Threshold){
+		print OUT "$ensg{$gene}\t$gene\t4\t$score_mef\t$score_fef\t$exp{$gene}->{'pmef'}\t$exp{$gene}->{'hmef'}\t$exp{$gene}->{'pref'}\t$exp{$gene}->{'href'}\n";
+	}
+}
+

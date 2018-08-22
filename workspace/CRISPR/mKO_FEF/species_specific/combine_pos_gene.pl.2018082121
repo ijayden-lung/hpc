@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+
+my %pos;
+open POS,"mouse.sam";
+while(<POS>){
+	chomp;
+	my ($sgrna,$strand,$chr,$pos) = split;
+	$pos{$sgrna} = "$strand:$chr:$pos";
+}
+
+open RAT,"rat.sam";
+my %rat_pos;
+my %misNum;
+while(<RAT>){
+	chomp;
+	my ($sgrna,$strand,$chr,$pos,$mismatch) = (split)[0,1,2,3,7];
+	$rat_pos{$sgrna} = "$strand:$chr:$pos";
+	my $mis_num = 0;
+	if(defined $mismatch){
+		my @mis_num = split /,/,$mismatch;
+		$mis_num = @mis_num;
+		if($mismatch =~ /22|23/){
+			$mis_num = 23;
+		}
+		elsif($mismatch =~ /21/){
+			$mis_num -= 1;
+		}
+	}
+	$misNum{$sgrna} = $mis_num == 23 ? "PAM" : "=$mis_num";
+}
+
+open LIB,"/home/bio-longyk/workspace/CRISPR/Library/lib_mKO.csv";
+open OUT,">lib_mKO_ncbi_position.txt";
+print OUT "gene_name\tncbi_id\tsgRNA\tmm10_pos\trn6_pos\tmismatch\n";
+<LIB>;
+while(<LIB>){
+	chomp;
+	my (undef,$gene,$ncbi,undef,undef,undef,$sgrna) = split /,/;
+	if(!exists $rat_pos{$sgrna}){
+		$rat_pos{$sgrna} = "null";
+		$misNum{$sgrna} = ">2";
+	}
+	print OUT "$gene\t$ncbi\t$sgrna\t$pos{$sgrna}\t$rat_pos{$sgrna}\tmis$misNum{$sgrna}\n";
+}

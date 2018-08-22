@@ -1,0 +1,10 @@
+#!/bin/bash
+
+name='BurroughsAM'
+#name='KanematsuS'
+#name='KrellJ'
+perl effect_miRNA.pl $name
+perl baseContent.pl Major $name
+perl baseContent.pl Major2FC $name
+
+./ggseqlogo.r "Input_barPlot_Major_$name.txt" "Input_seqLogo_Major_$name.txt" "Input_seqLogo_Minor_$name.txt" "Input_barPlot_Major2FC_$name.txt" "Input_seqLogo_Major2FC_$name.txt" "Input_seqLogo_Minor2FC_$name.txt" "SeqLogo_$name.pdf"

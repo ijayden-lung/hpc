@@ -1,0 +1,63 @@
+#!/usr/bin/perl -w
+use Statistics::R;
+
+my $cmds = <<EOF;
+	x = c(par_mouse,par_rat,hyb_mouse,hyb_rat)
+	alle<-matrix(x, nrow=2)
+	#fet_pvalue <-chisq.test(alle,simulate.p.value=TRUE, B=10000)\$p.value
+	fet_pvalue <-fisher.test(alle)\$p.value
+	fet_pvalue
+EOF
+my $R = Statistics::R->new();
+
+open PAR,"norm_par.txt";
+<PAR>;
+my %par_mouse;
+my %par_rat;
+while(<PAR>){
+	chomp;
+	my @data = split;
+	my $gene_id = shift @data;
+	$par_mouse{$gene_id} = sprintf("%.0f",($data[0]+$data[1])/2);
+	$par_rat{$gene_id} = sprintf("%.0f",($data[3]+$data[2])/2);
+}
+
+open HYB,"norm_hyb.txt";
+<HYB>;
+my %hyb_mouse;
+my %hyb_rat;
+while(<HYB>){
+	chomp;
+	my @data = split;
+	my $gene_id = shift @data;
+	$hyb_mouse{$gene_id} = sprintf("%.0f",($data[1]+$data[2]+$data[3]+$data[0])/4);
+	$hyb_rat{$gene_id} = sprintf("%.0f",($data[5]+$data[6]+$data[7]+$data[4])/4);
+}
+
+open OUT,">cis_norm_par_hyb.txt";
+print OUT "gene_id\tpar_mouse\tpar_rat\thyb_mouse\thyb_rat\tpval\tqval\n";
+foreach my $gene_id (keys %par_mouse){
+	if(exists $hyb_mouse{$gene_id}){
+		#print "$gene_id\n";
+		$R->set('par_mouse',$par_mouse{$gene_id});
+		$R->set('par_rat',$par_rat{$gene_id});
+		$R->set('hyb_mouse',$hyb_mouse{$gene_id});
+		$R->set('hyb_rat',$hyb_rat{$gene_id});
+		$R->run($cmds);
+		my $fet_pvalue = $R->get('fet_pvalue');
+		#print "$fet_pvalue\n";
+		#$fet_pvalue = (split /\s/,$fet_pvalue)[12];
+		print OUT "$gene_id\t$par_mouse{$gene_id}\t$par_rat{$gene_id}\t$hyb_mouse{$gene_id}\t$hyb_rat{$gene_id}\t$fet_pvalue\t0\n";
+	}
+}
+
+
+my $cmds2 = <<EOF;
+	library(qvalue)
+	table <- read.csv("./cis_norm_par_hyb.txt", sep="\t", header=T)
+	qobj <- qvalue(p = table\$pval)
+	qval <- qobj\$qvalues
+	table\$qval<-as.numeric(qval)
+	write.table(table,"qval_cis_norm_par_hyb.txt",quote = FALSE,row.names=FALSE,col.names=TRUE,sep="\t")
+EOF
+$R->run($cmds2);

@@ -1,0 +1,16 @@
+#!/usr/bin/perl -w
+
+open FILE,"zcat SRR546155.fastq.gz |";
+open OUT,  ">Trim_LiN.fastq";
+while(<FILE>){
+	chomp;
+	if($.%2 == 1){
+		print OUT "$_\n";
+	}
+	else{
+		my $cut = substr($_,30);
+		print OUT "$cut\n";
+	}
+	last if $. > 10000;
+}
+

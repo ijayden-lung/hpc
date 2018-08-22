@@ -1,0 +1,54 @@
+#!/usr/bin/perl -w
+#
+#
+my ($impor,$cis,$ort,$out,$log) = @ARGV;
+
+open FILE,"/home/bio-longyk/cnda/ensembl/mm10_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($id,$name) = split;
+	$mouse_id2name{$id} = $name;
+}
+open ORT,"$ort";
+<ORT>;
+my %ort;
+while(<ORT>){
+	chomp;
+	my ($mouse_id,$mouse_name,$rat_id,$rat_name) = split;
+	$ort{$mouse_id} = "$mouse_name\t$rat_id\t$rat_name\n";
+}
+
+my %important_gene;
+open FILE,"$impor";
+<FILE>;
+while(<FILE>){
+	chomp;
+	$important_gene{$_} = '';
+	if(!exists $ort{$_}){
+		print "$_\t$mouse_id2name{$_}\n";
+	}
+}
+
+open FILE,"$cis";
+my $header = <FILE>;
+open OUT,">$out";
+print OUT "$header";
+
+my %category;
+while(<FILE>){
+	chomp;
+	my ($gene_id) = split;
+	if(exists $important_gene{$gene_id}){
+		my ($cate) = (split)[-1];
+		$category{$cate}++;
+		print OUT "$_\n";
+	}
+}
+
+my $num = keys %category;
+
+open OUT2,">$log";
+print OUT2 "Category\tCount\n";
+while(my ($cat,$cnt) = each %category){
+	print OUT2 "$cat\t$cnt\n";
+}

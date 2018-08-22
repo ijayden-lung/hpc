@@ -1,0 +1,29 @@
+#!/bin/bash
+#PBS -q cal
+#PBS -N STAR
+#PBS -l nodes=1:ppn=12
+#PBS -o ${out}
+#PBS -j oe 
+#PBS -l walltime=06:00:00
+
+if [ ! -d ${inp} ];then
+	mkdir -p ${inp}
+fi
+cd $inp
+
+echo 'starting mapping with STAR'
+#STAR --twopassMode Basic --runThreadN 12 --genomeDir /home/bio-longyk/cnda/STAR_INDEX/$genomeIndex  --readFilesIn $fq1 $fq2 --outSAMtype BAM SortedByCoordinate --outSAMattrIHstart 0  --outFilterMultimapScoreRange 0  --alignEndsType EndToEnd  --readFilesCommand zcat --outFilterIntronMotifs RemoveNoncanonicalUnannotated --outSAMstrandField intronMotif 
+
+####INDEX for sorted bam file
+echo 'generating index with samtools'
+#samtools index -@ 12 Aligned.sortedByCoord.out.bam
+
+######Gene Abundance
+
+#python -m HTSeq.scripts.count --mode=union -s reverse -r pos  -f bam  Aligned.sortedByCoord.out.bam /home/lyk/data1/cnda/ensembl/hg38.ensemblv89.nopsuedo.gtf  >htseq.reverse.count 
+
+
+echo 'Stringtie'
+#stringtie --fr -e -p 12 -G ~/cnda/ensembl/$genome\.ensemblv92.nopsuedo.gtf -o out.gtf -A gene_abund.tab -C cov_refs.gtf Aligned.sortedByCoord.out.bam 
+stringtie --fr -p 12 -m 50 -G ~/cnda/ensembl/$genome\.ensemblv92.nopsuedo.gtf -o assembl.gtf Aligned.sortedByCoord.out.bam 
+stringtie --rf -p 12 -m 50 -G ~/cnda/ensembl/$genome\.ensemblv92.nopsuedo.gtf -o assemblrf.gtf Aligned.sortedByCoord.out.bam 

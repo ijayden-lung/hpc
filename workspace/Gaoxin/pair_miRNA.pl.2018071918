@@ -1,0 +1,66 @@
+#!/usr/bin/perl -w
+my ($author,$spe) = @ARGV;
+
+
+my %seq;
+open FILE, "/home/bio-longyk/cnda/miRNA/miRBase_$spe\_v22.fa";
+while(<FILE>){
+	chomp;
+	my ($mature) = split;
+	$mature = substr($mature,1);
+	my $seq = <FILE>;
+	chomp $seq;
+	$seq{$mature} = $seq;
+}
+
+
+open FILE,"$author/miR.RPM.csv";
+my $header = <FILE>;
+chomp $header;
+my %hash;
+while(<FILE>){
+	chomp;
+	my @data = split /,/;
+	my $mature = shift @data;
+	($mature)  = split /\//,$mature;
+	next if $mature !~ /p$/;
+	my $totalExp = 0;
+	foreach my $exp (@data){
+		$totalExp += $exp;
+	}
+	my $aveExp = $totalExp/@data;
+	my $precu = substr($mature,0,-2);
+	$hash{$precu}->{$mature} = $aveExp;
+}
+
+
+open OUT1, ">miRNA_Abundance_$author.txt";
+print OUT1 "majorMature\tmajorSequence\tmajorRPM\tminorMaure\tminorSequence\tminorRPM\n";
+while(my ($precu,$val) = each %hash){
+	my @mature = keys %$val;
+	if(@mature == 1){
+		my $mature2 = $mature[0];
+		if($mature2 =~ /5p/){
+			$mature2 =~ s/5p/3p/g;
+		}
+		else{
+			$mature2 =~ s/3p/5p/g;
+		}
+		next if !exists $seq{$mature[0]} || !exists $seq{$mature2};
+		next if $val->{$mature[0]}==0;
+		print OUT1 "$mature[0]\t$seq{$mature[0]}\t$val->{$mature[0]}\t";
+		print OUT1 "$mature2\t$seq{$mature2}\t0\n";
+	}
+	else{
+		next if ($val->{$mature[0]}+$val->{$mature[1]})==0;
+		next if !exists $seq{$mature[0]} || !exists $seq{$mature[1]};
+		if($val->{$mature[0]} > $val->{$mature[1]}){
+			print OUT1 "$mature[0]\t$seq{$mature[0]}\t$val->{$mature[0]}\t";
+			print OUT1 "$mature[1]\t$seq{$mature[1]}\t$val->{$mature[1]}\n";
+		}
+		else{
+			print OUT1 "$mature[1]\t$seq{$mature[1]}\t$val->{$mature[1]}\t";
+			print OUT1 "$mature[0]\t$seq{$mature[0]}\t$val->{$mature[0]}\n";
+		}
+	}
+}

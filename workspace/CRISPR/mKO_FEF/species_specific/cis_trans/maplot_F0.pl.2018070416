@@ -1,0 +1,36 @@
+#!/usr/bin/perl -w
+#
+#
+
+my ($impor,$cis,$out,$log) = @ARGV;
+my %important_gene;
+open FILE,"$impor";
+<FILE>;
+while(<FILE>){
+	chomp;
+	$important_gene{$_} = '';
+}
+
+open FILE,"$cis";
+my $header = <FILE>;
+open OUT,">$out";
+print OUT "$header";
+
+my %category;
+while(<FILE>){
+	chomp;
+	my ($gene_id) = split;
+	if(exists $important_gene{$gene_id}){
+		my ($cate) = (split)[-1];
+		$category{$cate}++;
+		print OUT "$_\n";
+	}
+}
+
+my $num = keys %category;
+
+open OUT2,">$log";
+print OUT2 "Category\tCount\n";
+while(my ($cat,$cnt) = each %category){
+	print OUT2 "$cat\t$cnt\n";
+}

@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+use List::Util qw(first max maxstr min minstr reduce shuffle sum);
+
+my ($lib,$exp,$dir) = @ARGV;
+open FILE,"RC_$lib\_$exp.tsv";
+my $header = <FILE>;
+open OUT, ">Input_mageck_RC_$lib\_$exp.tsv";
+print OUT "$header";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $sgrna = shift @data;
+	my $gene = shift @data;
+	next if $gene eq "NotHits";
+	my $ave = sum(@data)/@data;
+	print OUT "$_\n";
+}
+

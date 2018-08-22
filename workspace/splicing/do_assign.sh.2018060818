@@ -1,0 +1,19 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N assign
+#PBS -l nodes=1:ppn=1
+#PBS -j oe 
+#PBS -l walltime=06:00:00
+
+cd ~/workspace/splicing/
+dir=/home/bio-longyk/workspace/splicing
+sample=(RM-ES-P28-1  RM-ES-P28-2  RM-ES-P28-3  RM-MEF-P13-1  RM-MEF-P13-2  RM-MEF-P14-1  RM-MEF-P14-2)
+#sample=(RM-ES-P28-2 RM-MEF-P13-1 RM-MEF-P14-1  RM-MEF-P14-2)
+#sample=(RM-MEF-ES-P28-1)
+for sam in ${sample[*]}
+do
+	#log=`./assign_read.pl $sam`
+	#echo $log >>Log_assign
+	log=log_$sam
+	qsub -v sample=$sam,log=$log,dir=$dir assign.sh
+done

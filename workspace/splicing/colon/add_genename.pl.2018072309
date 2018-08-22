@@ -1,0 +1,41 @@
+#!/usr/bin/perl -w
+my %conventer;
+open FILE,'/home/bio-longyk/cnda/ensembl/hg38_ID2Name.txt';
+while(<FILE>){
+	chomp;
+	my ($id,$name) = split;
+	$conventer{$id} = $name;
+}
+
+
+#my ($input,$output) = ('DESeq2/DESeq2_out.txt','DESeq2/DESeq2_geneName.txt');
+my ($input,$output) = @ARGV;
+
+open FILE,$input;
+open OUT,'>',$output;
+my $header = <FILE>;
+print OUT "gene_id\tgene_name\tbaseMean\tlog2FoldChange\tlfcSE\tstat\tpval\tpadj\tRank\tTag\n";
+my $i=0;
+while(<FILE>){
+	chomp;
+	$i++;
+	my @data = split;
+	if(exists $conventer{$data[0]}){
+		print OUT "$data[0]\t$conventer{$data[0]}\t$data[1]\t$data[2]\t$data[3]\t$data[4]\t$data[5]\t$data[6]\t$i";
+		if($data[6] ne "NA" && $data[6] < 0.05 && $data[2] > 0){
+			print OUT "\tUp\n";
+		}
+		elsif($data[6] ne "NA" && $data[6] < 0.05 && $data[2] < 0){
+			print OUT "\tDown\n";
+		}
+		else{
+			print OUT "\tNo\n";
+		}
+
+	}
+	else{
+		print "gene name not found: $data[0]\n";
+	}
+}
+
+

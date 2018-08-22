@@ -1,0 +1,12 @@
+#!/usr/bin/perl -w
+#
+open FILE,"zcat mature.fa.gz |";
+open OUT, ">miRBase_mmu_v22.fa";
+while(<FILE>){
+	chomp;
+	if ($_ =~ /mmu/){
+		print OUT "$_\n";
+		my $seq = <FIIE>;
+		print OUT "$seq";
+	}
+}

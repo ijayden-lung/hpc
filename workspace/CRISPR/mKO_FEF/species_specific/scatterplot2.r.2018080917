@@ -1,0 +1,29 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(ggrepel)
+args<-commandArgs(T)
+
+pdf(args[3])
+data = read.table(args[1],header=TRUE)
+data2 = read.table(args[2],header=TRUE)
+
+quad1= nrow(subset(data2,data2$color=="yellow"))
+quad2= nrow(subset(data2,data2$color=="blue"))
+quad3= nrow(subset(data2,data2$color=="red"))
+quad4= nrow(subset(data2,data2$color=="green"))
+
+ggplot(data, aes(x=cycle_fef, y=cycle_mef))+
+geom_point(aes(color=color),size=1)+
+scale_color_manual(values=c(red="red",yellow="orange",blue="cyan",green="darkgreen",na="grey90"))+
+geom_hline(yintercept=0)+
+geom_vline(xintercept=0)+
+theme_bw()+
+theme(legend.position="none",legend.title=element_blank())+
+geom_text_repel(aes(label=gene),size=3, data=subset(data2,anno!="na"))+
+labs(x="fef heterozygous proliferation rate",y="mef proliferaion rate")+
+annotate("text", x=0.3, y=0.3, label=quad1, alpha=.5)+
+annotate("text", x=-0.3, y=0.3, label=quad2, alpha=.5)+
+annotate("text", x=-0.3, y=-0.3, label=quad3, alpha=.5)+
+annotate("text", x=0.3, y=-0.3, label=quad4, alpha=.5)
+
+

@@ -1,0 +1,15 @@
+#!/usr/bin/perl -w
+use Statistics::R;
+
+my $cmds = <<EOF;
+	x = c( 959     ,1795    ,784     ,1281)
+	alle<-matrix(x, nrow=2)
+	fet_pvalue <-chisq.test(alle,simulate.p.value = TRUE, B = 10000)\$p.value
+	#fet_pvalue <-fisher.test(alle)\$p.value
+	fet_pvalue
+EOF
+my $R = Statistics::R->new();
+
+$R->run($cmds);
+my $fet_pvalue = $R->get('fet_pvalue');
+print "$fet_pvalue\n";

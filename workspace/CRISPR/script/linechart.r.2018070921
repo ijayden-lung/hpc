@@ -1,0 +1,38 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+data = read.table(paste(args[1],"_",args[2],".normalized.txt",sep=""),header=TRUE)
+pdf(paste(args[1],"_",args[2],".normalized.pdf",sep=""),width=10)
+plotgenes = unique(data$Gene)
+i=0
+
+for (gene in plotgenes){
+	header = names(data)
+	len =ncol(data)
+	sample=header[4:len]
+	samplenum=len-3
+	sub = subset(data,data$Gene == gene)
+	count=as.vector(as.matrix(sub[4:len]))
+	sgrnanum=nrow(sub)
+	df = data.frame(sgrna=rep(sub$position,samplenum),
+					sample=rep(sample,each=sgrnanum),
+					count=count)
+
+	if(i%%4 == 0){
+		grid.newpage()
+		pushViewport(viewport(layout = grid.layout(2, 2)))
+		vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+	}
+	a<-ggplot(data=df,aes(x=sample,y=count,group=sgrna,color=sgrna))+
+		geom_line()+
+		geom_point(size=3)+
+		scale_x_discrete(limits=sample)+
+		scale_y_log10("Read Counts",breaks = scales::trans_breaks("log10", function(x) 10^x),labels = scales::trans_format("log10", scales::math_format(10^.x)))+
+		labs(x="",title=paste("sgRNA in ",gene))+
+		theme_bw()+
+		theme(panel.grid =element_blank(),axis.title=element_text(size=12),axis.text=element_text(size=12,vjust=0.5,hjust=0.5,angle=90),legend.title=element_blank(),plot.title = element_text(size=15,face = "bold",hjust = 0.5),legend.text=element_text(size=11,color="black",face="bold"))
+	print(a,vp = vplayout(i%%2+1, (i%%4-i%%2)/2+1))
+	i=i+1
+}

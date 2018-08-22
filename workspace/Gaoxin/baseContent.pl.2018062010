@@ -1,0 +1,72 @@
+#!/usr/bin/perl -w
+#
+#
+#
+my ($diff,$author) = @ARGV;
+
+my %conventer = ('3p'=>'5p','5p'=>'3p');
+my %major;
+my %minor;
+open FILE,"$diff\_$author.txt";
+while(<FILE>){
+	chomp;
+	my $min = substr($_,0,-2).$conventer{substr($_,-2)};
+	$major{$_} = '';
+	$minor{$min} = '';
+}
+
+my %data_minor;
+my %data_major;
+open FILE, '/home/bio-longyk/cnda/miRNA/miRBase_mmu_v22.fa';
+while(<FILE>){
+	chomp;
+	$mature = substr($_,1);
+	my $seq = <FILE>;
+	chomp $seq;
+	$seq =~ tr/AG/R/;
+	$seq =~ tr/CU/Y/;
+	if(exists $minor{$mature}){
+		for(my $i=0;$i< length $seq;$i++){
+			$data_minor{substr($seq,$i,1)}->{$i}++;
+		}
+	}
+	elsif(exists $major{$mature}){
+		for(my $i=0;$i< length $seq;$i++){
+			$data_major{substr($seq,$i,1)}->{$i}++;
+		}
+	}
+}
+
+open OUT2, ">Input_barPlot_$diff\_$author.txt";
+print OUT2 "position\tratio\n";
+for (my$i=0;$i<22;$i++){
+	my $pos = $i+1;
+	my $ratio = $data_major{'Y'}->{$i}/$data_minor{'Y'}->{$i};
+	print OUT2 "$pos\t$ratio\n";
+}
+
+
+
+
+
+&printinfo(\%data_major,$diff);
+$diff =~ s/Major/Minor/g;
+&printinfo(\%data_minor,$diff);
+
+sub printinfo{
+	my ($hash_ref,$info) = @_;
+	open OUT,">Input_seqLogo_$info\_$author.txt";
+	print OUT "header";
+	for(my $i =1 ;$i<23;$i++){
+		print OUT "\t$i";
+	}
+	print OUT "\n";
+
+	while(my ($key,$val) = each %$hash_ref){
+		print OUT "$key";
+		for(my $k=0;$k<22;$k++){
+			print OUT "\t$val->{$k}";
+		}
+		print OUT "\n";
+	}
+}

@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w
+
+open FILE,"WNTPos.normalized.txt";
+<FILE>;
+open OUT,">WNTPos.merge.normalized.txt";
+print OUT "sgRNA\tGene\tNC1\tNC2\tSort1\tSort2\n";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $sort1 = ($data[4]+$data[5])/2;
+	my $sort2 = ($data[6]+$data[7])/2;
+	print OUT "$data[0]\t$data[1]\t$data[2]\t$data[3]\t$sort1\t$sort2\n";
+}
+	

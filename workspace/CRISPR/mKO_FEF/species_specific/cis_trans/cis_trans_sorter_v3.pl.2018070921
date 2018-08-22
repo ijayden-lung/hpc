@@ -1,0 +1,147 @@
+#!/usr/bin/perl -w
+
+my ($par_file,$hyb_file,$fet_file,$sorter,$log,$qval_cutoff) = @ARGV;
+
+my %par_l2fc;
+my %par_qval;
+my %par_mean;
+open PAR,"$par_file";
+<PAR>;
+while(<PAR>){
+	chomp;
+	my ($gene_id,$mean,$l2fc,$qval) = (split)[0,1,2,-1];
+	if($qval eq "NA"){
+		if($mean>1000 && abs($l2fc)>1){
+			$qval = 0.0001;
+		}
+		else{
+			$qval = 1;
+		}
+	}
+	$par_l2fc{$gene_id} = $l2fc;
+	$par_qval{$gene_id} = $qval;
+	$par_mean{$gene_id} = $mean;
+}
+
+
+my %hyb_l2fc;
+my %hyb_qval;
+my %hyb_mean;
+open HYB,"$hyb_file";
+<HYB>;
+while(<HYB>){
+	chomp;
+	my ($gene_id,$mean,$l2fc,$qval) = (split)[0,1,2,-1];
+	if($qval eq "NA"){
+		if($mean>1000 && abs($l2fc)>1){
+			$qval = 0.0001;
+		}
+		else{
+			$qval = 1;
+		}
+	}
+	$hyb_l2fc{$gene_id} = $l2fc;
+	$hyb_qval{$gene_id} = $qval;
+	$hyb_mean{$gene_id} = $mean;
+}
+
+
+
+my %fet_qval;
+open FET,"$fet_file";
+<FET>;
+while(<FET>){
+	chomp;
+	my ($gene_id,$qval) = (split)[0,-1];
+	$qval = $qval eq "NA" ? 1 :$qval;
+	$fet_qval{$gene_id} = $qval*10;
+}
+
+my %ort;
+open ORT,"ReadCount_hyb.txt";
+while(<ORT>){
+	chomp;
+	my ($mouse_id,$mouse_name,$rat_id,$rat_name) = split;
+	$ort{$mouse_id} = "$mouse_name\t$rat_id\t$rat_name";
+}
+
+
+my $cis;
+my $trans;
+my $c_plus_t;
+my $c_minus_t;
+my $t_minus_c;
+my $compensatory;
+my $conserved;
+my $undefined;
+my $total;
+open OUT,">$sorter";
+print OUT "mouse_id\tmouse_name\trat_id\trat_name\tpar_mean\tpar_l2fc\tpar_qval\thyb_mean\thyb_l2fc\thyb_qval\tfet_qval\tCategory\n";
+while(my ($gene_id,$fet_qval) = each %fet_qval){
+	my $hyb_qval = $hyb_qval{$gene_id};
+	my $par_qval = $par_qval{$gene_id};
+	my $hyb_mean = $hyb_mean{$gene_id};
+	my $par_mean = $par_mean{$gene_id};
+	my $hyb_l2fc = $hyb_l2fc{$gene_id};
+	my $par_l2fc = $par_l2fc{$gene_id};
+	if($par_qval < $qval_cutoff && $hyb_qval<$qval_cutoff && $fet_qval>$qval_cutoff){
+		print OUT "$gene_id\t$ort{$gene_id}\t$par_mean\t$par_l2fc\t$par_qval\t$hyb_mean\t$hyb_l2fc\t$hyb_qval\t$fet_qval\tCIS\n";
+		$cis++;
+	}
+	elsif($par_qval < $qval_cutoff && $hyb_qval>=$qval_cutoff && $fet_qval<$qval_cutoff){
+		print OUT "$gene_id\t$ort{$gene_id}\t$par_mean\t$par_l2fc\t$par_qval\t$hyb_mean\t$hyb_l2fc\t$hyb_qval\t$fet_qval\tTRANS\n";
+		$trans++;
+	}	
+	elsif($par_qval < $qval_cutoff && $hyb_qval<$qval_cutoff && $fet_qval<$qval_cutoff){
+		if($par_l2fc/$hyb_l2fc>1){
+			print OUT "$gene_id\t$ort{$gene_id}\t$par_mean\t$par_l2fc\t$par_qval\t$hyb_mean\t$hyb_l2fc\t$hyb_qval\t$fet_qval\tC_PLUS_T\n";
+			$c_plus_t++;
+		}
+		elsif($par_l2fc*$hyb_l2fc>0){
+			print OUT "$gene_id\t$ort{$gene_id}\t$par_mean\t$par_l2fc\t$par_qval\t$hyb_mean\t$hyb_l2fc\t$hyb_qval\t$fet_qval\tC_MINUS_T\n";
+			$c_minus_t++;
+		}
+
+		else{
+			print OUT "$gene_id\t$ort{$gene_id}\t$par_mean\t$par_l2fc\t$par_qval\t$hyb_mean\t$hyb_l2fc\t$hyb_qval\t$fet_qval\tT_MINUS_C\n";
+			$t_minus_c++;
+		}
+			
+	}
+	elsif($par_qval >= $qval_cutoff && $hyb_qval<$qval_cutoff && $fet_qval<$qval_cutoff){
+		print OUT "$gene_id\t$ort{$gene_id}\t$par_mean\t$par_l2fc\t$par_qval\t$hyb_mean\t$hyb_l2fc\t$hyb_qval\t$fet_qval\tCOMPENSATORY\n";
+		$compensatory++;
+	}
+	elsif($par_qval >= $qval_cutoff && $hyb_qval>=$qval_cutoff){
+		print OUT "$gene_id\t$ort{$gene_id}\t$par_mean\t$par_l2fc\t$par_qval\t$hyb_mean\t$hyb_l2fc\t$hyb_qval\t$fet_qval\tCONSERVED\n";
+		$conserved++;
+	}
+	else{
+		print OUT "$gene_id\t$ort{$gene_id}\t$par_mean\t$par_l2fc\t$par_qval\t$hyb_mean\t$hyb_l2fc\t$hyb_qval\t$fet_qval\tUNDEFINED\n";
+		$undefined++;
+	}
+	$total++;
+}
+
+open OUT2,">$log";
+print OUT2 "Category\tCount\tPercent\n";
+my $cispct = sprintf("%.2f", (($cis/$total)*100));
+print OUT2 "CIS\t$cis\t$cispct\n";
+my $transpct = sprintf("%.2f", (($trans/$total)*100));
+print OUT2 "TRANS\t$trans\t$transpct\n";
+my $c_plus_tpct = sprintf("%.2f", (($c_plus_t/$total)*100));
+print OUT2 "C_PLUS_T\t$c_plus_t\t$c_plus_tpct\n";
+my $compensatorypct = sprintf("%.2f", (($compensatory/$total)*100));
+print OUT2 "COMPENSATORY\t$compensatory\t$compensatorypct\n";
+my $conservedpct = sprintf("%.2f", (($conserved/$total)*100));
+print OUT2 "CONSERVED\t$conserved\t$conservedpct\n";
+my $undefinedpct = sprintf("%.2f", (($undefined/$total)*100));
+print OUT2 "UNDEFINED\t$undefined\t$undefinedpct\n";
+my $c_minus_tpct = sprintf("%.2f", (($c_minus_t/$total)*100));
+print OUT2 "C_MINUS_T\t$c_minus_t\t$c_minus_tpct\n";
+my $t_minus_cpct = sprintf("%.2f", (($t_minus_c/$total)*100));
+print OUT2 "T_MINUS_C\t$t_minus_c\t$t_minus_cpct\n";
+	
+
+	
+

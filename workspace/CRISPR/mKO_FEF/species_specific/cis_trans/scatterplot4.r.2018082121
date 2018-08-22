@@ -1,0 +1,33 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(ggrepel)
+args<-commandArgs(T)
+
+pdf(args[2])
+data = read.table(args[1],header=TRUE,sep="\t")
+xtitle=args[3]
+data = subset(data,data$orthlog_type == "one2null")
+
+quad1= nrow(subset(data,data$color=="redundancy"))
+quad2= nrow(subset(data,data$color=="haplosufficiency"))
+quad3= nrow(subset(data,data$color=="KOcompensation"))
+quad4= nrow(subset(data,data$color=="haploinsufficiency"))
+quad5= nrow(subset(data,data$color=="haplocompensation"))
+
+ggplot(data, aes(x=fef_score, y=mef_score))+
+geom_point(aes(color=color),size=1)+
+scale_color_manual(values=c(haplosufficiency="orange",KOcompensation="cyan",haploinsufficiency="darkgreen",haplocompensation="purple",redundancy="grey90"))+
+geom_hline(yintercept=0)+
+geom_vline(xintercept=0)+
+theme_bw()+
+theme(legend.position="none")+
+geom_text_repel(aes(label=gene_name),size=3, data=subset(data,color!="redundancy" & color!="haplosufficiency"))+
+labs(x=paste("fef ",xtitle, " proliferation rate"),y="mef proliferaion rate")+
+xlim(-3,3)+ylim(-3,3)+
+annotate("text", x=-2.5, y=3.0, label=paste("redundancy",quad1), color="grey90")+
+annotate("text", x=-2.5, y=2.8, label=paste("haplosufficiency",quad2), color="orange")+
+annotate("text", x=-2.5, y=2.6, label=paste("KOcompensation",quad3), color="cyan")+
+annotate("text", x=-2.5, y=2.4, label=paste("haploinsufficiency",quad4), color="darkgreen")+
+annotate("text", x=-2.5, y=2.2, label=paste("haplocompensation",quad5), color="purple")
+
+

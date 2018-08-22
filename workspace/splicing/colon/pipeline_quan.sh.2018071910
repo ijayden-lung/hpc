@@ -1,0 +1,35 @@
+#!/bin/bash
+#PBS -q fatser
+#PBS -N featureCounts
+#PBS -l nodes=1:ppn=36
+#PBS -j oe 
+#PBS -l walltime=08:00:00
+#PBS -V
+
+ctrl='low'
+trea='high'
+cd ~/workspace/splicing/colon/
+mkdir DESeq2
+
+c=0
+for i in STAR/*/Aligned.sortedByCoord.out.bam
+do
+	sample[$c]=$i
+	((c++))
+done
+
+
+gtf='/home/bio-longyk/cnda/ensembl/hg38.ensemblv92.nopsuedo.gtf'
+count='DESeq2/FC_counts.txt'
+stat='DESeq2/FC_stat.txt'
+anno='DESeq2/FC_annotation.txt'
+deseq='DESeq2/DESeq2_out.txt'
+pdf='DESeq2/DESeq2_summary.pdf'
+#./feature_count.r $gtf $count $stat $anno 36 ${sample[@]}
+#./test.r $gtf $count $stat $anno 12 ${sample[@]}
+#./deseq2.r $ctrl $trea $count  $deseq $pdf
+#./deseq2.r WntHighMes WntHighEpi DESeq2/Count_WHMvsWHE.txt DESeq2/DESeq2_WHMvsWHE.txt DESeq2/DESeq2_WHMvsWHE.pdf
+#./deseq2.r WntHighMes WntLowEpi DESeq2/Count_WHMvsWLE.txt DESeq2/DESeq2_WHMvsWLE.txt DESeq2/DESeq2_WHMvsWLE.pdf
+./deseq2.r WntHighEpi WntLowEpi DESeq2/Count_WHEvsWLE.txt DESeq2/DESeq2_WHEvsWLE.txt DESeq2/DESeq2_WHEvsWLE.pdf
+
+

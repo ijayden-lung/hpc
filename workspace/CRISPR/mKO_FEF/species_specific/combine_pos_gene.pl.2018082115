@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+
+my %pos;
+open POS,"mouse.sam";
+while(<POS>){
+	chomp;
+	my ($sgrna,$strand,$chr,$pos) = split;
+	$pos{$sgrna} = "$strand:$chr:$pos";
+}
+
+open LIB,"/home/bio-longyk/workspace/CRISPR/Library/lib_mKO.csv";
+open OUT,">lib_mKO_ncbi_position.txt";
+<LIB>;
+while(<LIB>){
+	chomp;
+	my (undef,$gene,$ncbi,undef,undef,undef,$sgrna) = split /,/;
+	print OUT "$gene\t$ncbi\t$sgrna\t$pos{$sgrna}\n";
+}

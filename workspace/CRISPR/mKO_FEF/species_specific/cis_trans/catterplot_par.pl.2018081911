@@ -1,0 +1,28 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(ggrepel)
+args<-commandArgs(T)
+
+pdf(args[2])
+data = read.table(args[1],header=TRUE,sep="\t")
+
+#quad1= nrow(subset(data,data$color=="yellow"))
+#quad2= nrow(subset(data,data$color=="blue"))
+#quad3= nrow(subset(data,data$color=="red"))
+#quad4= nrow(subset(data,data$color=="green"))
+
+ggplot(data, aes(x=log2(mouse_par_fpkm), y=log2(mouse_hyb_fpkm)))+
+geom_point(aes(color=quadrant ),size=1)+
+scale_color_manual(values=c(quad1="orange",quad2="cyan",quad3="red",quad4="darkgreen",quad0="grey90"))+
+#geom_hline(yintercept=0)+
+#geom_vline(xintercept=0)+
+theme_bw()+
+theme(legend.position=c(0.1,0.9),legend.title=element_blank())+
+geom_text_repel(aes(label=gene_name),size=3, data=subset(data,quadrant!="quad0" & (mouse_par_fpkm/mouse_hyb_fpkm >2 | mouse_par_fpkm/mouse_hyb_fpkm <0.5)))
+#labs(x=paste("fef ",xtitle, " proliferation rate"),y="mef proliferaion rate")+
+#annotate("text", x=0.3, y=0.3, label=quad1, alpha=.5)+
+#annotate("text", x=-0.3, y=0.3, label=quad2, alpha=.5)+
+#annotate("text", x=-0.3, y=-0.3, label=quad3, alpha=.5)+
+#annotate("text", x=0.3, y=-0.3, label=quad4, alpha=.5)
+
+

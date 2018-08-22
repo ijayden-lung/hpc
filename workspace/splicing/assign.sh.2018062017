@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N Assign
+#PBS -l nodes=1:ppn=12
+#PBS -j oe 
+#PSB -o ${log}
+#PBS -l walltime=48:00:00
+
+cd ~/workspace/splicing/
+perl assign_read.pl $sample $dir

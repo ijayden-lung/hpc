@@ -1,0 +1,7 @@
+#!/bin/bash
+
+####Merge rn6 mm10 count data and normalize the gene length
+./merge_mouse_rat.pl ###ReadCount_mouse_rat.txt
+
+./deseq2.r "mm10" "rn6" "ReadCount_mouse_rat.txt" "DESeq2_mouse_rat.txt" "DESeq2_mouse_rat.pdf" "Rld_mouse_rat.txt"
+

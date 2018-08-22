@@ -1,0 +1,28 @@
+#!/usr/bin/perl -w
+
+my %hash;
+my @sample = qw/mEF mES hDF hES high_old low_old/;
+foreach my $sam (@sample){
+	open FILE, "isoform_$sam.txt";
+	while(<FILE>){
+		my ($iso,$count) = split;
+		$hash{$iso}->{$sam} = $count;
+	}
+}	
+
+
+print "isofrom\t", join "\t",@sample,"\n";
+
+while(my ($iso,$val) = each %hash){
+	print "$iso";
+	foreach my $sam (@sample){
+		if(exists $val->{$sam}){
+			print "\t$val->{$sam}";
+		}
+		else{
+			print "\t0";
+		}
+	}
+	print "\n";
+}
+

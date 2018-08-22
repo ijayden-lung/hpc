@@ -1,0 +1,10 @@
+GRC='Mus_musculus.GRCm38'
+VERSION=92
+UCSC=mm10
+
+#sed 's/^/chr/g' $GRC.$VERSION.gtf | sed 's/chrMT/chrM/g' | awk '/^chr[1-9XaXYM]/' | awk '($3 ~ /exon|transcript|gene/)' | grep -E -v 'snoRNA|snRNA|miRNA|rRNA|pseudogene|misc_RNA|_decay|-ps[1-9]|"Rpl[1-9]|"Rps[1-9]' >$UCSC.ensemblv$VERSION.nopsuedo.gtf
+sed 's/^/chr/g' $GRC.$VERSION.gtf | sed 's/chrMT/chrM/g' | awk '/^chr[1-9XaXYM]/' | awk '($3 ~ /exon|transcript|gene/)' | grep -E -v 'snoRNA|snRNA|miRNA|rRNA|pseudogene|misc_RNA|_decay|-ps[1-9]' >$UCSC.ensemblv$VERSION.nopsuedo.gtf
+
+
+wc -l $GRC.$VERSION.gtf
+wc -l $UCSC.ensemblv$VERSION.nopsuedo.gtf

@@ -1,0 +1,142 @@
+#!/usr/bin/perl -w
+my $Threshold = 1;
+
+my %strand;
+my %ensg;
+open FILE,"/home/bio-longyk/cnda/ensembl/mm10_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$strand) = split;
+	$strand{$gene_name} = $strand;
+	$ensg{$gene_name} = $gene_id;
+}
+
+my %mis_Num;
+open FILE,"RC_mKO_FEF_mis1.tsv";
+while(<FILE>){
+	chomp;
+	my ($sgrna,$mis_num) = split;
+	$mis_Num{$sgrna} = $mis_num;
+}
+
+
+
+
+open OUT,">MEF_HOMO_essentiality.txt";
+print OUT "gene\tcycle_fef\tcycle_mef\tcolor\tanno\n";
+
+open HETE,"mle_HOMO0.gene_summary.txt";
+<HETE>;
+my %fef;
+while(<HETE>){
+	chomp;
+	my ($gene,$beta) = (split)[0,2];
+	$fef{$gene} = $beta;	
+}
+
+open MEF,"mle_MEF.gene_summary.txt";
+<MEF>;
+my %mef;
+while(<MEF>){
+	chomp;
+	my ($gene,$beta) = (split)[0,2];
+	$mef{$gene} = $beta;
+}
+
+
+my %important1;
+my %important2;
+my %important3;
+######Gene Abundance
+my %important4;
+
+
+open GO3,">Input_gobp_important3.txt";
+open GO4,">Input_gobp_important4.txt";
+print GO3 ">ensg\n";
+print GO4 ">ensg\n";
+while(my ($gene,$score) = each %fef){
+	next if (!exists $mef{$gene});
+	if($score >$Threshold && $mef{$gene}>$Threshold){
+		$important1{$gene} = '';
+		print OUT "$gene\t$score\t$mef{$gene}\tyellow\t$gene\n";
+	}
+	elsif($score <-$Threshold && $mef{$gene}>$Threshold){
+		print OUT "$gene\t$score\t$mef{$gene}\tblue\t$gene\n";
+		$important2{$gene} = '';
+	}
+	elsif($score <-$Threshold && $mef{$gene}<-$Threshold){
+		print OUT "$gene\t$score\t$mef{$gene}\tred\t$gene\n";
+		$important3{$gene} = '';
+		print GO3 "$ensg{$gene}\n" if exists $ensg{$gene};
+	}
+	elsif($score >$Threshold && $mef{$gene}<-$Threshold){
+		print OUT "$gene\t$score\t$mef{$gene}\tgreen\t$gene\n";
+		$important4{$gene} = '';
+		print GO4 "$ensg{$gene}\n" if exists $ensg{$gene};
+	}
+	else{
+		print OUT "$gene\t$score\t$mef{$gene}\tna\tna\n";
+	}
+
+}
+
+my %position;
+open FILE,"mouse.sam";
+while(<FILE>){
+	chomp;
+	my ($sgrna,$strand,$chr,$pos) = split;
+	$position{$sgrna} = "$strand:$chr:$pos";
+}
+
+
+&linechart(\%important1,"Important1");
+&linechart(\%important2,"Important2");
+&linechart(\%important3,"Important3");
+&linechart(\%important4,"Important4");
+
+sub linechart{
+	my ($important,$prefix) = @_;
+	my %important = %$important;
+	open OUT, ">$prefix.sgrna_summary.txt";
+	print OUT "celltype\tposition\tsimilarity\tsgrna\tgene\tctrl1\tctrl2\ttest1\ttest2\n";
+	open FILE,"HETE.sgrna_summary.txt";
+	<FILE>;
+	while(<FILE>){
+		chomp;
+		my ($sgrna,$gene,$control_count,$treat_count) = split;
+		my ($control1,$control2) = split /\//,$control_count;
+		my ($treat1,$treat2) = split /\//,$treat_count;
+		if(exists $important{$gene}){
+			print OUT "fef\t$position{$sgrna}\tmis$mis_Num{$sgrna}\t$sgrna\t$gene($strand{$gene})\t$control1\t$control2\t$treat1\t$treat2\n";
+		}
+	}
+
+	open FILE,"HOMO.sgrna_summary.txt";
+	<FILE>;
+	while(<FILE>){
+		chomp;
+		my ($sgrna,$gene,$control_count,$treat_count) = split;
+		my ($control1,$control2) = split /\//,$control_count;
+		my ($treat1,$treat2) = split /\//,$treat_count;
+		if(exists $important{$gene}){
+			print OUT "fef\t$position{$sgrna}\thomo\t$sgrna\t$gene($strand{$gene})\t$control1\t$control2\t$treat1\t$treat2\n";
+		}
+	}
+
+
+	open FILE,"MEF.sgrna_summary.txt";
+	<FILE>;
+	while(<FILE>){
+		chomp;
+		my ($sgrna,$gene,$control_count,$treat_count) = split;
+		my ($control1,$control2) = split /\//,$control_count;
+		my ($treat1,$treat2) = split /\//,$treat_count;
+		if(exists $important{$gene}){
+			print OUT "mef\t$position{$sgrna}\thomo\t$sgrna\t$gene($strand{$gene})\t$control1\t$control2\t$treat1\t$treat2\n";
+		}
+	}
+
+	#system("./linechart.r $prefix.sgrna_summary.txt $prefix.sgrna_summary.pdf");
+}
+system("./scatterplot.r MEF_HOMO_essentiality.txt MEF_HOMO_essentiality.pdf homo");

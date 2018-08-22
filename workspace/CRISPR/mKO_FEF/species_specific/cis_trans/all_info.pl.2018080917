@@ -1,0 +1,109 @@
+#!/usr/bin/perl -w
+my $Threshold = 1;
+
+my %strand;
+my %ensg;
+open FILE,"/home/bio-longyk/cnda/ensembl/mm10_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$strand) = split;
+	$strand{$gene_name} = $strand;
+	$ensg{$gene_name} = $gene_id;
+}
+
+my %org;
+my %type;
+my %iden;
+open FILE,"/home/bio-longyk/cnda/ortholog/mouse2rat.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($mid,$mouse,$rid,$rat,$type,$id1,$id2) = split;
+	$org{$mouse} = $rat;
+	$type{$mouse} = (split /_/,$type)[1];
+	$iden{$mouse} = "$id1\t$id2";
+}
+
+
+
+my %exp;
+open FILE,"/home/bio-longyk/workspace/splicing/mouse_es_ef.fpkm";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($id,$name,$pef1,$pef2,$pes1,$pes2,$hes1,$hes2,$hes3,$hef1,$hef2,$hef3,$hef4) = split;
+	$exp{$name}->{'pmef'} = sprintf("%.2f",($pef1+$pef2)/2);
+	$exp{$name}->{'hmef'} = sprintf("%.2f",($hef1+$hef2+$hef3+$hef4)/4);
+}
+open FILE,"/home/bio-longyk/workspace/splicing/rat_es_ef.fpkm";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($id,$name,$pef1,$pef2,$pes1,$pes2,$hes1,$hes2,$hes3,$hef1,$hef2,$hef3,$hef4) = split;
+	$exp{$name}->{'pref'} =  sprintf("%.2f",($pef1+$pef2)/2);
+	$exp{$name}->{'href'} =  sprintf("%.2f",($hef1+$hef2+$hef3+$hef4)/4);
+}
+
+
+open HETE,"../mle_HETE0.gene_summary.txt";
+<HETE>;
+my %fef;
+while(<HETE>){
+	chomp;
+	my ($gene,$beta) = (split)[0,2];
+	$fef{$gene} = $beta;	
+}
+
+open MEF,"../mle_MEF.gene_summary.txt";
+<MEF>;
+my %mef;
+while(<MEF>){
+	chomp;
+	my ($gene,$beta) = (split)[0,2];
+	$mef{$gene} = $beta;
+}
+
+
+
+
+open OUT,">HETE_exp_similarity.txt";
+print OUT "gene_id\tgene_name\tquadrant\tmef_score\tfef_score\tmouse_par_fpkm\tmouse_hyb_fpkm\torthlog_type\trat_par_fpkm\trat_hyb_fpkm\t%identity. query\t%identity. target\n";
+
+while(my ($gene,$score_fef) = each %fef){
+	next if (!exists $mef{$gene});
+	my $score_mef = $mef{$gene};
+	my $quad;
+	my $pref = "NA";
+	my $href = "NA";
+	my $id  = "NA\tNA";
+	if($score_fef>0.6 && $score_mef>0.6 && $score_fef*$score_mef>$Threshold){
+		$quad = 'quad1';
+	}
+	elsif($score_fef<-0.6 && $score_mef>0.6 && $score_fef*$score_mef<-$Threshold){
+		$quad = 'quad2';
+	}
+	elsif($score_fef<-0.6 && $score_mef<-0.6 && $score_fef*$score_mef>$Threshold){
+		$quad = 'quad3';
+	}
+	elsif($score_fef>0.6 && $score_mef<-0.6 && $score_fef*$score_mef<-$Threshold){
+		$quad = 'quad4';
+	}
+	else{
+		$quad = 'quad0';
+	}
+	if(!exists $org{$gene}){
+		$type{$gene} = "one2null";
+	}
+	elsif($type{$gene} eq "one2one"){
+		$pref = $exp{$org{$gene}}->{'pref'};
+		$href = $exp{$org{$gene}}->{'href'};
+		$id   = $iden{$gene};
+	}
+
+	if(!exists $ensg{$gene}){
+		print "$gene\n";
+		next;
+	}
+	print OUT "$ensg{$gene}\t$gene\t$quad\t$score_mef\t$score_fef\t$exp{$gene}->{'pmef'}\t$exp{$gene}->{'hmef'}\t$type{$gene}\t$pref\t$href\t$id\n";
+}
+

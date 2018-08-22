@@ -1,0 +1,22 @@
+#!/usr/bin/perl -w
+my %allgene;
+open FILE,"colon/DESeq2/DESeq2_geneName.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$baseMean,$l2fc)= split;
+	$allgene{$gene_name} = "$baseMean\t$l2fc";
+}
+
+open FILE,"RBPmap_gene.txt";
+open OUT,">RBPmap_gene_de.txt";
+while(<FILE>){
+	chomp;
+	my ($pre,$gene) = split;
+	if(exists $allgene{$gene}){
+		print OUT "$_\t$allgene{$gene}\n";
+	}
+	else{
+		print "$gene\n";
+	}
+}
+

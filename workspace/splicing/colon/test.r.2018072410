@@ -1,0 +1,26 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+#### Add psudo counts
+data = read.table("DESeq2/DESeq2_geneName_WHMvsWHE.txt",header=TRUE)
+anno= read.table("DESeq2/FC_annotation.txt",header=TRUE,row.names=1)
+header=names(anno)
+header[1] = "gene_id"
+names(anno) = header
+up.data  <-  data[data$Tag == "Up",]
+down.data <- data[data$Tag == "Down",]
+bg = data[data$baseMean > min(up.data$baseMean) & data$baseMean > min(down.data$baseMean) ,]
+anno = anno[anno$gene_id %in% bg$gene_id,]
+
+
+de.genes = up.data$gene_id
+merge  = merge(bg,anno)
+assayed.genes = merge$gene_id
+lengthbias = merge$Length
+
+gene.vector = as.integer(assayed.genes%in%de.genes)
+names(gene.vector) = assayed.genes
+gene.vector
+

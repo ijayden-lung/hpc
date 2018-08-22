@@ -1,0 +1,36 @@
+#!/bin/bash
+#PBS -q fatser
+#PBS -N FeatureCounts
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+#PBS -V
+
+ctrl='ES'
+trea='EF'
+spe='rn6'
+cd ~/workspace/splicing/F0/
+c=0
+for i in STAR/rn6*/Aligned.sortedByCoord.out.bam
+do
+	path=${i%\/*}
+	echo $path
+	sample[$c]=$i
+	((c++))
+	cd $path
+	stringtie --fr -e -p 18 -G ~/cnda/ensembl/rn6.ensemblv92.nopsuedo.gtf -o out.gtf -A gene_abund.tab -C cov_refs.gtf Aligned.sortedByCoord.out.bam 
+done
+
+
+cd ~/workspace/splicing/F0/
+gtf="/home/bio-longyk/cnda/ensembl/$spe.ensemblv92.nopsuedo.gtf"
+count="FC_counts_$spe\.txt"
+stat="FC_stat_$spe\.txt"
+anno="FC_annotation_$spe\.txt"
+deseq='DESeq2/DESeq2_common_out.txt'
+pdf='DESeq2/DESeq2_common_summary.pdf'
+
+#./feature_count.r $gtf $count $stat $anno 18 ${sample[@]}
+
+#./deseq2.r $ctrl $trea $count  $deseq $pdf
+#./add_genename.pl $spe $deseq "DESeq2/DESeq2_common_geneName.txt" $ctrl $trea

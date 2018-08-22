@@ -1,0 +1,22 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N MLE
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+
+
+cd ~/workspace/CRISPR/mKO_FEF/species_specific/
+
+
+
+#mageck test -k  Map_RC_mKO_FEF.tsv -t FEF1D28,FEF2D28 -c FEF1D1,FEF2D1 -n FEF --pdf-report --normcounts-to-file
+
+#mageck test -k RC_mKO_FEF_hete.tsv -t FEF1D28,FEF2D28 -c FEF1D1,FEF2D1 -n HETE --pdf-report --normcounts-to-file --norm-method none
+#mageck test -k RC_mKO_FEF_homo.tsv -t FEF1D28,FEF2D28 -c FEF1D1,FEF2D1 -n HOMO --pdf-report --normcounts-to-file --norm-method none
+
+#mageck test -k ../../mKO_MEF/Map_RC_mKO_MEF.tsv -t MEF1D10,MEF2D10 -c MEF1D1,MEF2D1 -n MEF --pdf-report --normcounts-to-file
+
+#mageck mle -k RC_mKO_FEF_hete.tsv -d matrix_file -n mle_HETE0 --threads 18
+mageck mle -k RC_mKO_FEF_homo.tsv -d matrix_file -n mle_HOMO0 --threads 18
+#mageck mle -k ../../mKO_MEF/Map_RC_mKO_MEF.tsv -d matrix_MEF -n mle_MEF--threads 72

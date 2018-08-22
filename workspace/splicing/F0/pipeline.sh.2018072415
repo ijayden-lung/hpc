@@ -1,0 +1,16 @@
+#!/bin/bash
+
+mkdir WIG
+#perl select_gene.pl
+sample=(RM-ES-P28-1 RM-MEF-P13-1)
+#perl  get_genelist_bam.pl "mouse_EF_1" "/home/bio-longyk/workspace/splicing/F0/STAR/mm10_m1_HCTH3DMXX_L1/Aligned.sortedByCoord.out.bam"
+perl  get_genelist_bam.pl "rat_EF_1" "/home/bio-longyk/workspace/splicing/F0/STAR/rn6_R1_HCTH3DMXX_L1/Aligned.sortedByCoord.out.bam"
+#perl  get_genelist_bam.pl "mouse_ES_1" "/home/bio-longyk/workspace/splicing/F0/STAR/mm10_mES-1RNA_RRB14331-V/Aligned.sortedByCoord.out.bam"
+perl  get_genelist_bam.pl "rat_ES_1" "/home/bio-longyk/workspace/splicing/F0/STAR/rn6_RES-1RNA_RRB14333-V/Aligned.sortedByCoord.out.bam"
+
+
+for sam in ${sample[*]}
+do
+	#bam2wig.py -i WIG/$sam.sorted.bam -s ~/apps/RSeQC/hg38.chrom.sizes -o WIG/$sam
+	#sed -i "1i\track type=wiggle_0 name='$sam'" WIG/$sam.wig	
+done

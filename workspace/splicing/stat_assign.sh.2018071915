@@ -1,0 +1,17 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N assign
+#PBS -l nodes=1:ppn=1
+#PBS -j oe 
+#PBS -l walltime=06:00:00
+
+common=`samtools view -c -f 67 -F 256 ~/workspace/splicing/mouse/common/C2M_RM-$sample.sorted.bam`;
+ratcom=`samtools view -c -f 67 -F 256 ~/workspace/splicing/rat/common/C2R_RM-$sample.sorted.bam`;
+mouse=`samtools view -c -f 67 -F 256 ~/workspace/splicing/mouse/assign/A2M_RM-$sample.sorted.bam`;
+ratfal=`samtools view -c -f 67 -F 256 ~/workspace/splicing/rat/assign/A2R_RM-$sample.sorted.bam`;
+
+echo $mouse
+echo $ratfal
+echo $common
+echo $ratcom
+

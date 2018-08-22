@@ -1,0 +1,29 @@
+#!/usr/bin/perl  -w
+#
+
+my %ensg;
+open FILE,"/home/bio-longyk/cnda/ensembl/mm10_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$strand) = split;
+	$ensg{$gene_name} = $gene_id;
+}
+
+
+my %bg;
+open FILE,"MEF.gene_summary.txt";
+while(<FILE>){
+	chomp;
+	my ($gene) = split;
+	$bg{$ensg{$gene}} = '' if exists $ensg{$gene};
+}
+
+open FILE,"/home/bio-longyk/workspace/splicing/mouse/DESeq3/mm10_bg.txt";
+<FILE>;
+open OUT,">mm10_mKO.bg";
+print OUT "gene\tlength\n";
+while(<FILE>){
+	chomp;
+	my ($gene_id) = split;
+	print OUT "$_\n" if exists $bg{$gene_id};
+}

@@ -1,0 +1,21 @@
+#!/usr/bin/perl -w
+#
+
+my %old_nc;
+open FILE,"../new_year/WNT+.normalized.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$nc1,$nc2) = split;
+	$old_nc{$sgrna} = "$nc1\t$nc2";
+}
+open OUT,">WNTPos.oldNC.txt";
+open FILE,"WNTPos.normalized.txt";
+my $header = <FILE>;
+print OUT "sgRNA\tGene\tNCold1\tNCold2\tNCnew1\tNCnew2\tSC\tSD\tSE\tSF\n";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	next if !exists $old_nc{$data[0]};
+	print OUT "$data[0]\t$data[1]\t$old_nc{$data[0]}\t$data[2]\t$data[3]\t$data[4]\t$data[5]\t$data[6]\t$data[7]\n";
+}

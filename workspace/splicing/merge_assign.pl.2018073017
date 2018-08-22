@@ -1,0 +1,29 @@
+#!/usr/bin/perl -w
+#
+my %hash;
+my @sample;
+open OUT,">Assign.log";
+print OUT "species";
+for my $file (glob "Assign.o50*"){
+	open $file,$file;
+	my $name = <$file>;
+	chomp $name;
+	(undef,$name) = split /\s+/,$name;
+	push @sample,$name;
+	print OUT "\t$name";
+	while(<$file>){
+		chomp;
+		my ($spe,$count) = split;
+		$hash{$spe}->{$name} = $count;
+		last if $. >5;
+	}
+}
+
+print OUT "\n";
+while(my ($spe,$val) = each %hash){
+	print OUT "$spe";
+	foreach my $sam (@sample){
+		print OUT "\t$val->{$sam}";
+	}
+	print OUT "\n";
+}

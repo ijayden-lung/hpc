@@ -1,0 +1,24 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(ggrepel)
+args<-commandArgs(T)
+
+pdf(args[2])
+data = read.table(args[1],header=TRUE,sep="\t")
+xtitle=args[3]
+#data = subset(data,data$color != "na")
+
+
+ggplot(data, aes(x=log2(mouse_par_fpkm), y=log2(mouse_hyb_fpkm)))+
+geom_point(aes(color=color),size=1)+
+scale_color_manual(values=c(haplosufficiency="orange",KOcompensation="cyan",haploinsufficiency="darkgreen",haplocompensation="purple",redundancy="grey90"))+
+geom_hline(yintercept=0)+
+geom_vline(xintercept=0)+
+theme_bw()+
+theme(legend.position=c(0.2,0.8),legend.title=element_blank())
+#geom_text_repel(aes(label=gene_name),size=3, data=subset(data,color!="redundancy" & (mouse_par_fpkm/mouse_hyb_fpkm >2 | mouse_par_fpkm/mouse_hyb_fpkm <0.5)))
+#geom_text_repel(aes(label=gene),size=3, data=subset(data,color=="haploinsufficiency"))+
+#labs(x="log2,y="mef proliferaion rate")+
+#xlim(-3,3)+ylim(-3,3)+
+
+

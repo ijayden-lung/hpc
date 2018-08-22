@@ -1,0 +1,90 @@
+#!/usr/bin/perl -w
+use Statistics::R;
+
+my $low_count_threshold=10;
+
+=pod
+my $cmds = <<EOF;
+	x = c(par_mouse,par_rat,hyb_mouse,hyb_rat)
+	alle<-matrix(x, nrow=2)
+	#fet_pvalue <-chisq.test(alle,simulate.p.value=TRUE, B=10000)\$p.value
+	fet_pvalue <-fisher.test(alle)\$p.value
+	fet_pvalue
+EOF
+my $R = Statistics::R->new();
+
+open PAR,"norm_par.txt";
+<PAR>;
+my %par_mouse;
+my %par_rat;
+while(<PAR>){
+	chomp;
+	my @data = split;
+	my $gene_id = shift @data;
+	$par_mouse{$gene_id} = sprintf("%.0f",($data[0]+$data[1])/2);
+	$par_rat{$gene_id} = sprintf("%.0f",($data[3]+$data[2])/2);
+}
+
+open HYB,"norm_hyb.txt";
+<HYB>;
+my %hyb_mouse;
+my %hyb_rat;
+while(<HYB>){
+	chomp;
+	my @data = split;
+	my $gene_id = shift @data;
+	$hyb_mouse{$gene_id} = sprintf("%.0f",($data[1]+$data[2]+$data[3]+$data[0])/4);
+	$hyb_rat{$gene_id} = sprintf("%.0f",($data[5]+$data[6]+$data[7]+$data[4])/4);
+}
+
+open OUT,">cis_norm_par_hyb.txt";
+print OUT "gene_id\tpar_mouse\tpar_rat\thyb_mouse\thyb_rat\tpval\tqval\n";
+open OUT2,">mouse_specific_gene.txt";
+open OUT3,">rat_specific_gene.txt";
+my $low_count=0;
+my $mouse_specific=0;
+my $rat_specific=0;
+foreach my $gene_id (keys %par_mouse){
+	if(exists $hyb_mouse{$gene_id}){
+		my $par_mouse_count = $par_mouse{$gene_id};
+		my $par_rat_count = $par_rat{$gene_id};
+		my $hyb_mouse_count = $hyb_mouse{$gene_id};
+		my $hyb_rat_count = $hyb_rat{$gene_id};
+		if(($par_mouse_count+$par_rat_count+$hyb_mouse_count+$hyb_rat_count) < $low_count_threshold*4){
+			$low_count++;
+		}
+		elsif(($par_mouse_count+$hyb_mouse_count) < $low_count_threshold*2){
+			$rat_specific++;
+			print OUT3 "$gene_id\t$par_mouse_count\t$par_rat_count\t$hyb_mouse_count\t$hyb_rat_count\n";
+		}
+		elsif(($par_rat_count+$hyb_rat_count) < $low_count_threshold*2){
+			print OUT2 "$gene_id\t$par_mouse_count\t$par_rat_count\t$hyb_mouse_count\t$hyb_rat_count\n";
+			$mouse_specific++;
+		}
+		else{
+			$R->set('par_mouse',$par_mouse{$gene_id});
+			$R->set('par_rat',$par_rat{$gene_id});
+			$R->set('hyb_mouse',$hyb_mouse{$gene_id});
+			$R->set('hyb_rat',$hyb_rat{$gene_id});
+			$R->run($cmds);
+			my $fet_pvalue = $R->get('fet_pvalue');
+			print OUT "$gene_id\t$par_mouse{$gene_id}\t$par_rat{$gene_id}\t$hyb_mouse{$gene_id}\t$hyb_rat{$gene_id}\t$fet_pvalue\t0\n";
+		}
+	}
+}
+
+print "low count:$low_count\n";
+print "mouse_specific:$mouse_specific\n";
+print "rat_specific:$rat_specific\n";
+=cut
+
+my $R2 = Statistics::R->new();
+my $cmds2 = <<EOF;
+	library(qvalue)
+	table <- read.csv("./cis_norm_par_hyb.txt", sep="\t", header=T)
+	qobj <- qvalue(p = table\$pval)
+	qval <- qobj\$qvalues
+	table\$qval<-as.numeric(qval)
+	write.table(table,"qval_cis_norm_par_hyb.txt",quote = FALSE,row.names=FALSE,col.names=TRUE,sep="\t")
+EOF
+$R2->run($cmds2);

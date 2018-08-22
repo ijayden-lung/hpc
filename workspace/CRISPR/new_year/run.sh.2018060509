@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+#mageck test -k sample.txt -t HL60.final,KBM7.final -c HL60.initial,KBM7.initial  -n demo
+# or
+#mageck test -k sample.txt -t 2,3 -c 0,1  -n demo
+
+#mageck test -k Map_RC_hKO_WNTScreen_pos.tsv -t GFP+1,GFP+2 -c Baseline1,Baseline2 -n WNT+ --pdf-report --normcounts-to-file --control-sgrna control_sgrna
+
+#mageck test -k Map_RC_hKO_WNTScreen_neg.tsv -t GFP-1,GFP-2 -c Baseline1,Baseline2 -n WNT- --pdf-report --normcounts-to-file --control-sgrna control_sgrna
+
+
+mageck test -k Map_RC_hKO_WNTScreen_ess.tsv -t Baseline1,Baseline2 -c Library -n ESS --pdf-report --normcounts-to-file --control-sgrna control_sgrna

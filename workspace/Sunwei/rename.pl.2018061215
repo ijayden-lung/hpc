@@ -1,0 +1,70 @@
+#!/usr/bin/perl -w
+
+my %hash1 = ('ATCACG'=>'Ctr1','CGATGT'=>'Ctr2','TTAGGC'=>'Ctr3',
+			'TGACCA'=>'Bpa1','ACAGTG'=>'Bpa2','GCCAAT'=>'Bpa3');
+
+my %hash2 = ('ATCACG'=>'Cb31','CGATGT'=>'Cb32','TTAGGC'=>'Cb33',
+			'TGACCA'=>'Sw11','ACAGTG'=>'Sw12','GCCAAT'=>'Sw13');
+
+for my $file (glob "2.cleandata/SW01-06-*/*2.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[2];
+	system("mv $file TK1TK1/$hash1{$index}_2.clean.fq.gz");
+}
+for my $file (glob "2.cleandata/SW01-06-*/*1.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[2];
+	system("mv $file TK1TK1/$hash1{$index}_1.clean.fq.gz");
+}
+
+
+
+
+for my $file (glob "2.cleandata/SW07-12-*/*2.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[2];
+	system("mv $file TK1TK1/$hash2{$index}_2.clean.fq.gz");
+}
+for my $file (glob "2.cleandata/SW07-12-*/*1.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[2];
+	system("mv $file TK1TK1/$hash2{$index}_1.clean.fq.gz");
+}
+
+
+
+for my $file (glob "2.cleandata/SW13-18-*/*2.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[2];
+	system("mv $file TK1TK3/$hash1{$index}_2.clean.fq.gz");
+}
+for my $file (glob "2.cleandata/SW13-18-*/*1.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[2];
+	system("mv $file TK1TK3/$hash1{$index}_1.clean.fq.gz");
+}
+
+
+for my $file (glob "2.cleandata/SW19-24-*/*2.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[2];
+	system("mv $file TK1TK3/$hash2{$index}_2.clean.fq.gz");
+}
+for my $file (glob "2.cleandata/SW19-24-*/*1.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[2];
+	system("mv $file TK1TK3/$hash2{$index}_1.clean.fq.gz");
+}
+
+
+
+for my $file (glob "2.cleandata/SW25-30-*/*2.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[2];
+	system("mv $file TK3TK3/$hash1{$index}_2.clean.fq.gz");
+}
+for my $file (glob "2.cleandata/SW25-30-*/*1.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[2];
+	system("mv $file TK3TK3/$hash1{$index}_1.clean.fq.gz");
+}
+
+
+for my $file (glob "2.cleandata/SW31-36-*/*2.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[2];
+	system("mv $file TK3TK3/$hash2{$index}_2.clean.fq.gz");
+}
+for my $file (glob "2.cleandata/SW31-36-*/*1.clean.fq.gz"){
+	my $index = (split /\-|\_/,$file)[2];
+	system("mv $file TK3TK3/$hash2{$index}_1.clean.fq.gz");
+}

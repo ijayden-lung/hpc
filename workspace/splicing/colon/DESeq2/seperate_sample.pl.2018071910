@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+
+open FILE,"FC_counts.txt";
+<FILE>;
+open OUT1,">Count_WHMvsWHE.txt";
+open OUT2,">Count_WHMvsWLE.txt";
+open OUT3,">Count_WHEvsWLE.txt";
+print OUT1 "gene_id\tWntHighMes1\tWntHighMes2\tWntHighEpi1\tWntHighEpi2\n";
+print OUT2 "gene_id\tWntHighMes1\tWntHighMes2\tWntLowEpi1\tWntLowEpi2\n";
+print OUT3 "gene_id\tWntHighEpi1\tWntHighEpi2\tWntLowEpi1\tWntLowEpi2\n";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$whe1,$whe2,$whm1,$whm2,$wle1,$wle2) = split;
+	print OUT1 "$gene_id\t$whm1\t$whm2\t$whe1\t$whe2\n";
+	print OUT2 "$gene_id\t$whm1\t$whm2\t$wle1\t$wle2\n";
+	print OUT3 "$gene_id\t$whe1\t$whe2\t$wle1\t$wle2\n";
+}
+

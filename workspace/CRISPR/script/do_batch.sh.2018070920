@@ -1,0 +1,55 @@
+#!/bin/bash
+
+ #### Default: ACACC GTTTT
+ #### some ACT,REP: TGTTG GTTTA
+ #### TTFKO: GTTGG GTTTA
+
+lib=hKO
+exp=WNT_Pos
+
+dir='/home/bio-longyk/workspace/CRISPR/gpos'
+cd $dir
+if [ ! -d OUT ];then
+	mkdir -p OUT
+fi
+for file in fastq/*1.clean.fq.gz
+do
+	base=${file#*\/}
+	arrIN=(${base//\_/ })
+	sam=${arrIN[0]}
+	if [ ! -d OUT/$sam ];then
+		mkdir -p OUT/$sam
+	fi
+	#echo "mapping $sam"
+	#~/workspace/CRISPR/script/extract_gRNA.pl $file $lib ACACC GTTTT OUT/$sam
+done
+
+
+
+
+
+cd $dir
+### Do this after finishing mapping job;
+#~/workspace/CRISPR/script/merge_log.pl $lib $exp
+#~/workspace/CRISPR/script/normalize.pl $lib $exp
+#~/workspace/CRISPR/script/input_mageck.pl $lib $exp
+
+
+####Using mageck
+#mageck test -k Input_mageck_RC_$lib\_$exp.tsv -t SC,SD,SE,SF -c NC1,NC2 -n $exp --pdf-report --normcounts-to-file --control-sgrna control_sgrna --sort-criteria pos
+#~/workspace/CRISPR/script/scatterplot.r $lib $exp WNTPos.normalized.txt
+#~/workspace/CRISPR/script/cdf.r $lib $exp WNTPos.normalized.txt  #####Need to be modified every time
+
+~/workspace/CRISPR/script/input_linechart.pl $lib $exp
+#~/workspace/CRISPR/script/linechart.r Positive $exp 
+#~/workspace/CRISPR/script/linechart.r Negative $exp 
+
+
+
+#./generate_ref.pl $lib
+#./generate_query.pl $lib $exp
+#./retrieve_notHits.pl $lib $exp
+
+
+
+

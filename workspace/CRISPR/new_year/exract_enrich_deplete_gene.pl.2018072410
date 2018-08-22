@@ -1,0 +1,75 @@
+#!/usr/bin/perl -w
+
+my %name2id;
+#open ID,'/home/bio-longyk/cnda/ensembl/hg38_ID2Name.txt';
+open ID,'hg38_ID2name.txt';
+while(<ID>){
+	chomp;
+	my ($id,$name) = split;
+	$name2id{$name} = $id;
+}
+
+
+my %length;
+open FILE,"/home/bio-longyk/workspace/splicing/colon/DESeq2/FC_annotation.txt";
+while(<FILE>){
+	chomp;
+	my ($id,$length) = (split)[1,-1];
+	$length{$id} = $length;
+}
+
+my %bg;
+my %deplete;
+my %enrich;
+open FILE,'WNT+.gene_summary.txt';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my @data = split /\t/;
+	if($data[0] =~ /mir/){
+		my (undef,undef,$num1,$num2) = split /\-/,$data[0];
+		if(defined $num2){
+			if($num1 =~ /[a-z]$/){
+				$data[0] =uc "MIR$num1$num2";
+			}
+			else{
+				 $data[0] =uc "MIR$num1-$num2";
+			 }
+		}
+		else{
+			$data[0] = uc "MIR$num1";
+		}
+	}
+	if(!exists $name2id{$data[0]}){
+		print "$data[0]\n";
+		next;
+	}
+	$bg{$name2id{$data[0]}} = '';
+	if($data[8] < 0.01){
+		$enrich{$name2id{$data[0]}} = '';
+	}
+	elsif($data[2] < 0.05){
+		$deplete{$name2id{$data[0]}} = '';
+	}
+}
+
+open BG,'>total_bg.txt';
+print BG "gene\tlength\n";
+foreach my $id (keys %bg){
+	if(!exists $length{$id}){
+		$length{$id} = 22;
+	}
+	print BG "$id\t$length{$id}\n";
+}
+
+
+open ENR,'>total_enrich.txt';
+print ENR ">ensg\n";
+foreach my $id (keys %enrich){
+	print ENR "$id\n";
+}
+open DEP,'>>total_deplete.txt';
+print DEP "ensg\n";
+foreach my $id (keys %deplete){
+	print DEP "$id\n";
+}

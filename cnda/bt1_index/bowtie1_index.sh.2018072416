@@ -1,0 +1,9 @@
+#!/bin/bash
+#PBS -q batch
+#PBS -N bowtie-build 
+#PBS -l nodes=1:ppn=1
+#PBS -j oe
+#PBS -V
+
+cd ~/cnda/bt1_index/
+bowtie-build  /home/bio-longyk/cnda/STAR_INDEX/gfp.fa gfp

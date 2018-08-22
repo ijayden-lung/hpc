@@ -1,0 +1,87 @@
+#!/usr/bin/perl -w
+
+my %ort;
+my %ort_rev;
+my %id2name;
+open ORT,"/home/bio-longyk/cnda/ortholog/mouse2rat.txt";
+while(<ORT>){
+	chomp;
+	my ($mouse_id,$mouse_name,$rat_id,$rat_name,$ort_type) = split;
+	next if $ort_type !~ /one2one/;
+	$ort{$mouse_id} = $rat_id;
+	$ort_rev{$rat_id} = $mouse_id;
+	$id2name{$mouse_id} = $mouse_name;
+	$id2name{$rat_id} = $rat_name;
+}
+
+my %common_mouse;
+open MOU,"../mouse/DESeq2/FC_common_counts.txt";
+<MOU>;
+while(<MOU>){
+	chomp;
+	my @data = split;
+	my $gene_id = shift @data;
+	my $sum = 0;
+	foreach my $ele (@data){
+		$sum += $ele;
+	}
+	$common_mouse{$gene_id} = $sum/@data;
+}
+my %common_rat;
+open RAT,"../rat/DESeq2/FC_common_counts.txt";
+<RAT>;
+while(<RAT>){
+	chomp;
+	my @data = split;
+	my $gene_id = shift @data;
+	my $sum = 0;
+	foreach my $ele (@data){
+		$sum += $ele;
+	}
+	$common_rat{$gene_id} = $sum/@data;
+}
+
+my %assign_mouse;
+open MOU,"../mouse/DESeq2/FC_assign_counts.txt";
+<MOU>;
+while(<MOU>){
+	chomp;
+	my @data = split;
+	my $gene_id = shift @data;
+	my $sum = 0;
+	foreach my $ele (@data){
+		$sum += $ele;
+	}
+	$assign_mouse{$gene_id} = $sum/@data;
+}
+	
+my %assign_rat;
+open RAT,"../rat/DESeq2/FC_assign_counts.txt";
+<RAT>;
+while(<RAT>){
+	chomp;
+	my @data = split;
+	my $gene_id = shift @data;
+	my $sum = 0;
+	foreach my $ele (@data){
+		$sum += $ele;
+	}
+	$assign_rat{$gene_id} = $sum/@data;
+}
+
+
+open OUT,">Compare_assign_common_mouse.txt";
+print OUT "mouse_id\tmouse_name\trat_id\trat_name\tassign\tcommon\n";
+open OUT2,">Fiter_gene.txt";
+while(my ($mouse_id,$rat_id) = each %ort){
+	next if !exists $assign_mouse{$mouse_id} || !exists $assign_rat{$rat_id};
+	my $assign = $assign_mouse{$mouse_id}+$assign_rat{$rat_id};
+	my $common = $common_rat{$rat_id}+$common_mouse{$mouse_id};
+	if($assign>0 && $common>2){
+		print OUT "$mouse_id\t$id2name{$mouse_id}\t$rat_id\t$id2name{$rat_id}\t$assign\t$common\n";
+	}
+	if($assign>0 && $common/$assign>0.1){
+		print OUT2 "$mouse_id\t$id2name{$mouse_id}\t$rat_id\t$id2name{$rat_id}\t$assign\t$common\n";
+	}
+}
+system("./fit.r Compare_assign_common_mouse.txt Compare_assign_common_mouse.pdf ")

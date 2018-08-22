@@ -1,0 +1,41 @@
+#!/usr/bin/env Rscript
+
+require(ggplot2)
+require(ggseqlogo)
+library(grid)
+
+args<-commandArgs(T)
+
+pdf(args[7],height=9,width=12)
+
+
+data = as.matrix(read.table(args[2],header=TRUE,row.names=1))
+a<-ggseqlogo(data)+theme(legend.position="none")
+data = as.matrix(read.table(args[3],header=TRUE,row.names=1))
+b<-ggseqlogo(data)+theme(legend.position="none")
+data = read.table(args[1],header=TRUE)
+c<-ggplot(data=data,aes(x=position,y=ratio))+geom_bar(stat="identity", position=position_dodge())
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+data = as.matrix(read.table(args[5],header=TRUE,row.names=1))
+a<-ggseqlogo(data)+theme(legend.position="none")
+data = as.matrix(read.table(args[6],header=TRUE,row.names=1))
+b<-ggseqlogo(data)+theme(legend.position="none")
+data = read.table(args[4],header=TRUE)
+c<-ggplot(data=data,aes(x=position,y=ratio))+geom_bar(stat="identity", position=position_dodge())
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+
+

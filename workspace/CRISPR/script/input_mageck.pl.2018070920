@@ -1,0 +1,15 @@
+#!/usr/bin/perl -w
+
+my ($lib,$exp,$dir) = @ARGV;
+open FILE,"RC_$lib\_$exp.tsv";
+my $header = <FILE>;
+open OUT, ">Input_mageck_RC_$lib\_$exp.tsv";
+print OUT "$header";
+
+while(<FILE>){
+	chomp;
+	my @data = split;
+	next if $data[1] eq "NotHits";
+	print OUT "$_\n";# if ($data[2]+$data[3]+$data[4]+$data[5]+$data[6]+$data[7]) > 30;
+}
+

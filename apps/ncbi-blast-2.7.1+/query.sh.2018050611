@@ -1,3 +1,0 @@
-#!/bin/bash
-
-blastn -db DATABASE/hKO -query sequence.fa  -evalue 1e-3 -word_size 8 -outfmt $1 > sequences.reference

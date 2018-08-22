@@ -1,0 +1,32 @@
+#!/bin/bash
+#PBS -q cal
+#PBS -N featureCounts
+#PBS -l nodes=1:ppn=12
+#PBS -j oe 
+#PBS -l walltime=08:00:00
+#PBS -V
+
+ctrl='ES'
+trea='EF'
+spe='mm10'
+cd ~/workspace/splicing/mouse/
+mkdir DESeq2
+
+c=0
+for i in common/*sorted.bam
+do
+	sample[$c]=$i
+	((c++))
+done
+
+
+gtf="/home/bio-longyk/cnda/ensembl/$spe.ensemblv92.nopsuedo.gtf"
+count='DESeq2/FC_common_counts.txt'
+stat='DESeq2/FC_common_stat.txt'
+anno='DESeq2/FC_common_annotation.txt'
+deseq='DESeq2/DESeq2_common_out.txt'
+pdf='DESeq2/DESeq2_common_summary.pdf'
+
+./feature_count.r $gtf $count $stat $anno 12 ${sample[@]}
+#./deseq2.r $ctrl $trea $count  $deseq $pdf
+#./add_genename.pl $spe $deseq "DESeq2/DESeq2_common_geneName.txt" $ctrl $trea

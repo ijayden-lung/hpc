@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N esATAC
+#PBS -l nodes=1:ppn=1
+#PBS -j oe 
+#PBS -l walltime=24:00:00
+
+cd ~/workspace/ATAC/esATAC/
+
+./esATAC.r
