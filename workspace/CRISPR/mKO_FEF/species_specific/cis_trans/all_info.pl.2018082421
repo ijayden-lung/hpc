@@ -1,0 +1,155 @@
+#!/usr/bin/perl -w
+my $Threshold = 2;
+my $point = 0.6;
+
+my %synonyms;
+my %syn_id;
+open FILE,"awk '(\$1 == 10090)' /home/bio-longyk/cnda/refSeq/gene_info |";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene_name,$synonyms,$gene_id) = (split)[2,4,5];
+	if($gene_id =~ /ENSMUSG/){
+		$index = index($gene_id,"ENSMUSG");
+		my $ensg_id = substr($gene_id,$index,18);
+		foreach my $syn (split /\|/,$synonyms){
+			$synonyms{$syn} = $gene_name;
+			$syn_id{$syn} = $ensg_id;
+		}
+	}
+}
+
+#print "$syn_id{'G6b'}\n";
+
+my %strand;
+my %ensg;
+open FILE,"/home/bio-longyk/cnda/ensembl/mm10_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$strand) = split;
+	$strand{$gene_name} = $strand;
+	$ensg{$gene_name} = $gene_id;
+}
+
+print "$ensg{'1700122O11Rik'}\n";
+my %org;
+my %type;
+my %iden;
+open FILE,"/home/bio-longyk/cnda/ortholog/mouse2rat.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($mid,$mouse,$rid,$rat,$type,$id1,$id2) = split;
+	$org{$mouse} = $rat;
+	$type{$mouse} = (split /_/,$type)[1];
+	$iden{$mouse} = "$id1\t$id2";
+}
+
+
+
+my %exp_m;
+open FILE,"/home/bio-longyk/workspace/splicing/mouse_es_ef.fpkm";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($id,$name,$pef1,$pef2,$pes1,$pes2,$hes1,$hes2,$hes3,$hef1,$hef2,$hef3,$hef4) = split;
+	$exp_m{$name}->{'pmef'} = sprintf("%.2f",($pef1+$pef2)/2);
+	$exp_m{$name}->{'hmef'} = sprintf("%.2f",($hef1+$hef2+$hef3+$hef4)/4);
+}
+my %exp_r;
+open FILE,"/home/bio-longyk/workspace/splicing/rat_es_ef.fpkm";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($id,$name,$pef1,$pef2,$pes1,$pes2,$hes1,$hes2,$hes3,$hef1,$hef2,$hef3,$hef4) = split;
+	$exp_r{$name}->{'pref'} =  sprintf("%.2f",($pef1+$pef2)/2);
+	$exp_r{$name}->{'href'} =  sprintf("%.2f",($hef1+$hef2+$hef3+$hef4)/4);
+}
+
+
+open HETE,"../mle_HETE0.gene_summary.txt";
+#open HETE,"../HETEinHOMO.txt";
+<HETE>;
+my %fef;
+while(<HETE>){
+	chomp;
+	my ($gene,$beta) = (split)[0,2];
+	$fef{$gene} = $beta;	
+}
+
+open MEF,"../mle_MEF.gene_summary.txt";
+<MEF>;
+my %mef;
+while(<MEF>){
+	chomp;
+	my ($gene,$beta) = (split)[0,2];
+	$mef{$gene} = $beta;
+}
+
+
+
+open OUT,">HETE_exp_similarity.txt";
+#open OUT,">HOMO_exp_similarity.txt";
+print OUT "gene_id\tgene_name\tcolor\tmef_score\tfef_score\tmouse_par_fpkm\tmouse_hyb_fpkm\torthlog_type\trat_par_fpkm\trat_hyb_fpkm\t%identity. query\t%identity. target\n";
+
+while(my ($gene,$score_fef) = each %fef){
+	next if (!exists $mef{$gene});
+	my $score_mef = $mef{$gene};
+	my $gene_name;
+	my $gene_id;
+	if(exists $ensg{$gene}){
+		$gene_id = $ensg{$gene};
+		$gene_name = $gene;
+	}
+	else{
+		if(exists $syn_id{$gene}){
+			$gene_id = $syn_id{$gene};
+			$gene_name = "$synonyms{$gene},$gene";
+			$gene = $synonyms{$gene};
+		}
+		else{
+			$gene_id = "NA";
+			$gene_name = $gene;
+		}
+	}
+	my $quad;
+	my $pmef = 0;
+	my $hmef = 0;
+	my $pref = "NA";
+	my $href = "NA";
+	my $id  = "NA\tNA";
+	if($score_fef*$score_fef+$score_mef*$score_mef<$Threshold){
+		$quad = 'Redundancy';
+	}
+	elsif(abs($score_fef)<$point){
+		$quad = 'Haplosufficiency';
+	}
+	elsif(abs($score_mef)<$point){
+		$quad = 'Compensation';
+	}
+	elsif(abs($score_mef)>$point && abs($score_fef)>$point && $score_mef*$score_fef>0){
+		$quad = 'HaploInsufficiency';
+	}
+	 elsif(abs($score_mef)>$point && abs($score_fef)>$point && $score_mef*$score_fef<0){
+		$quad = 'Overcompensation';
+	}
+	if(!exists $org{$gene}){
+		$type{$gene} = "one2null";
+	}
+	if($type{$gene} eq "one2one"){
+		$id   = $iden{$gene};
+	}
+	if(exists $org{$gene} && exists $exp_r{$org{$gene}}){;
+		$pref = $exp_r{$org{$gene}}->{'pref'};
+		$href = $exp_r{$org{$gene}}->{'href'};
+	}
+	if(exists $exp_m{$gene}){
+		$pmef = $exp_m{$gene}->{'pmef'};
+		$hmef = $exp_m{$gene}->{'hmef'};
+	}
+	
+	print OUT "$gene_id\t$gene_name\t$quad\t$score_mef\t$score_fef\t$pmef\t$hmef\t$type{$gene}\t$pref\t$href\t$id\n";
+}
+
+#system("./scatterplot4.r HETE_exp_similarity.txt Scatterplot_one2null.pdf hete one2null")
+#system("./scatterplot4.r HETE_exp_similarity.txt Scatterplot_one2null.pdf hete one2many")
