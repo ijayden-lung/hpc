@@ -1,0 +1,31 @@
+#!/usr/bin/perl -w
+
+my ($input,$output) = @ARGV;
+my %uniq_exon;
+my %hash;
+open FILE,"awk '(\$3 == \"exon\")' $input |";
+while(<FILE>){
+	chomp;
+	my ($chr,$str,$end,$strand,$gene_id,$gene_name) = (split)[0,3,4,6,9,19];
+	$gene_id =~ s/\"|\;//g;
+	$gene_name =~ s/\"|\;//g;
+	$str--;
+	my $gene = "$gene_id,$gene_name";
+	$uniq_exon{$chr}->{$str}->{$end}->{$strand} = $gene;
+}
+
+open OUT,">$output";
+foreach my $chr (sort{$a cmp $b} keys %uniq_exon){
+	my $val = $uniq_exon{$chr};
+	foreach my $str (sort{$a<=>$b} keys %$val){
+		my $val2 = $val->{$str};
+		foreach my $end (sort{$a<=>$b} keys %$val2){
+			my $val3 = $val2->{$end};
+			foreach my $strand (keys %$val3){
+				my $gene = $val3->{$strand};
+				print OUT "$chr\t$str\t$end\t$gene,$strand:$chr:$str-$end\t.\t$strand\n";
+			}
+		}
+	}
+}
+
