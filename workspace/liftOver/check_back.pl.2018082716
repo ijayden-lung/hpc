@@ -1,0 +1,8 @@
+#!/usr/bin/perl -w
+#
+open FILE,"mm10back.bed";
+while(<FILE>){
+	chomp;
+	my ($chr1,$str1,$end1,$gene,$score,$strand) = split;
+	my (undef,undef,$coor2) = split /,/,$gene;
+	if(
