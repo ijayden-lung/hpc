@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N liftOver
+#PBS -l nodes=1:ppn=1
+#PBS -j oe 
+#PBS -l walltime=23:00:00
+
+mm10_origin=/home/bio-longyk/cnda/ensembl/mm10.ensemblv92.nopsuedo.gtf
+mm10_uniq=mm10.uniq_ensemblv92.bed
+
+cd ~/workspace/liftOver/
+#./uniq_exon.pl $mm10_origin $mm10_uniq
+#liftOver $mm10_uniq /home/bio-longyk/cnda/refSeq/mm10ToRn6.over.chain mm102rn6.bed umn_mm102rn6.txt
+#liftOver mm102rn6.bed /home/bio-longyk/cnda/refSeq/rn6ToMm10.over.chain mm10back.bed umn_mm10back.txt
+

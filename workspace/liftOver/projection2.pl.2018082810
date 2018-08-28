@@ -1,0 +1,38 @@
+#!/usr/bin/perl -w
+
+my %mm102rn6;
+open FILE,"mm102rn6_check.bed";
+while(<FILE>){
+	chomp;
+	my ($chr,$str,$end,$gene,$score,$strand) = split;
+	$mm102rn6{$gene} = "$chr\t$str\t$end\t$strand";
+}
+
+
+
+my %sortrn6;
+open FILE,"rn6.uniq_ensemblv92.bed";
+while(<FILE>){
+	chomp;
+	my ($chr,$str,$end,$gene,$score,$strand) = split;
+	push @{$sortrn6{"$chr\t$strand"}}, "$str\t$end\t$gene";
+}
+
+
+my %sortmm10;
+open MOU,"mm10.uniq_ensemblv92.bed";
+open OUT,">mm102rn6_exon.ort";
+while(<MOU>){
+	chomp;
+	my (undef,undef,undef,$gene,undef,undef) = split;
+	if(exists $mm102rn6{$gene}){
+
+
+	}
+	else{
+		print OUT "$gene\tnull\tnull\tnull\n";
+	}
+}
+
+
+

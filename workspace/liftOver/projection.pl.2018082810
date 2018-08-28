@@ -1,0 +1,71 @@
+#!/usr/bin/perl -w
+
+my %mm102rn6;
+open FILE,"mm102rn6_check.bed";
+while(<FILE>){
+	chomp;
+	my ($chr,$str,$end,$gene,$score,$strand) = split;
+	$mm102rn6{"$chr\t$strand"}->{$str}->{$end} = $gene;
+}
+
+my %sortmm102rn6;
+while(my($chr,$val) = each %mm102rn6){
+	foreach my $str (sort{$a<=>$b} keys %$val){
+		my $val2 = $val->{$str};
+		foreach my $end (sort{$a<=>$b} keys %$val2){
+			my $gene = $val2->{$end};
+			push @{$sortmm102rn6{$chr}},"$str\t$end\t$gene";
+		}
+	}
+}
+
+
+my %sortrn6;
+open FILE,"rn6.uniq_ensemblv92.bed";
+while(<FILE>){
+	chomp;
+	my ($chr,$str,$end,$gene,$score,$strand) = split;
+	push @{$sortrn6{"$chr\t$strand"}}, "$str\t$end\t$gene";
+}
+
+
+
+my $min_hangout = 0.5;
+while(my($chr,$val) = each %sortrn6){
+	my @ref = @$val;
+	my @lif = @{$sortmm102rn6{$chr}};
+	my $j=0;
+	for(my $i=0;$i<@lif;){
+		my ($str1,$end1,$gene1) = split /\t/,$lif[$i];
+		my ($str2,$end2,$gene2) = split /\t/,$ref[$j];
+		while(($str1-$str2)/($end2-$str2)>$min_hangout || ($str2-$str1)/($end1-$str1)>$min_hangout ){
+			if(($str1-$str2)/($end2-$str2)>$min_hangout){
+				 $j++;
+				 ($str2,$end2,$gene2) = split /\t/,$ref[$j];
+				 last if $j >= $#ref;
+			 }
+			 elsif(($str2-$str1)/($end1-$str1)>$min_hangout){
+				 $i++;
+				 ($str1,$end1,$gene1) = split /\t/,$lif[$i];
+				 last if $i >= $#lif;
+			 }
+			 my $strshift;
+			 my $endshift;
+			 my $k = 1;
+			 $strshift = $str1-$str2;
+			 $endshift = $end1-$end2;
+			 my %hash2;
+			 $hash2{$gene2} = "$gene1\t$strshift\t$endshift\t1:1\t$gene2\n";
+			 last if $j >= $#ref;
+			 ($str,$end,$gene) = split /\t/,$ref[$j+$k];
+			  while(($end-$end1)<$min_hangout*($end-$str)){
+				  $strshift = $str1-$str;
+				  $endshift = $end1-$end;
+				  $hash2{$gene} .= "$gene1\t$strshift\t$endshift\t1:1\t$gene\n";
+				  $k++;
+				  last if  ($j+$k)<=$#ref;
+				  ($str,$end,$gene) = split /\t/,$ref[$j+$k];
+
+	}
+
+}

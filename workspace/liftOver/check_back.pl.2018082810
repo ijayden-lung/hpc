@@ -1,0 +1,20 @@
+#!/usr/bin/perl -w
+#
+open FILE,"mm10back.bed";
+my %exon;
+while(<FILE>){
+	chomp;
+	my ($chr1,$str1,$end1,$gene,$score,$strand) = split;
+	$exon{$gene} = '';
+}
+
+open FILE,"mm102rn6.bed";
+open OUT,">mm102rn6_check.bed";
+while(<FILE>){
+	chomp;
+	my ($chr1,$str1,$end1,$gene,$score,$strand) = split;
+	if(exists $exon{$gene}){
+		print OUT "$_\n";
+	}
+}
+
