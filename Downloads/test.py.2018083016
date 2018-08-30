@@ -1,0 +1,19 @@
+#!/share/apps/genomics/opt/python/python3
+import requests
+import sys
+email = "longyk@mail.sustc.edu.cn"
+password = "lyk19941122"
+url = "https://cancer.sanger.ac.uk/cosmic/file_download/"
+filepath = ("GRCh38/cosmic/v86/" + sys.argv[1])
+filename = sys.argv[1]
+
+# get the download URL
+r = requests.get(url+filepath, auth=(email, password)) 
+download_url = r.json()["url"]
+
+# get the file itself
+r = requests.get(download_url)
+
+# write the file to disk
+with open(filename, "wb") as f:
+	f.write(r.content)
