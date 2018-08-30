@@ -1,0 +1,28 @@
+#!/usr/bin/perl -w
+
+my ($check) =  @ARGV;
+my %mm102rn6;
+my %count;
+open MM10,"$check";
+while(<MM10>){
+	chomp;
+	my ($chr,$str,$end,$gene,$score,$strand) = split;
+	$mm102rn6{"$strand:$chr"}->{$str}->{$end} = $gene;
+	$count{"$strand:$chr"}->{$str}->{$end}++;
+}
+
+
+my %sortmm102rn6;
+while(my($chr,$val) = each %mm102rn6){
+	foreach my $str (sort{$a<=>$b} keys %$val){
+		my $val2 = $val->{$str};
+		foreach my $end (sort{$a<=>$b} keys %$val2){
+			my $gene = $val2->{$end};
+			if($count{$chr}->{$str}->{$end}>2){
+				print "$chr\t$str\t$end\n";
+			}
+			push @{$sortmm102rn6{$chr}},"$str\t$end\t$gene";
+		}
+	}
+}
+
