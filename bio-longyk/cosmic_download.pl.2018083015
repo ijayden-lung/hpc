@@ -1,0 +1,27 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use LWP::UserAgent;
+use MIME::Base64;
+use URI;
+use JSON;
+my $ua = LWP::UserAgent->new;
+my $email = 'longyk@mail.sustc.edu.cn';
+my $password = 'lyk19941122';
+my $url = 'https:/cancer.sanger.ac.uk/cosmic/file_download/';
+my $filepath = 'GRCh38/cosmic/v85/classification.csv';
+my $filename = 'classification.csv';
+
+# build URL with the parameter specifying the file to be downloaded
+my $uri = URI->new("$url$filepath");
+
+# get the download URL
+my $r = $ua->get( $uri, Authorization => 'Basic ' . encode_base64("$email:$password") );
+
+# decode the JSON string in the response and extract the download URL
+my $json = decode_json( $r->decoded_content( charset => 'none' ) );
+#my $json = decode_json $r->content;
+my $download_url = $json->{url};
+
+# get the file itself and save it to disk
+$r = $ua->get($download_url, ':content_file' => $filename);
