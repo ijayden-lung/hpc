@@ -1,0 +1,22 @@
+#!/usr/bin/perl -w
+#
+
+my ($back,$lif,$check) = @ARGV;
+open FILE,"$back";
+my %exon;
+while(<FILE>){
+	chomp;
+	my ($chr1,$str1,$end1,$gene,$score,$strand) = split;
+	$exon{$gene} = '';
+}
+
+open FILE,"$lif";
+open OUT,">$check";
+while(<FILE>){
+	chomp;
+	my ($chr1,$str1,$end1,$gene,$score,$strand) = split;
+	if(exists $exon{$gene}){
+		print OUT "$_\n";
+	}
+}
+

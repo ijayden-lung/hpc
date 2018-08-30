@@ -1,0 +1,91 @@
+#!/usr/bin/perl -w
+
+my ($check,$ref,$out) =  @ARGV;
+
+
+my %mm102rn6;
+open MM10,"$check";
+while(<MM10>){
+	chomp;
+	my ($chr,$str,$end,$gene,$score,$strand) = split;
+	$mm102rn6{"$strand:$chr"}->{$str}->{$end} = $gene;
+}
+
+my %sortmm102rn6;
+while(my($chr,$val) = each %mm102rn6){
+	foreach my $str (sort{$a<=>$b} keys %$val){
+		my $val2 = $val->{$str};
+		foreach my $end (sort{$a<=>$b} keys %$val2){
+			my $gene = $val2->{$end};
+			push @{$sortmm102rn6{$chr}},"$str\t$end\t$gene";
+		}
+	}
+}
+
+
+my %sortrn6;
+open RN6,"$ref";
+while(<RN6>){
+	chomp;
+	my ($chr,$str,$end,$gene,$score,$strand) = split;
+	push @{$sortrn6{"$strand:$chr"}}, "$str\t$end\t$gene";
+}
+
+
+open OUT,">$out";
+print OUT "mouse_id,mouse_name,strand:chr:start-end\trat_id,rat_name,strand:chr:start-end\tliftOver_coor\tstart_shift\tend_shift\ttype\n";
+my $min_hangout = 0.2;
+while(my($chr,$val) = each %sortrn6){
+	my @ref = @$val;
+	my @lif = @{$sortmm102rn6{$chr}};
+	my $j=0;
+	my $ref = @ref;
+	my $lif = @lif;
+	for(my $i=0;$i<@lif;){
+		my ($str1,$end1,$gene1) = split /\t/,$lif[$i];
+		my ($str2,$end2,$gene2) = split /\t/,$ref[$j];
+		while(($str1-$str2)/($end2-$str2)>$min_hangout || ($str2-$str1)/($end1-$str1)>$min_hangout ){
+			if(($str1-$str2)/($end2-$str2)>$min_hangout){
+				$j++;
+				($str2,$end2,$gene2) = split /\t/,$ref[$j];
+				last if $j >= $#ref;
+			}
+			elsif(($str2-$str1)/($end1-$str1)>$min_hangout){
+				$i++;
+				($str1,$end1,$gene1) = split /\t/,$lif[$i];
+				last if $i >= $#lif;
+			}
+		}
+		my $strshift = $str1-$str2;
+		my $endshift = $end1-$end2;
+		my @array = "$gene1\t$gene2\t$chr:$str1-$end1\t$strshift\t$endshift";
+		my $k = 1;
+		last if $j >= $#ref;
+		my ($str2_tmp,$end2_tmp,$gene2_tmp) = split /\t/,$ref[$j+$k];
+		while(($end2_tmp-$end1)<$min_hangout*($end2_tmp-$str2_tmp)){
+			my $strshift = $str1-$str2_tmp;
+			my $endshift = $end1-$end2_tmp;
+			push @array, "$gene1\t$gene2_tmp\t$chr:$str1-$end1\t$strshift\t$endshift";
+			last if  ($j+$k)>=$#ref;
+			$k++;
+			($str2_tmp,$end2_tmp,$gene2_tmp) = split /\t/,$ref[$j+$k];
+		}
+		my $m = 1;
+		last if $i >= $#lif;
+		($str1_tmp,$end1_tmp,$gene1_tmp) = split /\t/,$lif[$i+$m];
+		while(($end1_tmp-$end2)<$min_hangout*($end1_tmp-$str1_tmp)){
+			my $strshift = $str1_tmp-$str2;
+			my $endshift = $end1_tmp-$end2;
+			push @array,"$gene1_tmp\t$gene2\t$chr:$str1_tmp-$end1_tmp\t$strshift\t$endshift";
+			last if $i+$m>=$#lif;
+			$m++;
+			($str1_tmp,$end1_tmp,$gene1_tmp) = split /\t/,$lif[$i+$m];
+		}
+		foreach my $ele (@array){
+			print OUT "$ele\t$m:$k\n";
+		}
+		$i += $m;
+		$j += $k;
+		last if $j >= $#ref;
+	}
+}
