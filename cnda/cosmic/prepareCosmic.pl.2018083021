@@ -1,0 +1,67 @@
+#!/usr/bin/perl -w
+
+my ($dbfile, $vcffile) = @ARGV;
+my (%cosmic, %cosmicid, %nonfound);
+my ($idprefix);
+
+
+open (DB, $dbfile) or die "Error: cannot read from DB file: $!\n";
+$_ = <DB>;
+my @field = split (/\t/, $_);
+my ($mutid, $id_tumor, $primary_site, $filetype);
+
+if ($field[16] eq 'Mutation ID') {
+	$mutid = $field[16];
+	$filetype = 'coding';
+} elsif ($field[11] eq 'ID_NCV') {
+	$mutid = $field[11];
+	$filetype = 'noncoding';
+} else {
+	die "Error: COSMIC MutantExport format error: column 17 or 12 should be 'Mutation ID' or 'ID_NCV'\n";
+}
+
+while (<DB>) {
+	@field = split (/\t/, $_);
+	print "$field[19]\n";
+	last;
+	if ($filetype eq 'coding') {
+		$mutid = $field[16];
+		$id_tumor = $field[6];
+		$primary_site = $field[7];
+	} elsif ($filetype eq 'noncoding') {
+		$mutid = $field[11];
+		$id_tumor = $field[2];
+		$primary_site = $field[3];
+	}
+
+	$cosmic{$chrstring} .= ";$id_tumor,$primary_site";		#these two columns are "ID_tumour" and "Primary site"
+	$cosmicid{$chrstring} .= ",$mutid";
+}
+print STDERR "NOTICE: Finished reading ", scalar (keys %cosmic), " COSMIC records in DB file $dbfile\n";
+
+#the following is to eliminate duplicate entries. For example, COSM256593 and COSM256594 refers to the same mutation in the same sample, but are annotated twice, once with CDK11B/NM_001787 and once with CDC2L2/ENST00000357760
+
+for my $key (keys %cosmic) {
+	my @id_site = split (/;/, $cosmic{$key});
+	shift @id_site;
+	my (%found_tumorid, %found_site);
+	for my $i (0 .. @id_site-1) {
+		my ($tumorid, $site) = split (/,/, $id_site[$i]);
+		$found_tumorid{$tumorid} and next;		#the idea is that for duplicate entries, the tumor ID must be identical
+		$found_tumorid{$tumorid}++;
+		$found_site{$site}++;
+	}
+
+	my @cosmicid;
+	@cosmicid = split (/,/, $cosmicid{$key});
+	shift @cosmicid;
+	my %cosmicid = map {$_, 1} @cosmicid;
+
+	print $key, "\t", "ID=", join (",", keys %cosmicid), ";", "OCCURENCE=";
+	my $occurence;
+	for my $site (keys %found_site) {
+		$occurence .= "," . $found_site{$site} . "(" . $site . ")";
+	}
+	$occurence =~ s/^,//;
+	print "$occurence\n";
+}			
