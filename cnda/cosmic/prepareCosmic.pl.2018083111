@@ -31,8 +31,8 @@ while (<DB>) {
 		$primary_site = $field[3];
 	}
 
-	$cosmic{$chrstring} .= ";$id_tumor,$primary_site";		#these two columns are "ID_tumour" and "Primary site"
-	$cosmicid{$chrstring} .= ",$mutid";
+	$cosmic{$pos} .= "$primary_site";		#these two columns are "ID_tumour" and "Primary site"
+	$cosmicid{$pos} .= ",$mutid";
 }
 print STDERR "NOTICE: Finished reading ", scalar (keys %cosmic), " COSMIC records in DB file $dbfile\n";
 
