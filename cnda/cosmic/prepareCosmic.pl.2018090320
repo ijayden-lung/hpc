@@ -1,0 +1,48 @@
+#!/usr/bin/perl -w
+
+my ($dbfile, $occurfile) = @ARGV;
+my (%cosmic, %cosmic_gene, %nonfound);
+my ($idprefix);
+
+
+open (DB, $dbfile) or die "Error: cannot read from DB file: $!\n";
+my $header = <DB>;
+my @field = split (/\t/, $header);
+my ($mutid, $id_tumor, $primary_site, $filetype);
+
+if ($field[16] eq 'Mutation ID') {
+	$mutid = $field[16];
+	$filetype = 'coding';
+} elsif ($field[11] eq 'ID_NCV') {
+	$mutid = $field[11];
+	$filetype = 'noncoding';
+} else {
+	die "Error: COSMIC MutantExport format error: column 17 or 12 should be 'Mutation ID' or 'ID_NCV'\n";
+}
+
+while (<DB>) {
+	@field = split (/\t/, $_);
+	my ($gene_name,$assession_num,$primary_site,$mutid,$mutcds,$mutaa,$mutdes,$pos,$strand) = (split /\t/)[0,1,7,16,17,18,19,23,24];
+	$gene_name =~ s/_$assession_num//g;
+	if ($filetype eq 'noncoding') {
+		$mutid = $field[11];
+		$id_tumor = $field[2];
+		$primary_site = $field[3];
+	}
+	$cosmic_gene{$gene_name}->{$primary_site}++;
+	#$cosmic{"$pos\t$mutcds\t$mutaa\t$mutdes"}->{$mutid}++;		#these two columns are "ID_tumour" and "Primary site"
+}
+#print STDERR "NOTICE: Finished reading ", scalar (keys %cosmic), " COSMIC records in DB file $dbfile\n";
+
+
+open OUT,">$occurfile";
+while(my ($key,$val) = each %cosmic_gene){
+	print OUT "$key\t";
+	my $total = 0;
+	foreach my $site (sort{$val->{$b}<=>$val->{$a}} keys %$val){
+		$times = $val->{$site};
+		$total += $times;
+		print OUT "$site=$times;";
+	}
+	print OUT "\t$total\n";
+}
