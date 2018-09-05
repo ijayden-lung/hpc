@@ -1,0 +1,71 @@
+#!/usr/bin/perl -w
+
+my %pos;
+my %neg;
+open FILE,"regulation_of_wnt_signaling_pathway.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$go_term,$go_name) = split;
+	if($go_name =~ /positive/){
+		$pos{$gene_name} = '';
+	}
+	elsif($go_name =~ /negative/){
+		$neg{$gene_name} = '';
+	}
+}
+
+
+
+
+my %pos_rank;
+my %pos_print;
+open FILE,"WNT+.gene_summary.txt";
+<FILE>;
+open OUT,">Rank_WNT+.txt";
+print OUT "gene_name\tpval\ttag\trank\n";
+while(<FILE>){
+	chomp;
+	my($gene,$pval) = (split)[0,-5];
+	$pos_rank{$gene} = $pval;
+	if(exists $neg{$gene}){
+		$pos_print{$gene} =  "$gene\t$pval\twnt";
+	}
+	else{
+		$pos_print{$gene} =  "$gene\t$pval\tother";
+	}
+}
+
+my $i=0;
+foreach my $gene (sort{$pos_rank{$a}<=>$pos_rank{$b}} keys %pos_rank){
+	$i++;
+	print OUT "$pos_print{$gene}\t$i\n";
+}
+
+
+
+my %neg_rank;
+my %neg_print;
+open FILE,"WNT-.gene_summary.txt";
+<FILE>;
+open OUT,">Rank_WNT-.txt";
+print OUT "gene_name\tpval\ttag\trank\n";
+while(<FILE>){
+	chomp;
+	my($gene,$pval) = (split)[0,-5];
+	$neg_rank{$gene} = $pval;
+	if(exists $neg{$gene}){
+		$neg_print{$gene} =  "$gene\t$pval\twnt";
+	}
+	else{
+		$neg_print{$gene} =  "$gene\t$pval\tother";
+	}
+}
+$i=0;
+foreach my $gene (sort{$neg_rank{$a}<=>$neg_rank{$b}} keys %neg_rank){
+	$i++;
+	print OUT "$neg_print{$gene}\t$i\n";
+}
+
+
+system("./pval_distribution.r Rank_WNT+.txt Rank_WNT+.pdf");
+system("./pval_distribution.r Rank_WNT-.txt Rank_WNT-.pdf");

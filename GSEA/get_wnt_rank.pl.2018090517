@@ -1,0 +1,10 @@
+#!/usr/bin/perl -w
+open FILE,"/home/bio-longyk/workspace/CRISPR/wntscreen/new_year/WNT-.gene_summary.txt";
+<FILE>;
+open OUT,">WNT-_rank.txt";
+while(<FILE>){
+	chomp;
+	my ($gene) = split;
+	print OUT "$gene\n";
+}
+
