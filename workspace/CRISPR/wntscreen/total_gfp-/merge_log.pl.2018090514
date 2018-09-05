@@ -1,0 +1,48 @@
+#!/usr/bin/perl -w
+#
+
+print "Start mapping log merge\n";
+
+my ($lib,$exp,$dir) = @ARGV;
+if(!defined $dir){
+	$dir = '.';
+}
+if(!defined $exp){
+	$exp = 'WNTScreen';
+}
+if(!defined $lib){
+	$lib = 'hKO';
+}
+my %hash;
+my @sample;
+my %hash2;
+foreach my $file (glob "$dir/OUT/*/log"){
+	my $sam = (split /\//,$file)[-2];
+	push @sample,$sam;
+	open FILE,$file;
+	my $i=0;
+	while(<FILE>){
+		chomp;
+		$i++;
+		my ($row,$num,$per)  = split /\t/;
+		$per = "%" if(!defined $per);
+		$num = '' if (!defined $num);
+		$hash{$row}->{$sam} = "$num, $per";
+		$hash2{$row} = $i;
+	}
+}
+
+open OUT,">Log_$lib\_$exp.tsv";
+print OUT "\t";
+print OUT join "\t", @sample;
+print OUT "\n";
+foreach my $row (sort{$hash2{$a}<=>$hash2{$b}} keys %hash2){
+	my $val = $hash{$row};
+	print OUT "$row";
+	foreach my $sam (@sample){
+		print OUT "\t$val->{$sam}";
+	}
+	print OUT "\n";
+}
+
+print "Finish mapping log merge\n";

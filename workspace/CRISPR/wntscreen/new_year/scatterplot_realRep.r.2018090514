@@ -1,0 +1,51 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+data = read.table(args[1],header=TRUE,row.names=1)
+pdf(args[2])
+#names(data) = c('gene','GFPpos1','GFPpos2','GFPpos3','GFPneg1','GFPneg2','library','total1','total2','total3','Tag')
+#reg<-glm(log2(mKOMEFDay15.2) ~ log2(mKOMEFDay15.1),data,na.action = na.omit)
+#summary(reg)
+
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(3, 3)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=log2(Tot4A), y=log2(Tot5A)))+geom_point()
+b<-ggplot(data, aes(x=log2(Tot4B), y=log2(Tot5B)))+geom_point()
+c<-ggplot(data, aes(x=log2(Tot4C), y=log2(Tot5C)))+geom_point()
+d<-ggplot(data, aes(x=log2(Tot4D), y=log2(Tot5D)))+geom_point()
+e<-ggplot(data, aes(x=log2(Tot4E), y=log2(Tot5E)))+geom_point()
+f<-ggplot(data, aes(x=log2(Tot4F), y=log2(Tot5F)))+geom_point()
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(1, 2))
+print(c, vp = vplayout(2, 2))
+print(d, vp = vplayout(1, 3))
+print(e, vp = vplayout(2, 3))
+print(f, vp = vplayout(3, 3))
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 1)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a1<-ggplot(data, aes(x=log2(Gpos4), y=log2(Gpos5)))+geom_point()
+print(a1, vp = vplayout(1, 1))
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 1)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a1<-ggplot(data, aes(x=log2(Gneg4), y=log2(Gneg5)))+geom_point()
+print(a1, vp = vplayout(1, 1))
+#grid.newpage()
+#pushViewport(viewport(layout = grid.layout(1, 1)))
+#vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+#a<-ggplot(data, aes(x=log2(GFPneg1), y=log2(GFPneg2)))+geom_point()
+#print(a, vp = vplayout(1, 1))
+
+
+#pdf(args[3])
+#ggplot(data, aes(x=log10((GFPneg1+GFPneg2+total1+total2)/4), y=log2((GFPneg2+GFPneg1)/(total1+total2)),colour=Tag))+geom_point()+labs(x = "Log10 Mean ReadCount",y = "Log2(GFP-/total)")
+#ggplot(data, aes(x=log10((GFPpos1+GFPpos2+GFPpos3+total1+total2)/5), y=log2((GFPpos2+GFPpos1+GFPpos3)/(total1+total2)/3*2),colour=Tag))+geom_point()+labs(x = "Log10 Mean ReadCount",y = "Log2(GFP+/total)")
+#ggplot(data, aes(x=log10((library+total1+total2)/3), y=log2((total1+total2)/library)))+geom_point()+labs(x = "Log10 Mean ReadCount",y = "Log2(total/library")

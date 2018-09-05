@@ -1,0 +1,16 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+data = read.table(args[1],header=TRUE,sep="\t")
+pdf(args[2])
+
+
+
+ggplot(data, aes(x=log2(Gpos4/(Tot4A+Tot4B+Tot4C+Tot4D+Tot4E+Tot4F)*6), y=log2(Gpos5/(Tot5A+Tot5B+Tot5C+Tot5D+Tot5E+Tot5F)*6)))+geom_point()+labs(x="log2(GFP+1/Baseline1)",y="log2(GFP+2/Baseline2)")+xlim(0,8)+ylim(0,8)+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+
+ggplot(data, aes(x=log2(Gneg4/(Tot4A+Tot4B+Tot4C+Tot4D+Tot4E+Tot4F)*6), y=log2(Gneg5/(Tot5A+Tot5B+Tot5C+Tot5D+Tot5E+Tot5F)*6)))+geom_point()+labs(x="log2(GFP-1/Baseline1)",y="log2(GFP-2/Baseline2)")+xlim(0,8)+ylim(0,8)+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))
+
+
+ggplot(data, aes(x=log2((Tot4A+Tot4B+Tot4C+Tot4D+Tot4E+Tot4F)*6/library), y=log2((Tot5A+Tot5B+Tot5C+Tot5D+Tot5E+Tot5F)*6/library)))+geom_point()+labs(x="log2(Baseline1/Library)",y="log2(Baseline2/Library)")+theme(axis.title=element_text(size =20),axis.text=element_text(size =15))

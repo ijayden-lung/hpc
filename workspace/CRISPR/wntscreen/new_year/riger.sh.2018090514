@@ -1,0 +1,8 @@
+#!/bin/bash
+sample=("GFP-5" "GFP-4" "GFP+4" "GFP+5")
+for sam in ${sample[*]}
+do
+	echo $sam
+	java -jar ~/apps/rigerj/target/rigerj-2.0.1-assembly.jar  -inputFile hKO_$sam\_RIGER_input.tsv -scoringMethod SecondBestRank -outputFile hKO_$sam\_RIGER_SBR.txt
+done
+

@@ -1,0 +1,52 @@
+#!/usr/bin/perl -w
+
+my %name2id;
+open ID,'hg38_ID2name.txt';
+while(<ID>){
+	chomp;
+	my ($id,$name) = split;
+	$name2id{$name} = $id;
+}
+my %deplete;
+my %enrich;
+open FILE,'Deplete_totVSlib.tsv';
+<FILE>;
+while(<FILE>){
+	chomp;
+	my @data = split /\t/;
+	if($data[1] =~ /mir/){
+		my (undef,undef,$num1,$num2) = split /\-/,$data[1];
+		if(defined $num2){
+			if($num1 =~ /[a-z]$/){
+				$data[1] =uc "MIR$num1$num2";
+			}
+			else{
+				 $data[1] =uc "MIR$num1-$num2";
+			 }
+		}
+		else{
+			$data[1] = uc "MIR$num1";
+		}
+	}
+	if(!exists $name2id{$data[1]}){
+		print "$data[1]\n";
+		next;
+	}
+	if($data[-1] eq "Enrich"){
+		$enrich{$name2id{$data[1]}} = '';
+	}
+	elsif($data[-1] eq "Deplete"){
+		$deplete{$name2id{$data[1]}} = '';
+	}
+}
+
+open ENR,'>total_enrich.txt';
+print ENR "ensg\n";
+foreach my $id (keys %enrich){
+	print ENR "$id\n";
+}
+open DEP,'>total_deplete.txt';
+print DEP "ensg\n";
+foreach my $id (keys %deplete){
+	print DEP "$id\n";
+}

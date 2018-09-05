@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N CRISPR
+#PBS -l nodes=1:ppn=1
+#PBS -o ${out}
+#PBS -j oe 
+#PBS -l walltime=01:00:00
+
+#mkdir $inp
+cd $inp
+perl ~/workspace/CRISPR/total_gfp-/extract_gRNA.pl $fq1 $lib
+

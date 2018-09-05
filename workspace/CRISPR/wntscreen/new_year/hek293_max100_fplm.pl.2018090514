@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+
+open FILE,"hek293_fpkm.tsv";
+<FILE>;
+my %hash;
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$gene_length,$ctrl,$test) = split;
+	$hash{"$gene_id\t$gene_name"} = $ctrl+$test;
+}
+
+open OUT,">Top100_hek293_fpkm.tsv";
+my $i = 0;
+foreach my $key (sort{$hash{$b}<=>$hash{$a}} keys %hash){
+	print OUT "$key\t$hash{$key}\n";
+	$i++;
+	last if $i > 199;
+}

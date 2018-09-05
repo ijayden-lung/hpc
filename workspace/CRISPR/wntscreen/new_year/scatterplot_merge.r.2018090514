@@ -1,0 +1,19 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+data = read.table(args[1],header=TRUE,row.names=1)
+pdf(args[2])
+#names(data) = c('gene','GFPpos1','GFPpos2','GFPpos3','GFPneg1','GFPneg2','library','total1','total2','total3','Tag')
+#reg<-glm(log2(mKOMEFDay15.2) ~ log2(mKOMEFDay15.1),data,na.action = na.omit)
+#summary(reg)
+
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 1)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=log2((Tot4A+Tot4B+Tot4C+Tot4D+Tot4E+Tot4F)/6), y=log2((Tot5A+Tot5B+Tot5C+Tot5D+Tot5E+Tot5F)/6)))+geom_point()
+print(a, vp = vplayout(1, 1))
+

@@ -1,0 +1,20 @@
+#!/usr/bin/env Rscript
+library(grid)
+library(ggplot2)
+args<-commandArgs(T)
+data = read.table(args[1],header=T,row.names=1)
+names(data) = c('gene','GFPpos1','GFPpos2','GFPpos3','GFPneg1','GFPneg2','library','total1','total2','total3','Tag')
+pdf(args[2],width=12,height=12)
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 1)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=log2((total1+total2+total3)/3), y=log2((GFPneg1+GFPneg2)/2),colour=Tag))+geom_point()+labs(x = "Log2 Reads (gRNA in total cells)",y="Log2 Reads (gRNA in GFP- cells)")
+print(a, vp = vplayout(1,1))
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 1)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+a<-ggplot(data, aes(x=log2(((GFPneg1+GFPneg2)/2+(total1+total2+total3)/3)/2), y=log2((GFPneg1+GFPneg2)/2/(total1+total2+total3)*3),colour=Tag))+geom_point()+labs(x = "Log2 Mean Reads",y = "Log2 (GFP-/total)")
+print(a, vp = vplayout(1,1))

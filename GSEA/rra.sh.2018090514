@@ -1,0 +1,12 @@
+#!/bin/bash
+#mageck pathway --gene-ranking ~/workspace/CRISPR/new_year/WNT+.gene_summary.txt --single-ranking --gmt-file c2.cp.kegg.v6.2.symbols.gmt -n WNT+_KEGG --method rra --ranking-column 9
+
+
+#mageck pathway --gene-ranking ~/workspace/CRISPR/new_year/WNT+.gene_summary.txt --single-ranking --gmt-file c5.bp.v6.2.symbols.gmt -n WNT+_GOBP --method rra --ranking-column 9
+
+
+
+#mageck pathway --gene-ranking WHMvsWLE.txt --single-ranking --gmt-file c2.cp.kegg.v6.2.symbols.gmt -n WNHMvsWLE_KEGG --method rra --ranking-column 2
+
+#mageckGSEA -s -o GSEA_kegg_WNT+.txt -r WNT+_rank.txt -g c2.cp.kegg.v6.2.symbols.gmt -p 100000
+mageckGSEA -s -o GSEA_gobp_WNT+.txt -r WNT+_rank.txt -g c5.bp.v6.2.symbols.gmt -p 100000

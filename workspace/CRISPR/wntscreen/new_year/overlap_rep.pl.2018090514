@@ -1,0 +1,72 @@
+#!/usr/bin/perl -w
+
+my %wholeGene;
+my %sigGene;
+my @replicate = qw/GFP-4 GFP-5 GFP+4 GFP+5/;
+my %number;
+foreach my $rep (@replicate){
+	open FILE, "hKO_$rep\_RIGER_SBR.txt";
+	<FILE>;
+	my $sig = 0;
+	while(<FILE>){
+		chomp;
+		my ($rank,$gene,$score,$pval,$prank,$allrank) = split /\t/;
+		$wholeGene{$rep}->{$gene} = "$rank\t$allrank";
+		if($pval < 0.05){
+			$sig++;
+			$sigGene{$rep}->{$gene} = "$rank\t$allrank";
+		}
+	}
+	$number{$rep} = $sig;
+	print "$rep\t$sig\n";
+}
+
+
+open OUT,'>hKO_GFP+_overlap_RIGER_SBR.tsv';
+print OUT "GeneName\tRep4GeneRank\tRep5GeneRank\tRep4sgRNARank\tRep5sgRank\n";
+my $high1 = $sigGene{'GFP+4'};
+my $high2 = $sigGene{'GFP+5'};
+my %overlap_high;
+my %rank_high;
+while (my ($gene,$val) = each %$high1){
+	if(exists $high2->{$gene}){
+		my ($rank,$allrank) = split /\t/,$val;
+		my ($rank2,$allrank2) = split /\t/,$high2->{$gene};
+		$overlap_high{$gene} = "$rank\t$rank2\t$allrank\t$allrank2";
+		$rank_high{$gene} = $rank+$rank2;
+	}
+}
+
+my $overlap = 0;
+foreach my $gene (sort{$rank_high{$a} <=> $rank_high{$b}} keys %rank_high){
+	print OUT "$gene\t$overlap_high{$gene}\n";
+	$overlap++;
+}
+my $rep4only = $number{'GFP+4'}-$overlap;
+my $rep5only = $number{'GFP+5'}-$overlap;
+print "plot(Venn(SetNames = c('GFP+4', 'GFP+5'), Weight = c( '01' = $rep4only, '11' =$overlap, '10' =$rep5only)),doWeights = TRUE, type = 'circles')\n";
+
+open OUT,'>hKO_GFP-_overlap_RIGER_SBR.tsv';
+print OUT "GeneName\tRep4GeneRank\tRep5GeneRank\tRep4sgRNARank\tRep5sgRank\n";
+my $low1 = $sigGene{'GFP-4'};
+my $low2 = $sigGene{'GFP-5'};
+my %overlap_low;
+my %rank_low;
+while (my ($gene,$val) = each %$low1){
+	if(exists $low2->{$gene}){
+		my ($rank,$allrank) = split /\t/,$val;
+		my ($rank2,$allrank2) = split /\t/,$low2->{$gene};
+		$overlap_low{$gene} = "$rank\t$rank2\t$allrank\t$allrank2";
+		$rank_low{$gene} = $rank+$rank2;
+	}
+}
+
+$overlap = 0;
+foreach my $gene (sort{$rank_low{$a} <=> $rank_low{$b}} keys %rank_low){
+	print OUT "$gene\t$overlap_low{$gene}\n";
+	$overlap++;
+}
+
+$rep4only = $number{'GFP+4'}-$overlap;
+$rep5only = $number{'GFP+5'}-$overlap;
+print "plot(Venn(SetNames = c('GFP+4', 'GFP+5'), Weight = c( '01' = $rep4only, '11' =$overlap, '10' =$rep5only)),doWeights = TRUE, type = 'circles')\n";

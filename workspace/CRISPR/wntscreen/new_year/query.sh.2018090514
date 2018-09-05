@@ -1,0 +1,3 @@
+#!/bin/bash
+
+blastn -db /home/bio-longyk/apps/ncbi-blast-2.7.1+/DATABASE/hKO -query Query_hKO_WNTScreen.fa  -evalue 1e-3 -word_size 8 -outfmt 6  > BlastResult_hKOWNTScreen.txt
