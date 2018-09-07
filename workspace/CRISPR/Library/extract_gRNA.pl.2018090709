@@ -101,7 +101,7 @@ my %mapGene;
 my %mapLib;
 while(<LIB>){
 	chomp;
-	my ($gene,$target) = (split /,/)[1,6];
+	my ($gene,$target) = (split /\t/)[1,6];
 	$target = uc($target);
 	$lib{$target} .= "$gene;";
 	$geneLib{$gene} = 0;

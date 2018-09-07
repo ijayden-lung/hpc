@@ -13,7 +13,7 @@ open OUT, ">No_Reads_sgRNA.txt";
 <FILE>;
 while(<FILE>){
 	chomp;
-	my ($gene,$target) = (split /,/)[1,6];
+	my ($gene,$target) = (split /\t/)[1,6];
 	$target = uc($target);
 	if(!exists $lib{$target}){
 		print OUT "$gene\t$target\n";

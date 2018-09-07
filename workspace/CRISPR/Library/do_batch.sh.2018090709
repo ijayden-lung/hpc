@@ -12,7 +12,7 @@ cd $dir
 #mkdir "$dir/OUT/hACT-CaAp"
 #./extract_gRNA.pl fastq/hACT-CaAp.fq.gz  hACT-CaAp TGTTG GTTTA OUT/hACT-CaAp
 #mkdir "$dir/OUT/hACT-KPDT"
-#./extract_gRNA.pl fastq/hACT-KPDT.fq.gz  hACT-KPDT TGTTG GTTTA OUT/hACT-KPDT
+./extract_gRNA.pl fastq/hACT-KPDT.fq.gz  hACT-KPDT TGTTG GTTTA OUT/hACT-KPDT
 #mkdir "$dir/OUT/hREP-KPDT"
 #./extract_gRNA.pl fastq/hREP-KPDT.fq.gz  hREP-KPDT TGTTG GTTTA OUT/hREP-KPDT
 

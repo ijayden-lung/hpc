@@ -9,9 +9,10 @@ my $csv = Text::CSV->new ({
 });
 
 open(my $data,$file) or die "Could not open '$file' $!\n";
+open OUT,">lib_hACT-KPDT.csv";
+print OUT "sgID\tgene\ttranscript\tsublibrary\tsublibrary_half\t\tsgRNA\n";
 while (my $fields = $csv->getline( $data )) {
-	next if $. < 10;
 	my ($id,$gene,$tss,$sgrna,$sub,$top) = ($fields->[0],$fields->[1],$fields->[2],$fields->[3],$fields->[8],$fields->[9]);
-	print "$id,$gene,$tss,$sgrna,$sub,$top\n";
-	last if $. >20	;
+	next if $top eq "Supp5";
+	print OUT "$id\t$gene\t$tss\t$sub\t$top\t\t$sgrna\n" if $sub eq "h1";
 }
