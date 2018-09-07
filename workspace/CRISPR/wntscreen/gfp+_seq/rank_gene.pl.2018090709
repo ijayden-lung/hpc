@@ -1,0 +1,60 @@
+#!/usr/bin/perl -w
+
+my %wnt;
+open FILE,"/home/bio-longyk/workspace/CRISPR/wntscreen/new_year/wnt_signaling_pathway.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$go_term,$go_name) = split /\t/;
+	$wnt{$gene_name} = $go_name;
+}
+
+open FILE,"/home/bio-longyk/workspace/CRISPR/wntscreen/new_year/wnt_pathway_list.csv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($path,$sgrna,$gene) = split /,/;
+	if(!exists $wnt{$gene}){
+		$wnt{$gene} = "Wnt related genes from ohter source";
+	}
+}
+
+
+my %pval_rank;
+my %score_rank;
+open FILE,"WNTPos_Seq.gene_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my($gene,$score,$pval,$rank,$good_num) = (split)[0,,-6,-5,-3,-2];
+	next if $good_num <2;
+	$pval_rank{$gene} = $pval;
+	$score_rank{$gene} = "$good_num\t$score\t$rank";
+}
+
+my $i=0;
+open OUT,">Rank_gpos_seq.txt";
+print OUT "gene_name\tgood_sgrna_num\tscore\tscore_rank\tpval\tpval_rank\ttag\n";
+my $pval = -1;
+my $rank = 1;
+foreach my $gene (sort{$pval_rank{$a}<=>$pval_rank{$b}} keys %pval_rank){
+	$i++;
+	if($pval_rank{$gene} == $pval){
+		$rank--;
+	}
+	print OUT "$gene\t$score_rank{$gene}\t$pval_rank{$gene}\t$rank\t";
+	$pval = $pval_rank{$gene};
+	if($gene =~ /hsa/){
+		$gene =~ s/hsa//g;
+		$gene =~ s/-//g;
+		$gene = uc($gene);
+	}
+	if(!exists $wnt{$gene}){
+		$wnt{$gene} = "other";
+	}
+	print OUT "$wnt{$gene}\n";
+	$rank++;
+}
+
+
+
+system("./pval_distribution.r Rank_gpos_seq.txt Rank_gpos_seq.pdf");

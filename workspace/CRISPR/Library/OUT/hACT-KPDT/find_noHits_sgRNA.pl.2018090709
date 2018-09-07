@@ -1,0 +1,22 @@
+#!/usr/bin/perl -w
+my %lib;
+open FILE,"gRNA_sorted.txt";
+while(<FILE>){
+	chomp;
+	my ($gene,$target) = split;
+	$lib{$target} = $gene;
+	
+}
+
+open FILE,"/home/bio-longyk/workspace/CRISPR/Library/lib_hACT-KPDT.csv";
+open OUT, ">No_Reads_sgRNA.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$target) = (split /,/)[1,6];
+	$target = uc($target);
+	if(!exists $lib{$target}){
+		print OUT "$gene\t$target\n";
+	}
+}
+
