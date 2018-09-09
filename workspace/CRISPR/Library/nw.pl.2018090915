@@ -1,0 +1,104 @@
+#!/usr/bin/env perl
+
+sub pairwise{
+#Parameters:
+#matrix=idmat: 10 pour un Match, -10 pour un MM
+	my $match=10;
+	my $mismatch=-10;
+	my $gop=-10;
+	my $gep=-10;
+
+	my ($al0,$al1) = @_;
+
+
+# split the sequences
+	my @res0=@$al0;
+	my @res1=@$al1;
+
+#evaluate substitutions
+	my $len0=@res0;
+	my $len1=@res1;
+
+	for (my $i=0; $i<=$len0; $i++){$smat[$i][0]=$i*$gep;$tb[$i][0 ]= 1;}
+	for (my $j=0; $j<=$len1; $j++){$smat[0][$j]=$j*$gep;$tb[0 ][$j]=-1;}
+
+	for (my $i=1; $i<=$len0; $i++){
+		for (my $j=1; $j<=$len1; $j++){
+			#calcul du score
+			my $s = $mismatch;
+			if ($res0[$i-1] eq $res1[$j-1]){$s=$match;}
+
+			my $sub=$smat[$i-1][$j-1]+$s;
+			my $del=$smat[$i  ][$j-1]+$gep;
+			my $ins=$smat[$i-1][$j  ]+$gep;
+
+			if   ($sub>$del && $sub>$ins){$smat[$i][$j]=$sub;$tb[$i][$j]=0;}
+			elsif($del>$ins){$smat[$i][$j]=$del;$tb[$i][$j]=-1;}
+			else {$smat[$i][$j]=$ins;$tb[$i][$j]=1;}
+		}
+	}
+
+	my $i=$len0;
+	my $j=$len1;
+	my $aln_len=0;
+
+	while (!($i==0 && $j==0)){
+		if ($tb[$i][$j]==0){
+			$aln0[$aln_len]=$res0[--$i];
+			$aln1[$aln_len]=$res1[--$j];
+		}
+		elsif ($tb[$i][$j]==-1){
+			$aln0[$aln_len]='-';
+			$aln1[$aln_len]=$res1[--$j];
+		}
+		elsif ($tb[$i][$j]==1){
+			$aln0[$aln_len]=$res0[--$i];
+			$aln1[$aln_len]='-';
+		}
+		$aln_len++;
+
+	}
+#Output en Fasta:
+	my $mis = 0;
+	for (my $i=$aln_len-1; $i>=0; $i--){
+		if($aln0[$i] ne $aln1[$i]){
+			$mis++;
+		}
+	}
+	return $mis;
+}
+
+my $a = 'agtttta';
+my $b = 'gtttta';
+my @a = split //,$a;
+my @b = split //,$b;
+my ($indel) = &Compare(\@a,\@b);
+print "return $indel\n";
+
+
+sub Compare{
+	my ($query,$refer) = @_;
+	my @q = @$query;
+	my @q1 = @q[0..5];
+	my ($mis) = &pairwise(\@q1,$refer);
+	if($mis < 2){
+		return 0;
+	}
+	else{
+		my @q2 = @q[0..4];
+		$mis = &pairwise(\@q2,$refer);
+		if($mis < 2){
+			return -1;
+		}
+		else{
+			my @q3 = @q[0..6];
+			$mis = &pairwise(\@q3,$refer);
+			if($mis <2){
+				return 1;
+			}
+			else{
+				return 2;
+			}
+		}
+	}
+}

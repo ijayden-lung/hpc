@@ -1,0 +1,282 @@
+#!/usr/bin/perl -w
+
+my $INDEX1 = 81;
+my $INDEX2 = 107;
+my ($sample,$lib,$prefix,$suffix,$out_dir) = @ARGV;
+if($prefix eq "AACACC" && $suffix eq "GTTTTA"){
+	$INDEX1 = 2;
+	$INDEX2 = ;
+}
+elsif($prefix eq "TTGTTG" && $suffix eq "GTTTAA"){
+	$INDEX1 = 81;
+	$INDEX2 = 107;
+}
+else{
+	die "die: please check your index\n";
+}
+if(!defined $out_dir){
+	$out_dir = '.';
+}
+if(!defined $lib){
+	$lib = 'hKO';
+}
+
+open FILE, "zcat $sample |";
+
+my $noPre = 0;
+my $noSuf = 0;
+my $unmap = 0;
+my $lenLes20 = 0;
+my $lenGre21 = 0;
+my $len20 = 0;
+my $len21 = 0;
+my $len20NoG = 0;
+my $len21NoG = 0;
+my $total = 0;
+my %hash;
+open UNDET, ">$out_dir/undermined.fa";
+open OUT,   ">$out_dir/gRNA_sorted.txt";
+
+
+my $revpre = reverse $prefix;
+my @revpre = split //,$revpre;
+my @suffix = split //,$suffix;
+
+while(<FILE>){
+	chomp;
+	if($.%4 == 2){
+		$total++;
+		my $local_pre = substr($_,$INDX1-3,9);
+		my $local_suf = substr($_,$INDX2-1,9);
+		my @local_pre = split //,$local_pre;
+		my @local_suf = split //,$local_suf；
+		my ($index_$
+		my ($indel_suf) = &Compare(\@local_pre,\@suffix);
+		
+		&Locate($_);
+	}
+}
+
+open LIB,"/home/bio-longyk/workspace/CRISPR/Library/lib_$lib.csv";
+<LIB>;
+my %lib;
+my %geneLib;
+my %mapGene;
+my %mapLib;
+while(<LIB>){
+	chomp;
+	my ($gene,$target) = (split /,/)[1,6];
+	$target = uc($target);
+	$lib{$target} .= "$gene;";
+	$geneLib{$gene} = 0;
+	if(exists $hash{$target}){
+		$mapLib{$target} = $gene;
+		$mapGene{$gene}++;
+	}
+}
+
+my $mapLib = keys %mapLib;
+my $totalLib = keys %lib;
+my $mapGene = keys %mapGene;
+my $totalGene = keys %geneLib;
+my $mapNum= 0;
+
+foreach my $key (sort{$hash{$b}<=>$hash{$a}} keys (%hash)){
+	if( exists $lib{$key}){
+		$mapNum += $hash{$key};
+		print OUT "$lib{$key}\t$key\t$hash{$key}\n";
+	}
+	else{
+		print OUT "NotHits\t$key\t$hash{$key}\n";
+	}
+}
+
+
+open LOG, ">$out_dir/log";
+print LOG "Sequencing Quality\n";
+my $perTotal = sprintf("%.2e",$total);
+my $perNoPre = sprintf("%.2f",$noPre/$total*100);
+my $perNoSuf = sprintf("%.2f",$noSuf/$total*100);
+my $perUnmap = sprintf("%.2f",$unmap/$total*100);
+my $perLenLes20 = sprintf("%.2f",$lenLes20/$total*100);
+my $perLenGre21 = sprintf("%.2f",$lenGre21/$total*100);
+my $perLen21NoG = sprintf("%.2f",$len21NoG/$total*100);
+my $perLen20NoG = sprintf("%.2f",$len20NoG/$total*100);
+my $perLen20 = sprintf("%.2f",$len20/$total*100);
+my $perLen21 = sprintf("%.2f",$len21/$total*100);
+my $perMapNum = sprintf("%.2f",$mapNum/$total*100);
+print LOG "Total reads number\t$total\t$perTotal\n";
+print LOG "Mapped to library\t$mapNum\t$perMapNum\n";
+print LOG "Length 20 with G start\t$len20\t$perLen20\n";
+print LOG "Length 21 with G start\t$len21\t$perLen21\n";
+print LOG "Length 20 without G start\t$len20NoG\t$perLen20NoG\n";
+print LOG "Length 21 without G start\t$len21NoG\t$perLen21NoG\n";
+print LOG "Length less than 20\t$lenLes20\t$perLenLes20\n";
+print LOG "Length greater than 21\t$lenGre21\t$perLenGre21\n";
+print LOG "No Prefix\t$noPre\t$perNoPre\n";
+print LOG "No Suffix\t$noSuf\t$perNoSuf\n";
+print LOG "No Pre&Suf\t$unmap\t$perUnmap\n";
+
+print LOG "Library Coverage\n";
+my $perMapLib = sprintf("%.2f",$mapLib/$totalLib*100);
+my $perMapGene = sprintf("%.2f",$mapGene/$totalGene*100);
+print LOG "gRNA in library with Reads\t$mapLib\t$perMapLib\n";
+print LOG "gene in library with Reads\t$mapGene\t$perMapGene\n";
+
+sub Locate{
+	my $ind1 = index($_[0],$prefix);
+	my $ind2 = index($_[0],$suffix);
+	if($ind1 == -1 || $ind2 == -1){
+		if($ind1 == -1 && $ind2 == -1){
+			$unmap++;
+			print UNDET "$_[0]\n";
+		}
+		elsif($ind1 == -1){
+			$noPre++;
+			print UNDET "$_[0]\n";
+		}
+		else{
+			$noSuf++;
+			print UNDET "$_[0]\n";
+		}
+	}
+	else{
+		my $length = $ind2-$ind1-5;
+		while($length <20){
+			my $new_ind2 = index($_[0],$suffix,$ind2+1);
+			last if $new_ind2 == -1;
+			$ind2 = $new_ind2;
+			$length = $ind2-$ind1-5;
+		}
+		while($length >21){
+			my $new_ind1 = index($_[0],$prefix,$ind1+1);
+			last if $new_ind1 == -1;
+			$ind1 = $new_ind1;
+			$length = $ind2-$ind1-5;
+		}
+		if($length > 21){
+			$lenGre21++;
+		}
+		elsif($length < 20){
+			$lenLes20++;
+		}
+		else{
+			print "$ind1\t$ind2\n";
+			my $str = substr($_[0],$ind1+5,$length);
+			print "$str\n" if $ind1 == 75;
+			if(substr($str,0,1) ne "G"){
+				if($length ==20){
+					$len20NoG++;
+				}
+				else{
+					$len21NoG++;
+				}
+			}
+			else{
+				if($length ==20){
+					$len20++;
+				}
+				else{
+					$len21++;
+				}
+			}
+			my $grna = length($str) == 20 ? $str : substr($str,1);
+			$hash{$grna}++;
+		}
+	}
+}
+
+sub pairwise{
+#Parameters:
+#matrix=idmat: 10 pour un Match, -10 pour un MM
+	my $match=10;
+	my $mismatch=-10;
+	my $gop=-10;
+	my $gep=-10;
+
+	my ($al0,$al1) = @_;
+
+
+# split the sequences
+	my @res0=@$al0;
+	my @res1=@$al1;
+
+#evaluate substitutions
+	my $len0=@res0;
+	my $len1=@res1;
+
+	for (my $i=0; $i<=$len0; $i++){$smat[$i][0]=$i*$gep;$tb[$i][0 ]= 1;}
+	for (my $j=0; $j<=$len1; $j++){$smat[0][$j]=$j*$gep;$tb[0 ][$j]=-1;}
+
+	for (my $i=1; $i<=$len0; $i++){
+		for (my $j=1; $j<=$len1; $j++){
+			#calcul du score
+			my $s = $mismatch;
+			if ($res0[$i-1] eq $res1[$j-1]){$s=$match;}
+
+			my $sub=$smat[$i-1][$j-1]+$s;
+			my $del=$smat[$i  ][$j-1]+$gep;
+			my $ins=$smat[$i-1][$j  ]+$gep;
+
+			if   ($sub>$del && $sub>$ins){$smat[$i][$j]=$sub;$tb[$i][$j]=0;}
+			elsif($del>$ins){$smat[$i][$j]=$del;$tb[$i][$j]=-1;}
+			else {$smat[$i][$j]=$ins;$tb[$i][$j]=1;}
+		}
+	}
+
+	my $i=$len0;
+	my $j=$len1;
+	my $aln_len=0;
+
+	while (!($i==0 && $j==0)){
+		if ($tb[$i][$j]==0){
+			$aln0[$aln_len]=$res0[--$i];
+			$aln1[$aln_len]=$res1[--$j];
+		}
+		elsif ($tb[$i][$j]==-1){
+			$aln0[$aln_len]='-';
+			$aln1[$aln_len]=$res1[--$j];
+		}
+		elsif ($tb[$i][$j]==1){
+			$aln0[$aln_len]=$res0[--$i];
+			$aln1[$aln_len]='-';
+		}
+		$aln_len++;
+
+	}
+#Output en Fasta:
+	my $mis = 0;
+	for (my $i=$aln_len-1; $i>=0; $i--){
+		if($aln0[$i] ne $aln1[$i]){
+			$mis++;
+		}
+	}
+	return $mis;
+}
+
+sub Compare{
+	my ($query,$refer) = @_;
+	my @q = @$query;
+	my @q1 = @q[0..5];
+	my ($mis) = &pairwise(\@q1,$refer);
+	if($mis < 2){
+		return 0;
+	}
+	else{
+		my @q2 = @q[0..4];
+		$mis = &pairwise(\@q2,$refer);
+		if($mis < 2){
+			return -1;
+		}
+		else{
+			my @q3 = @q[0..6];
+			$mis = &pairwise(\@q3,$refer);
+			if($mis <2){
+				return 1;
+			}
+			else{
+				return 2;
+			}
+		}
+	}
+}

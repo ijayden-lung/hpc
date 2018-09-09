@@ -1,0 +1,160 @@
+#!/usr/bin/perl -w
+
+my ($sample,$lib,$prefix,$suffix,$out_dir) = @ARGV;
+if(!defined $prefix){
+	$prefix = "ACACC";
+}
+if(!defined $suffix){
+	$suffix= "GTTTT";
+}
+if(!defined $out_dir){
+	$out_dir = '.';
+}
+if(!defined $lib){
+	$lib = 'hKO';
+}
+
+open FILE, "zcat $sample |";
+
+my $i=0;
+my $noPre = 0;
+my $noSuf = 0;
+my $unmap = 0;
+my $lenLes20 = 0;
+my $lenGre21 = 0;
+my $len20 = 0;
+my $len21 = 0;
+my $len20NoG = 0;
+my $len21NoG = 0;
+my $total = 0;
+my %hash;
+open UNDET, ">$out_dir/undermined.fa";
+open OUT,   ">$out_dir/gRNA_sorted.txt";
+
+while(<FILE>){
+	chomp;
+	if($i%4 == 1){
+		$total++;
+		my $ind1 = index($_,"$prefix");
+		my $ind2 = index($_,"$suffix");
+		if($ind1 == -1 || $ind2 == -1){
+			if($ind1 == -1 && $ind2 == -1){
+				$unmap++;
+				print UNDET "$_\n";
+			}
+			elsif($ind1 == -1){
+				$noPre++;
+				print UNDET "$_\n";
+			}
+			else{
+				$noSuf++;
+				print UNDET "$_\n";
+			}
+		}
+		else{
+			my $length = $ind2-$ind1-5;
+			while($length <20 && $ind2 > -1){
+				$ind2 = index($_,"$suffix",$ind2+1);
+				$length = $ind2-$ind1-5;
+			}
+			while($length >21 && $ind1 > -1){
+				$ind1 = index($_,"$prefix",$ind1+1);
+				$length = $ind2-$ind1-5;
+			}
+			if($length > 21 || ($ind2 >0 && $ind2<($ind1+5))){
+				$lenGre21++;
+			}
+			elsif($length < 20){
+				$lenLes20++;
+			}
+			else{
+				my $str = substr($_,$ind1+5,$length);
+				if(substr($str,0,1) ne "G"){
+					if($length ==20){
+						$len20NoG++;
+					}
+					else{
+						$len21NoG++;
+					}
+				}
+				else{
+					if($length ==20){
+						$len20++;
+					}
+					else{
+						$len21++;
+					}
+				}
+				my $grna = length($str) == 20 ? $str : substr($str,1);
+				$hash{$grna}++;
+			}
+		}
+	}
+	$i++;
+}
+
+open LIB,"/home/bio-longyk/workspace/CRISPR/Library/lib_$lib.csv";
+<LIB>;
+my %lib;
+my %geneLib;
+my %mapGene;
+my %mapLib;
+while(<LIB>){
+	chomp;
+	my ($gene,$target) = (split /\t/)[1,6];
+	$lib{$target} .= "$gene;";
+	$geneLib{$gene} = 0;
+	if(exists $hash{$target}){
+		$mapLib{$target} = $gene;
+		$mapGene{$gene}++;
+	}
+}
+
+my $mapLib = keys %mapLib;
+my $totalLib = keys %lib;
+my $mapGene = keys %mapGene;
+my $totalGene = keys %geneLib;
+my $mapNum= 0;
+
+foreach my $key (sort{$hash{$b}<=>$hash{$a}} keys (%hash)){
+	if( exists $lib{$key}){
+		$mapNum += $hash{$key};
+		print OUT "$lib{$key}\t$key\t$hash{$key}\n";
+	}
+	else{
+		print OUT "NotHits\t$key\t$hash{$key}\n";
+	}
+}
+
+
+open LOG, ">$out_dir/log";
+print LOG "Sequencing Quality\n";
+my $perTotal = sprintf("%.2e",$total);
+my $perNoPre = sprintf("%.2f",$noPre/$total*100);
+my $perNoSuf = sprintf("%.2f",$noSuf/$total*100);
+my $perUnmap = sprintf("%.2f",$unmap/$total*100);
+my $perLenLes20 = sprintf("%.2f",$lenLes20/$total*100);
+my $perLenGre21 = sprintf("%.2f",$lenGre21/$total*100);
+my $perLen21NoG = sprintf("%.2f",$len21NoG/$total*100);
+my $perLen20NoG = sprintf("%.2f",$len20NoG/$total*100);
+my $perLen20 = sprintf("%.2f",$len20/$total*100);
+my $perLen21 = sprintf("%.2f",$len21/$total*100);
+my $perMapNum = sprintf("%.2f",$mapNum/$total*100);
+print LOG "Total reads number\t$total\t$perTotal\n";
+print LOG "Mapped to library\t$mapNum\t$perMapNum\n";
+print LOG "Length 20 with G start\t$len20\t$perLen20\n";
+print LOG "Length 21 with G start\t$len21\t$perLen21\n";
+print LOG "Length 20 without G start\t$len20NoG\t$perLen20NoG\n";
+print LOG "Length 21 without G start\t$len21NoG\t$perLen21NoG\n";
+print LOG "Length less than 20\t$lenLes20\t$perLenLes20\n";
+print LOG "Length greater than 21\t$lenGre21\t$perLenGre21\n";
+print LOG "No Prefix\t$noPre\t$perNoPre\n";
+print LOG "No Suffix\t$noSuf\t$perNoSuf\n";
+print LOG "No Pre&Suf\t$unmap\t$perUnmap\n";
+
+print LOG "Library Coverage\n";
+my $perMapLib = sprintf("%.2f",$mapLib/$totalLib*100);
+my $perMapGene = sprintf("%.2f",$mapGene/$totalGene*100);
+print LOG "gRNA in library with Reads\t$mapLib\t$perMapLib\n";
+print LOG "gene in library with Reads\t$mapGene\t$perMapGene\n";
+
