@@ -1,0 +1,9 @@
+#!/bin/bash
+#PBS -q fatser
+#PBS -N cellranger_count
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+cd ~/cnda/10x_index/
+
+cellranger count --id=LF17 --transcriptome=/home/bio-longyk/cnda/10x_index/mm10 --fastqs=/home/bio-longyk/workspace/single_cell/1.rawdata --sample=LF17
