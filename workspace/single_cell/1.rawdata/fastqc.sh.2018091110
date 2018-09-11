@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -q fatser
+#PBS -N Fastqc
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=08:00:00
+cd ~/workspace/single_cell/1.rawdata/
+mkdir FASTQC_OUT
+for i in */*fq.gz
+do
+	fastqc -t 18 -o FASTQC_OUT/  $i
+done
+
+
+
