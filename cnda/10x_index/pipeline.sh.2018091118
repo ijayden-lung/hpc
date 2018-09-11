@@ -1,0 +1,22 @@
+#!/bin/bash
+#PBS -q fatser
+#PBS -N MKREF
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+cd ~/cnda/10x_index/
+
+
+#cellranger mkgtf /home/bio-longyk/cnda/ensembl/Mus_musculus.GRCm38.92.gtf mm10v92_filter.gtf --attribute=gene_biotype:protein_coding --attribute=gene_biotype:lincRNA --attribute=gene_biotype:antisense --attribute=gene_biotype:IG_LV_gene --attribute=gene_biotype:IG_V_gene --attribute=gene_biotype:IG_V_pseudogene --attribute=gene_biotype:IG_D_gene --attribute=gene_biotype:IG_J_gene --attribute=gene_biotype:IG_J_pseudogene --attribute=gene_biotype:IG_C_gene --attribute=gene_biotype:IG_C_pseudogene --attribute=gene_biotype:TR_V_gene --attribute=gene_biotype:TR_V_pseudogene --attribute=gene_biotype:TR_D_gene --attribute=gene_biotype:TR_J_gene --attribute=gene_biotype:TR_J_pseudogene --attribute=gene_biotype:TR_C_gene
+
+
+#cellranger mkgtf /home/bio-longyk/cnda/ensembl/Homo_sapiens.GRCh38.92.gtf hg38v92_filter.gtf --attribute=gene_biotype:protein_coding --attribute=gene_biotype:lincRNA --attribute=gene_biotype:antisense --attribute=gene_biotype:IG_LV_gene --attribute=gene_biotype:IG_V_gene --attribute=gene_biotype:IG_V_pseudogene --attribute=gene_biotype:IG_D_gene --attribute=gene_biotype:IG_J_gene --attribute=gene_biotype:IG_J_pseudogene --attribute=gene_biotype:IG_C_gene --attribute=gene_biotype:IG_C_pseudogene --attribute=gene_biotype:TR_V_gene --attribute=gene_biotype:TR_V_pseudogene --attribute=gene_biotype:TR_D_gene --attribute=gene_biotype:TR_J_gene --attribute=gene_biotype:TR_J_pseudogene --attribute=gene_biotype:TR_C_gene
+
+
+
+#sed 's/^/chr/g' mm10v92_filter.gtf | sed 's/chrMT/chrM/g' | awk '/^chr[1-9XaXYM]/' >mm10v92_filter_chr.gtf
+#sed 's/^/chr/g' hg38v92_filter.gtf | sed 's/chrMT/chrM/g' | awk '/^chr[1-9XaXYM]/' >hg38v92_filter_chr.gtf
+
+#cellranger mkref --genome=hg38 --fasta=/home/biology/genome/hg38/hg38.fa --genes= ~/cnda/ensembl/hg38.ensemblv92.10x.gtf --genome=mm10 --fasta = /home/biology/genome/mm10/mm10.fa --genes = ~/cnda/ensembl/mm10.ensemblv92.10x.gtf --genome=exogenous --fasta= ~/cnda/10x_index/p120barcode.fa --genes = ~/cnda/10x_index/
+#cellranger mkref --genome=mm10 --fasta=/home/bio-longyk/cnda/ensembl/Mus_musculus.GRCm38.dna.primary_assembly.fa --genes=/home/bio-longyk/cnda/10x_index/mm10v92_filter.gtf --genome=exogenous --fasta=~/cnda/10x_index/p120barcode.fa --genes=~/cnda/10x_index/p120barcode.gtf --nthreads=18
+cellranger mkref --genome=hg38 --fasta=~/cnda/ensembl/Homo_sapiens.GRCh38.dna.primary_assembly.fa --genes=~/cnda/10x_index/hg38v92_filter.gtf --genome=mm10 --fasta=/home/bio-longyk/cnda/ensembl/Mus_musculus.GRCm38.dna.primary_assembly.fa --genes=/home/bio-longyk/cnda/10x_index/mm10v92_filter.gtf --genome=exogenous --fasta=~/cnda/10x_index/p120barcode.fa --genes=~/cnda/10x_index/p120barcode.gtf --nthreads=18
