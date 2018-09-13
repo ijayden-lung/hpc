@@ -1,0 +1,22 @@
+#!/usr/bin/perl -w
+
+use Text::CSV;
+my $file = "lib_116_hKOV2.csv";
+my $csv = Text::CSV->new ({
+		binary    => 1,
+		auto_diag => 1,
+		sep_char  => ','    # not really needed as this is the default
+});
+
+open(my $data,$file) or die "Could not open '$file' $!\n";
+open OUT,">lib_hKOV2.csv";
+print OUT "sgID\tgene\ttranscript\tgenomic\tpam\texonNumber\tsgRNA\n";
+while (my $fields = $csv->getline( $data )) {
+	my ($id,$gene,$trans,$genomin,$sgrna,$pam,$exonNum) = ($fields->[0],$fields->[1],$fields->[2],$fields->[3],$fields->[6],$fields->[8],$fields->[9]);
+	#my ($id,$gene,$pool,$chr,$pos,$strand,$sgrna,$trans) = @$fields;
+	$sgrna = uc($sgrna);
+	print OUT "$id\t$gene\t$trans\t$genomin\t$pam\t$exonNum\t$sgrna\n";
+}
+
+
+

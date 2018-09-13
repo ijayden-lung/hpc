@@ -1,0 +1,22 @@
+#!/usr/bin/perl -w
+
+use Text::CSV;
+my $file = "TableS3_hCRISPRiv2_libraries.csv";
+my $csv = Text::CSV->new ({
+		binary    => 1,
+		auto_diag => 1,
+		sep_char  => ','    # not really needed as this is the default
+});
+
+open(my $data,$file) or die "Could not open '$file' $!\n";
+open OUT,">lib_hREP.csv";
+print OUT "sgID\tgene\ttranscript\tsublibrary\tsublibrary_half\t\tsgRNA\n";
+while (my $fields = $csv->getline( $data )) {
+	my ($id,$gene,$tss,$sgrna,$sub,$top) = ($fields->[0],$fields->[1],$fields->[2],$fields->[3],$fields->[9],$fields->[10]);
+	$sgrna = uc($sgrna);
+	next if $top eq "Supp5";
+	print OUT "$id\t$gene\t$tss\t$sub\t$top\t\t$sgrna\n" #if $sub eq "h1";
+}
+
+
+

@@ -1,0 +1,22 @@
+#!/usr/bin/perl -w
+
+use Text::CSV;
+my $file = "115_hKO-NP.csv";
+my $csv = Text::CSV->new ({
+		binary    => 1,
+		auto_diag => 1,
+		sep_char  => ','    # not really needed as this is the default
+});
+
+open(my $data,$file) or die "Could not open '$file' $!\n";
+open OUT,">lib_hKO-NP.csv";
+print OUT "sgID\tgene\ttranscript\tsublibrary\tchr\tpos\tsgRNA\n";
+while (my $fields = $csv->getline( $data )) {
+	#my ($id,$gene,$pool,$chr,$pos,$strand,$sgrna,$trans) = ($fields->[0],$fields->[1],$fields->[2],$fields->[3],$fields->[4],$fields->[5],$fields->[6],$fields->[7]);
+	my ($id,$gene,$pool,$chr,$pos,$strand,$sgrna,$trans) = @$fields;
+	$sgrna = uc($sgrna);
+	print OUT "$id\t$gene\t$trans\t$pool\t$chr\t$pos\t$sgrna\n" if $pool eq "nuclear";
+}
+
+
+
