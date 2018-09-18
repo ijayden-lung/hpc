@@ -1,0 +1,12 @@
+#!/usr/bin/perl -w
+
+open FILE,"RC_hKO-NP_np.tsv";
+<FILE>;
+open OUT,">Input_mageck_hKO-NP_sw480.tsv";
+print OUT "sgRNA\tgene\tsw480nc1\tsw480nc2\tsw480s1\tsw480s2\n";
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$nc1,$nc2,$nc3,$nc4,$s1,$s2,$sw480nc1,$sw480nc2,$sw480s1,$sw480s2) = split;
+	print OUT "$sgrna\t$gene\t$sw480nc1\t$sw480nc2\t$sw480s1\t$sw480s2\n" if $gene ne "NotHits";
+}
+

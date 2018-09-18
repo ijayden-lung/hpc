@@ -1,0 +1,26 @@
+#!/usr/bin/perl -w
+my ($species,$selection,$pos,$inp,$out) =@ARGV;
+
+open ID,"/home/bio-longyk/cnda/ensembl/$species\_ID2Name.txt";
+while(<ID>){
+	
+
+
+open FILE,"../wntscreen/np/sw480-np.gene_summary.txt";
+<FILE>;
+my %enrich;
+while(<FILE>){
+	chomp;
+	my ($gene,$num,$neg_score,$neg_pval,$neg_fdr,$neg_rank,$neg_good_sgrna,$neg_lfc,$pos_score,$pos_pval,$pos_fdr,$pos_rank,$pos_good_sgrna,$pos_lfc) = split;
+	if($selection eq "positive"){
+		my $rank = $pos_rank;
+		my $pval = $pos_pval;
+	}
+	elsif($selection eq "positive"){
+		my $rank = $neg_rank;
+		my $pval = $neg_pval;
+	}
+	if($pval < 0.05){
+		$enrich{$gene} = '';
+	}
+}
