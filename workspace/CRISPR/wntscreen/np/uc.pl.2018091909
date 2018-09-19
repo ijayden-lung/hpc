@@ -1,0 +1,3 @@
+
+my $seq = uc("aagcttggcgtaactagatcttgagacaaatggcagtattcatccacaattt");
+print "$seq\n";
