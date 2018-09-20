@@ -1,0 +1,49 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+#data = read.table(paste("Input_mageck_RC_",args[1],"_",args[2],".tsv",sep=''),header=TRUE,row.names=1)
+data = read.table(args[3],header=TRUE,row.names=1)
+pdf(paste("Scatterplot_",args[1],"_",args[2],".pdf",sep=''),width=12,height=12)
+
+#pdf("test.pdf")
+#ggplot(data, aes(x=log2(NC1), y=log2(NC2)))+geom_point()+theme_bw()
+
+colNum = ncol(data)
+sampleNum = colNum-1
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(sampleNum, sampleNum)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+colnames(data)
+
+for (i in 1:sampleNum){
+	a<-ggplot()+annotate("text", x = 1, y = 1, size=10, label = colnames(data)[i+1])+
+		theme_bw()+theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.text = element_blank(),axis.ticks = element_blank())+labs(x='',y='')
+	print(a, vp = vplayout(i,i))
+}
+
+#logdata=data
+#logdata[, 2:colNum] <- log(logdata[2:colNum], 2)
+
+colN=sampleNum-1
+for(i in 1:colN){
+	z=i+1
+	for(j in z:sampleNum){
+#b=ggplot(logdata,aes_string(x=colnames(logdata)[i+1],y=colnames(logdata)[j+1]))+geom_point()+theme_bw()
+		b=ggplot(data,aes_string(x=paste("log2(",colnames(data)[j+1],")",sep=""),y=paste("log2(",colnames(data)[i+1],")",sep="")))+geom_point(size=1)+theme_bw()
+		fit = lm(as.formula(paste("log2(",colnames(data)[i+1],"+1)","~","log2(",colnames(data)[j+1],"+1)",sep="")),data=data)
+		c<-ggplot()+annotate("text", x = 1, y = 1, size=6, label =signif(summary(fit)$adj.r.squared, 4))+theme_bw()+
+		theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.text = element_blank(),axis.ticks = element_blank())+labs(x='',y='')
+		print(b, vp=vplayout(j,i))
+		print(c, vp = vplayout(i,j))
+	}
+}
+
+
+#fit = lm(log2(NC1+1) ~ log2(NC2+1),data=data)
+#fit = lm(as.formula(paste("log2(",colnames(data)[2],"+1)","~","log2(",colnames(data)[3],"+1)")))
+#ab1<-ggplot(data, aes(x=log2(NC1), y=log2(NC2)))+geom_point()+theme_bw()
+#ab2<-ggplot()+annotate("text", x = 1, y = 1, size=10, label =signif(summary(fit)$adj.r.squared, 4))+theme_bw()+
+#theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.text = element_blank(),axis.ticks = element_blank())+labs(x='',y='')
+

@@ -1,0 +1,24 @@
+#!/usr/bin/perl -w
+
+my %hek;
+open FILE,"hek293-nc.normalized.txt";
+<FILE>;
+while(<FILE>){
+	my ($sgrna,$gene,$nc1,$nc2,$nc3,$nc4) = split;
+	$nc1 = ($nc1+$nc3)/2;
+	$nc2 = ($nc2+$nc4)/2;
+	$hek{"$sgrna\t$gene"} = "$nc1\t$nc2";
+}
+
+open FILE,"sw480-np.normalized.txt";
+<FILE>;
+open OUT,">hek293+sw480-np.txt";
+print OUT "sgRNA\tgene\thek293nc1\thek293nc2\tsw480nc1\tsw480nc2\n";
+while(<FILE>){
+	my ($sgrna,$gene,$nc1,$nc2) = split;
+	my $hek = $hek{"$sgrna\t$gene"};
+	print OUT"$sgrna\t$gene\t$hek\t$nc1\t$nc2\n";
+}
+
+
+

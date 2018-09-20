@@ -1,0 +1,72 @@
+#!/usr/bin/perl -w
+
+my ($lib,$exp,$sel) = @ARGV;
+my %symbol;
+open SYN,"/home/bio-longyk/workspace/CRISPR/Library/symbol_checker_$lib";
+<SYN>;
+while(<SYN>){
+	chomp;
+	my ($pre,$new) = (split /\t/)[0,2];
+	$symbol{$pre} = $new;
+}
+
+my %hek293;
+open HEK,"/home/bio-longyk/workspace/CRISPR/wntscreen/new_year/hek293_fpkm.tsv";
+<HEK>;
+while(<HEK>){
+	chomp;
+	my ($gene_id,$gene_name,undef,$ctrl,$test) = split;
+	$hek293{$gene_name} = "$ctrl\t$test"
+
+}
+my %deseq2;
+open DES,"/home/bio-longyk/workspace/splicing/colon/FPKM_colon_merge.tsv";
+<DES>;
+while(<DES>){
+	chomp;
+	my ($gene_id,$gene_name,$high1,$high2,$low1,$low2) = split;
+	my $high = ($high1+$high2)/2;
+	my $low = ($low1+$low2)/2;
+	$deseq2{$gene_name} = "$gene_id\t$high\t$low";
+}
+
+open DES,"/home/bio-longyk/workspace/miRNA/Fangliang/miR.RPM.csv";
+<DES>;
+while(<DES>){
+	chomp;
+	my ($gene_name,$high1,$high2,$low1,$low2) = split /,/;
+	$gene_name = substr($gene_name,0,-3);
+	$gene_name = lc $gene_name;
+	my $high = ($high1+$high2)/2/22;
+	my $low = ($low1+$low2)/2/22;
+	$deseq2{$gene_name} = "$gene_name\t$high\t$low";
+}
+open POS,"$exp.gene_summary.txt";
+open OUT,">$exp.fpkm.txt";
+my $header = <POS>;
+chomp $header;
+print OUT "id\tpos|p-value\tpos|fdr\tpos|rank\tpos|goodsgrna\tpos|lfc\tgene_name\tgene_id\tSW480_high\tSW480_low\tHEK293_test\tHEK293_ctrl\n";
+while(<POS>){
+	chomp;
+	my ($gene_name,$num,$neg_score,$neg_pval,$neg_fdr,$neg_rank,$neg_good_sgrna,$neg_lfc,$pos_score,$pos_pval,$pos_fdr,$pos_rank,$pos_good_sgrna,$pos_lfc) = split;
+	my $out = "$gene_name\t$pos_score\t$pos_pval\t$pos_fdr\t$pos_rank\t$pos_good_sgrna\t$pos_lfc";
+	print OUT "$out\t$gene_name\t";
+	if(exists $symbol{$gene_name}){
+		$gene_name = $symbol{$gene_name};
+	}
+	if(exists $deseq2{$gene_name}){
+		print OUT "$deseq2{$gene_name}\t";
+	}
+	else{
+		print OUT "NA\tNA\tNA\t";
+	}
+	if(exists $hek293{$gene_name}){
+		print OUT "$hek293{$gene_name}\n";
+	}
+	else{
+		print OUT "NA\tNA\n";
+	}
+}
+
+
+
