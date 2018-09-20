@@ -1,0 +1,67 @@
+#!/bin/bash
+
+ #### Default: ACACC GTTTT
+ #### some ACT,REP: TGTTG GTTTA
+ #### TTFKO: GTTGG GTTTA
+
+lib=hKO-NP
+exp=sw480-np
+
+dir='/home/bio-longyk/workspace/CRISPR/wntscreen/np/'
+cd $dir
+if [ ! -d OUT ];then
+	mkdir -p OUT
+fi
+for file in fastq/sw480*fq.gz
+do
+	base=${file#*\/}
+	#arrIN=(${base//\_/ })
+	#sam=${arrIN[0]}
+	sam=${base%%.*}
+	if [ ! -d OUT/$sam ];then
+		mkdir -p OUT/$sam
+	fi
+	echo "mapping $sam"
+	#~/workspace/CRISPR/script/extract_gRNA2.pl $file $lib ACACC GTTTT OUT/$sam
+done
+
+
+
+
+
+cd $dir
+### Do this after finishing mapping job;
+#~/workspace/CRISPR/script/merge_log.pl $lib $exp
+#~/workspace/CRISPR/script/normalize.pl $lib $exp
+
+#~/workspace/CRISPR/script/input_mageck.pl $lib $exp
+#~/workspace/CRISPR/script/scatterplot.r $lib $exp Input_mageck_hKO-NP_sw480.tsv
+
+################MAGECK TEST######################
+#mageck test -k Input_mageck_hKO-NP_sw480.tsv  -t sw480s1,sw480s2 -c sw480nc1,sw480nc2 -n sw480-np --pdf-report --normcounts-to-file --sort-criteria pos
+#mageck test -k Map_RC_$lib\_$exp.tsv -t GFP-1,GFP-2 -c Baseline1,Baseline2 -n WNT- --pdf-report --normcounts-to-file --control-sgrna control_sgrna --sort-criteria pos
+
+######CDF 
+~/workspace/CRISPR/script/cdf.r $lib $exp $exp.normalized.txt  #####Need to be modified every time
+
+
+#######GO
+#~/workspace/CRISPR/script/input_go.pl hg38 pos hKO-NP sw480-np
+#~/workspace/CRISPR/script/goseq_hg38.R go.hKO-NP.pos.sw480-np hKO-NP.bg
+#mageckGSEA -s -o GSEA_kegg_hKO-NP.pos.sw480-np.txt -r rank.hKO-NP.pos.sw480-np -g ~/GSEA/c2.cp.kegg.v6.2.symbols.gmt -p 100000
+#mageckGSEA -s -o GSEA_gobp_hKO-NP.pos.sw480-np.txt -r rank.hKO-NP.pos.sw480-np -g ~/GSEA/c5.bp.v6.2.symbols.gmt -p 1000
+
+
+#~/workspace/CRISPR/script/input_linechart.pl $lib WNT-
+#~/workspace/CRISPR/script/linechart.r Positive $exp 
+#~/workspace/CRISPR/script/linechart.r Negative WNT- 
+
+
+
+#./generate_ref.pl $lib
+#./generate_query.pl $lib $exp
+#./retrieve_notHits.pl $lib $exp
+
+
+
+
