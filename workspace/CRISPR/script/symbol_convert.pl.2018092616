@@ -1,0 +1,21 @@
+#!/usr/bin/perl -w
+#
+my ($lib,$species) = @ARGV;
+
+my %name2id;
+open ID,"/home/bio-longyk/cnda/ensembl/$species\_ID2Name.txt";
+while(<ID>){
+	my ($id,$name) = split;
+	$name2id{$name} = $id;
+}
+
+open LIB,"/home/bio-longyk/workspace/CRISPR/Library/lib_hKO.csv";
+<LIB>;
+while(<LIB>){
+	chomp;
+	my (undef,$gene_name) = split /\t/;
+	if(!exists $name2id{$gene_name}){
+		print "$gene_name\n";
+	}
+}
+

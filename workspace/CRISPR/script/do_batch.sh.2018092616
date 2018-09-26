@@ -1,0 +1,72 @@
+#!/bin/bash
+
+ #### Default: ACACC GTTTT
+ #### some ACT,REP: TGTTG GTTTA
+ #### TTFKO: GTTGG GTTTA
+
+lib=hKO-NP
+exp=sw480
+
+dir='/home/bio-longyk/workspace/CRISPR/wntscreen/np'
+cd $dir
+if [ ! -d OUT ];then
+	mkdir -p OUT
+fi
+for file in fastq/*fq.gz
+do
+	base=${file#*\/}
+	#arrIN=(${base//\_/ })
+	#sam=${arrIN[0]}
+	sam=${base%%.*}
+	if [ ! -d OUT/$sam ];then
+		mkdir -p OUT/$sam
+	fi
+	echo "mapping $sam"
+	#~/workspace/CRISPR/script/extract_gRNA2.pl $file $lib ACACC GTTTT OUT/$sam
+done
+
+
+
+cd $dir
+### Do this after finishing mapping job;
+#~/workspace/CRISPR/script/merge_log.pl $lib $exp
+#~/workspace/CRISPR/script/normalize.pl $lib $exp
+
+#~/workspace/CRISPR/script/input_mageck.pl $lib $exp
+
+################MAGECK TEST######################
+#mageck test -k Input_mageck_$lib\_$exp.tsv  -t sw480s1,sw480s2 -c sw480nc1,sw480nc2 -n $exp --pdf-report --normcounts-to-file --sort-criteria pos --remove-zero control
+
+
+#mageck test -k sw480.filter.txt  -c sw480nc1,sw480nc2 -t sw480s1,sw480s2  -n sw480.filter --pdf-report --normcounts-to-file --sort-criteria pos
+
+######Scatterplot and CDF 
+#~/workspace/CRISPR/script/scatterplot.r $lib $exp $exp.normalized.txt
+#~/workspace/CRISPR/script/cdf.r $lib $exp $exp.normalized.txt  #####Need to be modified every time
+
+
+######Add mrna to screen
+#~/workspace/CRISPR/script/add_mRNA2Sceen.pl $lib $exp
+
+
+
+#######GO pos
+#~/workspace/CRISPR/script/input_go.pl hg38 pos $lib $exp
+#~/workspace/CRISPR/script/goseq_hg38.R go.$lib.pos.$exp bg.$lib.$exp
+#mageckGSEA -s -o GSEA_kegg_hKO-NP.pos.sw480-np.txt -r rank.hKO-NP.pos.sw480-np -g ~/GSEA/c2.cp.kegg.v6.2.symbols.gmt -p 100000
+#mageckGSEA -s -o GSEA_gobp_hKO-NP.pos.sw480-np.txt -r rank.hKO-NP.pos.sw480-np -g ~/GSEA/c5.bp.v6.2.symbols.gmt -p 1000
+
+#######GO neg
+#~/workspace/CRISPR/script/input_go.pl hg38 neg $lib $exp
+#~/workspace/CRISPR/script/goseq_hg38.R go.$lib.neg.hek293-sw480 $lib.bg
+
+
+#~/workspace/CRISPR/script/input_linechart.pl $lib WNT-
+#~/workspace/CRISPR/script/linechart.r Positive $exp 
+#~/workspace/CRISPR/script/linechart.r Negative WNT- 
+
+
+
+#./generate_ref.pl $lib
+#./generate_query.pl $lib $exp
+#./retrieve_notHits.pl $lib $exp
