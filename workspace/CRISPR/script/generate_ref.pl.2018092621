@@ -1,0 +1,30 @@
+#!/usr/bin/perl -w
+
+print "Start Blast library preparation\n";
+
+my ($lib,$dir) = @ARGV;
+if(!defined $dir){
+	$dir = '.';
+}
+if(!defined $lib){
+	$lib = 'hKO';
+}
+open FILE,"/home/bio-longyk/workspace/CRISPR/Library/lib_$lib.csv";
+<FILE>;
+open OUT, ">/home/bio-longyk/workspace/CRISPR/Library/$lib.fa";
+my %lib;
+while(<FILE>){
+	chomp;
+	my ($grna) = (split /\t/)[-1];
+	$lib{$grna} = '';
+}
+
+foreach my $grna (keys %lib){
+	print OUT "\>$grna\n$grna"."NGG\n";
+}
+
+
+#system("makeblastdb -in $lib.fa -title $lib -dbtype nucl -out /home/bio-longyk/apps/ncbi-blast-2.7.1+/DATABASE/$lib");
+
+
+print "Finish Blast library preparation\n";
