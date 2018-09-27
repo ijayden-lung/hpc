@@ -1,0 +1,79 @@
+#!/usr/bin/perl -w
+
+my ($species,$select,$lib,$exp) =@ARGV;
+my $spe = $species=~/hg/ ? "hsa" : "mmu";
+####https://www.genenames.org/cgi-bin/symbol_checker
+my %symbol;
+open SYN,"/home/bio-longyk/workspace/CRISPR/Library/symbol_checker_$lib";
+<SYN>;
+while(<SYN>){
+	chomp;
+	my ($pre,$new) = (split /\t/)[0,2];
+	$symbol{$pre} = $new;
+}
+
+my %position;
+open FILE,"/home/bio-longyk/workspace/CRISPR/Library/$lib.sam";
+while(<FILE>){
+	chomp;
+	my ($sgrna,$strand,$chr,$pos) = split;
+	$position{$sgrna} = "$strand:$chr:$pos";
+}
+
+
+my %strand;
+open FILE,"/home/bio-longyk/cnda/ensembl/$species\_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$strand) = split;
+	$strand{$gene_name} = $strand;
+}
+
+open FILE,"/home/bio-longyk/cnda/miRNA/$spe\_id2name.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$strand) = split;
+	$strand{$gene_name} = $strand;
+}
+
+my %enrich;
+open FILE,"$exp.gene_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$num,$neg_score,$neg_pval,$neg_fdr,$neg_rank,$neg_num,$neg_lfc,$pos_score,$pos_pval,$pos_fdr,$pos_rank,$pos_num,$pos_lfc) = split;
+	if($select eq "pos" && $pos_num>1 && $pos_fdr<0.25){
+		$enrich{$gene} ='';
+	}
+	elsif($select eq "neg" && $neg_num>1 && $neg_fdr<0.25){
+		$enrich{$gene} ='';
+	}
+}
+
+
+open FILE,"$exp.normalized.txt ";
+my $header = <FILE>;
+$header =~ s/Gene/gene/g;
+open OUT1, ">Input_linechart_$select.$exp.normalized.txt";
+print OUT1 "position\t$header";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $gene = $data[1];
+	if(exists $symbol{$gene}){
+		$gene = $symbol{$gene};
+	}
+	if(!exists $strand{$gene}){
+		$strand{$gene} = '';
+	}
+	if(exists $enrich{$data[1]}){
+		print OUT1 "$position{$data[0]}\t$data[0]\t$data[1]($strand{$gene})";
+		for(my$i=2;$i<@data;$i++){
+			$data[$i]++;
+			print OUT1 "\t$data[$i]";
+		}
+		print OUT1 "\n";
+	}
+}
+
+
