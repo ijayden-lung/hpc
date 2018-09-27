@@ -20,11 +20,11 @@ for (Gene in plotgenes){
 					sample=rep(sample,each=sgrnanum),
 					count=count)
 
-#if(i%%4 == 0){
-#		grid.newpage()
-#		pushViewport(viewport(layout = grid.layout(2, 2)))
-#		vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
-#	}
+	if(i%%4 == 0){
+		grid.newpage()
+		pushViewport(viewport(layout = grid.layout(2, 2)))
+		vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+	}
 	a<-ggplot(data=df,aes(x=sample,y=count,group=sgrna,color=sgrna))+
 		geom_line()+
 		geom_point(size=3)+
