@@ -61,8 +61,8 @@ cd $dir
 
 
 #######GO pos
-#~/workspace/CRISPR/script/input_go.pl hg38 pos $lib $exp
-#~/workspace/CRISPR/script/goseq_hg38.R go.$lib.pos.$exp bg.$lib.$exp
+~/workspace/CRISPR/script/input_go.pl hg38 pos $lib $exp
+~/workspace/CRISPR/script/goseq_hg38.R go.$lib.pos.$exp bg.$lib.$exp
 #mageckGSEA -s -o GSEA_kegg_hKO-NP.pos.sw480-np.txt -r rank.hKO-NP.pos.sw480-np -g ~/GSEA/c2.cp.kegg.v6.2.symbols.gmt -p 100000
 #mageckGSEA -s -o GSEA_gobp_hKO-NP.pos.sw480-np.txt -r rank.hKO-NP.pos.sw480-np -g ~/GSEA/c5.bp.v6.2.symbols.gmt -p 1000
 

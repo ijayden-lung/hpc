@@ -43,9 +43,11 @@ while(<FILE>){
 	chomp;
 	my ($gene,$num,$neg_score,$neg_pval,$neg_fdr,$neg_rank,$neg_num,$neg_lfc,$pos_score,$pos_pval,$pos_fdr,$pos_rank,$pos_num,$pos_lfc) = split;
 	if($select eq "pos" && $pos_num>1 && $pos_fdr<0.25){
+		#if($select eq "pos" && $pos_num>1 && $pos_pval<0.05){
 		$enrich{$gene} = $pos_rank;
 	}
 	elsif($select eq "neg" && $neg_num>1 && $neg_fdr<0.25){
+	#elsif($select eq "neg" && $neg_num>1 && $neg_pval<0.05){
 		$enrich{$gene} = $neg_rank;
 	}
 }
