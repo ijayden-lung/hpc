@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -q cal
+#PBS -N FASTQC
+#PBS -l nodes=1:ppn=12
+#PBS -j oe 
+#PBS -l walltime=08:00:00
+cd ~/workspace/splicing/prostate/
+for i in fastq/*fastq.bz2
+do
+	fastqc -t 12 -o FASTQC_OUT  $i
+done
+
+
+
