@@ -1,0 +1,10 @@
+#!/usr/bin/perl -w
+#
+open FILE,"zcat WC_SW2_286_S1_L004_R1_001.fastq.gz |";
+while(<FILE>){
+	chomp;
+	if($.%4==2){
+		print "$_\n";
+		last;
+	}
+}
