@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+open FILE,'OUT/293gneg_seq_nc2/norm.fa';
+my %hash;
+while(<FILE>){
+	chomp;
+	if($.%4 == 2){
+		my $str = substr($_,49,50);
+		$hash{$str}++
+	}
+}
+
+
+open FILE,'OUT/293gneg_seq_nc2/nosuf.fa';
+my %hash2;
+while(<FILE>){
+	chomp;
+	if($.%4 == 2){
+		my $str = substr($_,49,50);
+		$hash2{$str}++;
+	}
+}
+
+my @top10;
+my $i=0;
+foreach my $ele (sort{$hash{$b}<=>$hash{$a}}  keys %hash){
+	$top10[0][$i] = "$ele\t$hash{$ele}";
+	$i++;
+	last if $i >10;
+}
+
+$i=0;
+foreach my $ele (sort{$hash2{$b}<=>$hash2{$a}}  keys %hash2){
+	$top10[1][$i] = "$ele\t$hash2{$ele}";
+	$i++;
+	last if $i >10;
+}
+
+
+open OUT,">s_top10";
+print OUT "norm_seq\tnorm_count\tnosuf_seq\tnosuf_count\n";
+for(my$i=0;$i<10;$i++){
+	print OUT "$top10[0][$i]\t$top10[1][$i]\n";
+}
+
