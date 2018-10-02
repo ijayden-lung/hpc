@@ -1,0 +1,24 @@
+#!/usr/bin/perl -w
+#
+
+my %hash;
+open FILE,"zcat WC_SW2_286_S1_L004_R1_001.fastq.gz |";
+while(<FILE>){
+	chomp;
+	if($.%4==2){
+		my $pre = substr($_,0,15);
+		my $left = substr($_,15);
+		my $i =0;
+		for(;$i<10;$i++){
+			if(substr($left,$i,1) ne "A" ){
+				last;
+			}
+		}
+
+		$hash{$i}++;
+	}
+}
+
+foreach my $key (sort{$a<=>$b} keys %hash){
+	print "$key\t$hash{$key}\n";
+}
