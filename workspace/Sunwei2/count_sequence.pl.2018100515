@@ -3,7 +3,7 @@
 
 my %sum;
 my %logo;
-open FILE,"zcat WC_SW2_286_S1_L004_R1_001.fastq.gz |";
+open FILE,"zcat WC_SW2_287_S2_L004_R1_001.fastq.gz |";
 while(<FILE>){
 	chomp;
 	if($.%4==2){
@@ -24,16 +24,17 @@ while(<FILE>){
 
 
 while(my ($key,$val) = each %logo){
-	open OUT,">Input_logo_WC_SW2_286_$key.txt";
+	open OUT,">Input_logo_WC_SW2_287_$key.txt";
 	print OUT "header";
 	for(my$j=1;$j<16;$j++){
 		print OUT "\t$j";
 	}
 	print OUT "\n";
 	while(my($key2,$val2) = each %$val){
+		next if $key2 eq "N";
 		print OUT "$key2";
 		for(my$j=0;$j<15;$j++){;
-			print OUT "\t$val2->{$key2}";
+			print OUT "\t$val2->{$j}";
 		}
 		print OUT "\n";
 	}
@@ -42,3 +43,5 @@ while(my ($key,$val) = each %logo){
 foreach my $key (sort{$a<=>$b} keys %sum){
 	print "$key\t$sum{$key}\n";
 }
+
+system("./ggseqlogo.r Input_logo_WC_SW2_287_0.txt Input_logo_WC_SW2_287_1.txt Input_logo_WC_SW2_287_2.txt Input_logo_WC_SW2_287_3.txt Input_logo_WC_SW2_287_4.txt Input_logo_WC_SW2_287_5.txt Input_logo_WC_SW2_287_6.txt Input_logo_WC_SW2_287_7.txt Input_logo_WC_SW2_287_8.txt Input_logo_WC_SW2_287_9.txt Input_logo_WC_SW2_287_10.txt Logo_SW2_287.pdf");
