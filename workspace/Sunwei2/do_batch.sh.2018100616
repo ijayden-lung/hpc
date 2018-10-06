@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./count_sequence.pl 291 S6
