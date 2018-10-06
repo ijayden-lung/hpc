@@ -1,0 +1,82 @@
+#!/usr/bin/perl -w
+#
+my %background;
+open BG1,"Input_logo_WC_SW2_286_0.txt";
+<BG1>;
+while(<BG1>){
+	chomp;
+	my @data = split;
+	my $base = shift @data;
+	for(my$i=0;$i<@data;$i++){
+		$background{$base}->{$i} = $data[$i];
+	}
+}
+
+open BG2,"Input_logo_WC_SW2_287_0.txt";
+<BG2>;
+while(<BG2>){
+	chomp;
+	my @data = split;
+	my $base = shift @data;
+	for(my$i=0;$i<@data;$i++){
+		$background{$base}->{$i} += $data[$i];
+	}
+}
+
+open OUT,">Input_logo_286+287_background";
+print OUT "header";
+for(my$j=1;$j<16;$j++){
+	print OUT "\t$j";
+}
+print OUT "\n";
+while(my($key2,$val2) = each %background){
+	next if $key2 eq "N";
+	print OUT "$key2";
+	for(my$j=0;$j<15;$j++){;
+		$val2->{$j} = 0 if ! exists $val2->{$j};
+		print OUT "\t$val2->{$j}";
+	}
+	print OUT "\n";
+}
+
+my %foreground;
+for(my $k=5;$k<11;$k++){
+	open BG1,"Input_logo_WC_SW2_286_$k.txt";
+	<BG1>;
+	while(<BG1>){
+		chomp;
+		my @data = split;
+		my $base = shift @data;
+		for(my$i=0;$i<@data;$i++){
+			$foregroud{$base}->{$i} += $data[$i];
+		}
+	}
+
+	open BG2,"Input_logo_WC_SW2_287_$k.txt";
+	<BG2>;
+	while(<BG2>){
+		chomp;
+		my @data = split;
+		my $base = shift @data;
+		for(my$i=0;$i<@data;$i++){
+			$foregroud{$base}->{$i} += $data[$i];
+		}
+	}
+}
+
+
+open OUT,">Input_logo_286+287_foregroud";
+print OUT "header";
+for(my$j=1;$j<16;$j++){
+	print OUT "\t$j";
+}
+print OUT "\n";
+while(my($key2,$val2) = each %foregroud){
+	next if $key2 eq "N";
+	print OUT "$key2";
+	for(my$j=0;$j<15;$j++){;
+		$val2->{$j} = 0 if ! exists $val2->{$j};
+		print OUT "\t$val2->{$j}";
+	}
+	print OUT "\n";
+}
