@@ -1,0 +1,62 @@
+#!/usr/bin/perl -w
+#
+
+my ($sam1,$num1,$sam2,$num2) = @ARGV;
+
+my %sum;
+my %seq;
+open FILE,"zcat WC_SW2_$sam1\_$num1\_L004_R1_001.fastq.gz |";
+while(<FILE>){
+	chomp;
+	if($.%4==2){
+		my $pre = substr($_,0,15);
+		my $left = substr($_,15);
+		my $i =0;
+		for(;$i<10;$i++){
+			if(substr($left,$i,1) ne "A" ){
+				last;
+			}
+		}
+		$sum{$i}++;
+		if($i ==0){
+			$seq{$pre}->{'bg'}++;
+		}
+		elsif($i>=5){
+			$seq{$pre}->{'fg'}++;
+		}
+	}
+}
+
+open FILE,"zcat WC_SW2_$sam2\_$num2\_L004_R1_001.fastq.gz |";
+while(<FILE>){
+	chomp;
+	if($.%4==2){
+		my $pre = substr($_,0,15);
+		my $left = substr($_,15);
+		my $i =0;
+		for(;$i<10;$i++){
+			if(substr($left,$i,1) ne "A" ){
+				last;
+			}
+		}
+		$sum{$i}++;
+		if($i ==0){
+			$seq{$pre}->{'bg'}++;
+		}
+		elsif($i>=5){
+			$seq{$pre}->{'fg'}++;
+		}
+	}
+}
+
+open OUT,">Count_$sam1\+$sam2.txt";
+while(my ($key,$val) = each %seq){
+	$val->{'fg'} = 0 if !exists $val->{'fg'};
+	$val->{'bg'} = 0 if !exists $val->{'bg'};
+	print OUT "$key\t$val->{'bg'}\t$val->{'fg'}\n";
+}
+
+foreach my $key (sort{$a<=>$b} keys %sum){
+	print  "$key\t$sum{$key}\n";
+}
+

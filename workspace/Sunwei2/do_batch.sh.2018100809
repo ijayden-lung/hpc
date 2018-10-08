@@ -1,0 +1,5 @@
+#!/bin/bash
+
+#./count_sequence2.pl 286 S1 287 S2
+./count_sequence2.pl 288 S3 289 S4
+#./count_sequence2.pl 290 S5 291 S6
