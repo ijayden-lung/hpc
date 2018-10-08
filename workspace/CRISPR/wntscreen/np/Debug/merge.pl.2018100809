@@ -1,0 +1,33 @@
+#!/usr/bin/perl -w
+
+my %hash1;
+open FILE,"../../new_year/RC_hKO_gfp-.tsv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$gneg1,$gneg2,$base1,$base2) = split;
+	$hash1{$sgrna} = "$gene\t$base1\t$base2\t$gneg1\t$gneg2";
+}
+my %hash2;
+open FILE,"../../new_year/RC_hKO_gfp+.tsv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$gneg1,$gneg2,$base1,$base2) = split;
+	$hash2{$sgrna} = "$gneg1\t$gneg2" if exists $hash1{$sgrna};
+}
+
+my %hash3;
+open FILE,"gRNA_sorted.txt";
+while(<FILE>){
+	chomp;
+	my ($gene,$sgrna,$read) = split;
+	$hash3{$sgrna} = "$read" if exists $hash2{$sgrna};
+}
+
+open OUT,">merge_read.txt";
+print OUT "sgRNA\tgene\tgfp_base1\tgfp_base2\tgfpneg1\tgfpneg2\tgfppos1\tgfppos2\thek293s1\n";
+while(my($sgrna,$val) = each %hash3){
+	print OUT "$sgrna\t$hash1{$sgrna}\t$hash2{$sgrna}\t$val\n";
+}
+
