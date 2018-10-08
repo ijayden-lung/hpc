@@ -1,0 +1,42 @@
+#!/usr/bin/perl -w
+
+my %hash1;
+open FILE,"Count_286+287.txt";
+while(<FILE>){
+	chomp;
+	my ($seq,$bg,$fg) = split;
+	if($bg+$fg>2){
+		$hash1{$seq} = "$bg\t$fg";
+	}
+}
+
+my %hash2;
+open FILE,"Count_288+289.txt";
+while(<FILE>){
+	chomp;
+	my ($seq,$bg,$fg) = split;
+	if($bg+$fg>2){
+		$hash2{$seq} = "$bg\t$fg";
+	}
+}
+
+my %hash3;
+open FILE,"Count_290+291.txt";
+while(<FILE>){
+	chomp;
+	my ($seq,$bg,$fg) = split;
+	if($bg+$fg>2){
+		$hash3{$seq} = "$bg\t$fg";
+	}
+}
+
+open OUT,">Count_all.txt";
+print OUT "Sequence\tbg1\tbg2\tbg3\tfg1\tfg2\tfg3\n";
+while(my ($key,$val) = each %hash1){
+	if (exists $hash2{$key} && exists $hash3{$key}){
+		my ($bg1,$fg1) = split /\t/,$val;
+		my ($bg2,$fg2) = split /\t/,$hash2{$key};
+		my ($bg3,$fg3) = split /\t/,$hash3{$key};
+		print OUT "$key\t$bg1\t$bg2\t$bg3\t$fg1\t$fg2\t$fg3\n";
+	}
+}

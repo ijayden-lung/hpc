@@ -1,0 +1,57 @@
+#!/home/bio-longyk/apps/R-3.5.0/bin/Rscript
+
+##Load Library
+suppressPackageStartupMessages(library("DESeq2"))
+#library("pheatmap")
+library("RColorBrewer")
+
+args<-commandArgs(T)
+
+pdf("DESeq2_Result.pdf")
+
+ctrl='bg'
+test='fg'
+
+cts = read.table("Count_all.txt",header=TRUE,sep="\t",row.names=1)
+
+###Rewirte Colum Names
+
+coldata <- data.frame(row.names = colnames( cts ),condition = c(rep(ctrl,3),rep(test,3)))
+dds <- DESeqDataSetFromMatrix(countData = cts,colData = coldata, design = ~ condition)
+###Alternative Step;
+
+dds <- dds[ rowSums(counts(dds)) > 0, ]
+
+##Sample distances
+rld <- rlog(dds, blind = FALSE)
+sampleDists <- dist(t(assay(rld)))
+sampleDistMatrix <- as.matrix( sampleDists )
+#rownames(sampleDistMatrix) <- paste(vsd$condition, vsd$type, sep="-")
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+#pheatmap(sampleDistMatrix,
+#clustering_distance_rows = sampleDists,
+#clustering_distance_cols = sampleDists,
+#col = colors)
+
+plotPCA(rld)
+
+
+##Running the differential expression pipeline
+dds$condition <- factor(dds$condition, levels=c(test,ctrl))
+dds <- DESeq(dds)
+
+res <- results(dds,alpha=0.05,lfcThreshold=.5, altHypothesis="greaterAbs")
+summary(res)
+
+#resLFC <- lfcShrink(dds, coef=2, res=res)
+#res <- resLFC
+
+resOrdered <- res[order(res$padj),]   ####Alternative Step;
+write.table(resOrdered, "DESeq2_Result.tsv",quote=FALSE,sep="\t",col.names=NA,row.names=TRUE )
+
+plotDispEsts(dds)
+hist(res$padj[res$baseMean>5], breaks=100,col="skyblue", border="slateblue")
+plotMA(res)
+
+
