@@ -1,0 +1,34 @@
+#!/usr/bin/perl -w
+#
+my ($sam1,$sam2) = @ARGV;
+open FILE,"Count_$sam1\+$sam2.txt";
+my %hash1;
+my %hash2;
+while(<FILE>){
+	chomp;
+	my ($seq,$bg,$fg) = split;
+	if($bg+$fg>2){
+		$bg++;
+		$fg++;
+		$hash1{$seq} = $fg/$bg;
+		$hash2{$seq} = $bg/$fg;
+	}
+}
+
+
+open OUT1,">Enrich_5A_Top10000.txt";
+my $i=0;
+print OUT1 "rank\tseq\tfoldChange\n";
+foreach my $key (sort{$hash1{$b}<=>$hash1{$a}} keys %hash1){
+	$i++;
+	last if $i >10000;
+	print OUT1 "$i\t$key\t$hash1{$key}\n";
+}
+$i=0;
+open OUT2,">Enrich_0A_Top10000.txt";
+print OUT2 "rank\tseq\tfoldChange\n";
+foreach my $key (sort{$hash2{$b}<=>$hash2{$a}} keys %hash2){
+	$i++;
+	last if $i >10000;
+	print OUT2 "$i\t$key\t$hash2{$key}\n";
+}
