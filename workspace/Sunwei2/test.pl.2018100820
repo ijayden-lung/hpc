@@ -1,0 +1,5 @@
+#!/usr/bin/perl -w
+
+my $seq = "AGAFAFAFFA";
+my $idx = index($seq,"AG");
+print $idx;

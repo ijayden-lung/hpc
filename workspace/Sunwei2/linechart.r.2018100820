@@ -1,0 +1,8 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+args<-commandArgs(T)
+
+data = read.table(args[1],header=TRUE)
+pdf(args[2])
+
+ggplot(data=data,aes(x=rank,y=foldChange))+geom_line()+geom_smooth(method="loess")
