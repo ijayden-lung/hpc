@@ -1,0 +1,20 @@
+#!/usr/bin/perl -w
+
+open FILE,"DESeq2_Result.tsv";
+open OUT1,">Enrich_>5A.txt";
+open OUT2,">Enrich_0A.txt";
+print OUT1 "sequence\tbaseMean\tl2fc\tpval\tpadj\n";
+print OUT2 "sequence\tbaseMean\tl2fc\tpval\tpadj\n";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($seq,$baseMean,$l2fc,$lfcSE,$stat,$pvalue,$padj) = split;
+	$l2fc = -$l2fc;
+	if($l2fc >0 && $padj <0.01){
+		print OUT1 "$seq\t$baseMean\t$l2fc\t$pvalue\t$padj\n";
+	}
+	elsif($l2fc<0 && $padj <0.01){
+		print OUT2 "$seq\t$baseMean\t$l2fc\t$pvalue\t$padj\n";
+	}
+}
+		
