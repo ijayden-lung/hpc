@@ -12,8 +12,15 @@ while(<FILE>){
 		my $pre = substr($_,0,15);
 		my $left = substr($_,15);
 		my $idx = index($left,"TGG");
-		if(($idx >=5 || $idx ==-1) && ($left =~ /^AAAA/ || $left =~ /^[CTGN]AAAA/ || $left =~ /^A[CTGN]AAA/ || $left =~ /^AA[CTGN]AA/ || $left =~ /^AAA[CTGN]A/)){
-			$seq{$pre}->{'fg'}++;
+		if($idx >=5 || $idx ==-1){
+			my $notANum = 0;
+			for(my$i=0;$i<$idx;$i++){
+				if(substr($left,$i,1) ne "A")){
+					$notANum++;
+				}
+				last if $notANum/$idx > $idx/10;
+			}
+			$seq{$pre}->{'fg'}++ if($notNum/$idx<10);
 		}
 		elsif($idx == 0){
 			$seq{$pre}->{'bg'}++;
@@ -29,8 +36,15 @@ while(<FILE>){
 		my $pre = substr($_,0,15);
 		my $left = substr($_,15);
 		my $idx = index($left,"TGG");
-		if(($idx >=5 || $idx ==-1) && ($left =~ /^AAAA/ || $left =~ /^[CTGN]AAAA/ || $left =~ /^A[CTGN]AAA/ || $left =~ /^AA[CTGN]AA/ || $left =~ /^AAA[CTGN]A/)){
-			$seq{$pre}->{'fg'}++;
+		if($idx >=5 || $idx ==-1){
+			my $notANum = 0;
+			for(my$i=0;$i<$idx;$i++){
+				if(substr($left,$i,1) ne "A")){
+					$notANum++;
+				}
+				last if $notANum/$idx > $idx/10;
+			}
+			$seq{$pre}->{'fg'}++ if($notNum/$idx<10);
 		}
 		elsif($idx == 0){
 			$seq{$pre}->{'bg'}++;
