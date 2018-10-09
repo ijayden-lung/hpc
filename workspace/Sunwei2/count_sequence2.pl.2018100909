@@ -15,7 +15,7 @@ while(<FILE>){
 		if(($idx >=5 || $idx ==-1) && ($left =~ /^AAAA/ || $left =~ /^[CTGN]AAAA/ || $left =~ /^A[CTGN]AAA/ || $left =~ /^AA[CTGN]AA/ || $left =~ /^AAA[CTGN]A/)){
 			$seq{$pre}->{'fg'}++;
 		}
-		else{
+		elsif($idx == 0){
 			$seq{$pre}->{'bg'}++;
 		}
 		$sum{$idx}++;
@@ -32,7 +32,7 @@ while(<FILE>){
 		if(($idx >=5 || $idx ==-1) && ($left =~ /^AAAA/ || $left =~ /^[CTGN]AAAA/ || $left =~ /^A[CTGN]AAA/ || $left =~ /^AA[CTGN]AA/ || $left =~ /^AAA[CTGN]A/)){
 			$seq{$pre}->{'fg'}++;
 		}
-		else{
+		elsif($idx == 0){
 			$seq{$pre}->{'bg'}++;
 		}
 		$sum{$idx}++;
