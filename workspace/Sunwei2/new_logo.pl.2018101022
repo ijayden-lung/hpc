@@ -10,11 +10,28 @@ while(<FILE>){
 	chomp;
 	my ($seq,$bg,$fg) = split;
 	for(my$i=0;$i<15;$i++){
-		$fg{substr($seq,$i,1)}->{$i} += $fg;
-		$bg{substr($seq,$i,1)}->{$i} += $bg;
+		my $base = substr($seq,$i,1);
+		next if $base eq "N";
+		$fg{$base}->{$i} += $fg;
+		$bg{$base}->{$i} += $bg;
 		$sumfg{$i} += $fg;
 		$sumbg{$i} += $bg;
 	}
 }
 
 
+open OUT,">Input_logo_origin_$sam1\+$sam2\_background";
+print OUT "header";
+for(my$j=1;$j<16;$j++){
+	print OUT "\t$j";
+}
+print OUT "\n";
+while(my($key2,$val2) = each %bg){
+	print OUT "$key2";
+	for(my$j=0;$j<15;$j++){;
+		$val2->{$j} = 0 if ! exists $val2->{$j};
+		my $fre = $val2->{$j}/$sumbg{$key2}->{$j};
+		print OUT "\t$fre";
+	}
+	print OUT "\n";
+}
