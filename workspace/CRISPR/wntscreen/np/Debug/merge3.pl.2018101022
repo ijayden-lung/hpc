@@ -1,0 +1,51 @@
+#!/usr/bin/perl -w
+
+
+my %gneg1;
+my %gneg2;
+my %base1;
+my %base2;
+my %gpos1;
+my %gpos2;
+open FILE,"../../gfp-_seq/Input_mageck_RC_hKO_gfp-_seq.tsv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$base1,$base2,$gneg1,$gneg2) = split;
+	$gneg1{$sgrna} = $gneg1;
+	$gneg2{$sgrna} = $gneg2;
+	$base1{$sgrna} = $base1;
+	$base2{$sgrna} = $base2;
+}
+
+my %hash3;
+my %gene;
+open FILE,"gRNA_sorted1.txt";
+while(<FILE>){
+	chomp;
+	my ($gene,$sgrna,$read) = split;
+	next if $gene =~ /NotHits/;
+	$gene{$sgrna} = $gene;
+	$hash3{$sgrna} = $read;
+}
+my %hash4;
+open FILE,"gRNA_sorted2.txt";
+while(<FILE>){
+	chomp;
+	my ($gene,$sgrna,$read) = split;
+	next if $gene =~ /NotHits/;
+	$gene{$sgrna} = $gene;
+	$hash4{$sgrna} = $read;
+}
+
+open OUT,">merge3_read.txt";
+print OUT "sgRNA\tgene\tnc1\tnc2\ts2\thek293s1\thek293s2\n";
+while(my($sgrna,$val) = each %gene){
+	$gneg2{$sgrna} = 0 if !exists $gneg2{$sgrna};
+	$base2{$sgrna} = 0 if !exists $base2{$sgrna};
+	$base1{$sgrna} = 0 if !exists $base1{$sgrna};
+	$hash3{$sgrna} = 0 if !exists $hash3{$sgrna};
+	$hash4{$sgrna} = 0 if !exists $hash4{$sgrna};
+	print OUT "$sgrna\t$val\t$base1{$sgrna}\t$base2{$sgrna}\t$gneg2{$sgrna}\t$hash3{$sgrna}\t$hash4{$sgrna}\n";
+}
+

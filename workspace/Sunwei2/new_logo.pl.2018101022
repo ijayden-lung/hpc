@@ -1,0 +1,20 @@
+#!/usr/bin/perl -w
+
+my %fg;
+my %bg;
+my %sumfg;
+my %sumbg;
+my ($sam1,$sam2) = @ARGV;
+open FILE,"Count_$sam1\+$sam2.txt";
+while(<FILE>){
+	chomp;
+	my ($seq,$bg,$fg) = split;
+	for(my$i=0;$i<15;$i++){
+		$fg{substr($seq,$i,1)}->{$i} += $fg;
+		$bg{substr($seq,$i,1)}->{$i} += $bg;
+		$sumfg{$i} += $fg;
+		$sumbg{$i} += $bg;
+	}
+}
+
+
