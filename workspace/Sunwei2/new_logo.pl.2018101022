@@ -30,7 +30,24 @@ while(my($key2,$val2) = each %bg){
 	print OUT "$key2";
 	for(my$j=0;$j<15;$j++){;
 		$val2->{$j} = 0 if ! exists $val2->{$j};
-		my $fre = $val2->{$j}/$sumbg{$key2}->{$j};
+		my $fre = $val2->{$j}/$sumbg{$j};
+		print OUT "\t$fre";
+	}
+	print OUT "\n";
+}
+
+
+open OUT,">Input_logo_origin_$sam1\+$sam2\_foreground";
+print OUT "header";
+for(my$j=1;$j<16;$j++){
+	print OUT "\t$j";
+}
+print OUT "\n";
+while(my($key2,$val2) = each %fg){
+	print OUT "$key2";
+	for(my$j=0;$j<15;$j++){;
+		$val2->{$j} = 0 if ! exists $val2->{$j};
+		my $fre = $val2->{$j}/$sumfg{$j};
 		print OUT "\t$fre";
 	}
 	print OUT "\n";
