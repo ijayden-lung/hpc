@@ -1,0 +1,77 @@
+#!/usr/bin/perl -w
+#
+
+my ($sam1,$num1,$sam2,$num2) = @ARGV;
+
+my %sum;
+my %seq;
+open FILE,"zcat WC_SW2_$sam1\_$num1\_L004_R1_001.fastq.gz |";
+while(<FILE>){
+	chomp;
+	if($.%4==2){
+		my $pre = substr($_,0,15);
+		my $left = substr($_,15);
+		my $idx = index($left,"TGG");
+		$idx = 35 if $idx == -1;
+		my $boolean = 1;
+		if($idx >=5){
+			my $notANum = 0;
+			for(my$i=0;$i<$idx;$i++){
+				if(substr($left,$i,1) ne "A"){
+					$notANum++;
+				}
+				if ($notANum > $idx/10){
+					$boolean = 0;
+					last;
+				}
+			}
+			$seq{$pre}->{'fg'}++ if $boolean ==1;
+		}
+		elsif($idx == 0){
+			$seq{$pre}->{'bg'}++;
+		}
+		$sum{$idx}++;
+	}
+}
+
+open FILE,"zcat WC_SW2_$sam2\_$num2\_L004_R1_001.fastq.gz |";
+while(<FILE>){
+	chomp;
+	if($.%4==2){
+		my $pre = substr($_,0,15);
+		my $left = substr($_,15);
+		my $idx = index($left,"TGG");
+		my $boolean = 1;
+		$idx = 35 if $idx == -1;
+		if($idx >=5){
+			my $notANum = 0;
+			for(my$i=0;$i<$idx;$i++){
+				if(substr($left,$i,1) ne "A"){
+					$notANum++;
+				}
+				if ($notANum > $idx/10){
+					$boolean = 0;
+					last;
+				}
+			}
+			$seq{$pre}->{'fg'}++ if $boolean ==1;
+		}
+		elsif($idx == 0){
+			$seq{$pre}->{'bg'}++;
+		}
+		$sum{$idx}++;
+	}
+}
+
+
+open OUT,">Count_$sam1\+$sam2.txt";
+while(my ($key,$val) = each %seq){
+	$val->{'fg'} = 0 if !exists $val->{'fg'};
+	$val->{'bg'} = 0 if !exists $val->{'bg'};
+	print OUT "$key\t$val->{'bg'}\t$val->{'fg'}\n";
+}
+
+foreach my $key (sort{$a<=>$b} keys %sum){
+	print  "$key\t$sum{$key}\n";
+}
+

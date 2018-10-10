@@ -1,0 +1,61 @@
+#!/usr/bin/perl -w
+#
+my ($sam1,$sam2) = @ARGV;
+open FILE,"Count_$sam1\+$sam2.txt";
+my %foreground;
+my %background;
+while(<FILE>){
+	chomp;
+	my ($seq,$bg,$fg) = split;
+	if($bg+$fg>2){
+		$bg++;
+		$fg++;
+		my $scoreFG = $fg/$bg;
+		my $scoreBG = $bg/$fg;
+		if($scoreFG >=5){
+			for(my$i=0;$i<15;$i++){
+				$foreground{substr($seq,$i,1)}->{$i} += $scoreFG;
+			}
+		}
+		if($scoreBG >=5){
+			for(my$i=0;$i<13;$i++){
+				$background{substr($seq,$i,1)}->{$i} += $scoreBG;
+			}
+		}
+
+	}
+}
+
+
+open OUT,">Input_logo_enrich_$sam1\+$sam2\_foregroud";
+print OUT "header";
+for(my$j=1;$j<16;$j++){
+	print OUT "\t$j";
+}
+print OUT "\n";
+while(my($key2,$val2) = each %foreground){
+	next if $key2 eq "N";
+	print OUT "$key2";
+	for(my$j=0;$j<15;$j++){;
+		$val2->{$j} = 0 if ! exists $val2->{$j};
+		print OUT "\t$val2->{$j}";
+	}
+	print OUT "\n";
+}
+
+
+open OUT,">Input_logo_enrich_$sam1\+$sam2\_background";
+print OUT "header";
+for(my$j=1;$j<16;$j++){
+	print OUT "\t$j";
+}
+print OUT "\n";
+while(my($key2,$val2) = each %background){
+	next if $key2 eq "N";
+	print OUT "$key2";
+	for(my$j=0;$j<15;$j++){;
+		$val2->{$j} = 0 if ! exists $val2->{$j};
+		print OUT "\t$val2->{$j}";
+	}
+	print OUT "\n";
+}
