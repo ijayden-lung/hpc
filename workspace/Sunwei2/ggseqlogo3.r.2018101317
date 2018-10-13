@@ -1,0 +1,25 @@
+#!/usr/bin/env Rscript
+
+require(ggplot2)
+require(ggseqlogo)
+library(grid)
+
+args<-commandArgs(T)
+
+pdf(args[4],height=12,width=12)
+
+
+data = as.matrix(read.table(args[1],header=TRUE,row.names=1))
+a<-ggseqlogo(data)+labs(legend.position="none")+labs(title="286+287 normalize bg")+theme(plot.title = element_text(hjust = 0.5))
+data = as.matrix(read.table(args[2],header=TRUE,row.names=1))
+b<-ggseqlogo(data)+labs(legend.position="none")+labs(title="286+287 normalize bg")+theme(plot.title = element_text(hjust = 0.5))
+data = as.matrix(read.table(args[3],header=TRUE,row.names=1))
+c<-ggseqlogo(data)+labs(legend.position="none")+labs(title="288+289 normalize bg")+theme(plot.title = element_text(hjust = 0.5))
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(3, 1)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+print(a, vp = vplayout(1, 1))
+print(b, vp = vplayout(2, 1))
+print(c, vp = vplayout(3, 1))
+

@@ -1,0 +1,34 @@
+#!/usr/bin/perl -w
+my ($sam1,$sam2) = @ARGV;
+
+my %bg;
+open BG,"Input_logo_origin_$sam1\+$sam2\_background";
+<BG>;
+while(<BG>){
+	chomp;
+	my @data = split;
+	my $base = shift @data;
+	$bg{$base} = \@data;
+}
+
+my %fg;
+open FG,"Input_logo_origin_$sam1\+$sam2\_foreground";
+my $header = <FG>;
+while(<FG>){
+	chomp;
+	my @data = split;
+	my $base = shift @data;
+	$fg{$base} = \@data;
+}
+
+open OUT,">Input_logo_norm_$sam1\+$sam2.txt";
+print OUT $header;
+while(my($key,$val) = each %fg){
+	my $val2 = $bg{$key};
+	print OUT "$key";
+	for(my$j=0;$j<15;$j++){;
+		my $fre = $val->[$j]/$val2->[$j];
+		print OUT "\t$fre";
+	}
+	print OUT "\n";
+}
