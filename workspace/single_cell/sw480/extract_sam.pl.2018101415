@@ -1,0 +1,12 @@
+#!/usr/bin/perl -w
+
+system("samtools view -H ../LF18/outs/possorted_genome_bam.bam | grep -E -v SN:mm10_plus_exo | sed 's/hg38__________//g' | cat >hg38_possorted_genome.sam");
+open OUT,">>hg38_possorted_genome.sam";
+open FILE,"samtools view ../LF18/outs/possorted_genome_bam.bam | awk '(\$3 ~ /^hg38/)' |";
+while(<FILE>){
+	chomp;
+	s/hg38__________//g;
+	print OUT "$_\n";
+}
+
+
