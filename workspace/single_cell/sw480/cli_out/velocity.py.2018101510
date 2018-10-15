@@ -1,0 +1,7 @@
+import velocyto as vcy
+vlm = vcy.VelocytoLoom("hg38_possorted_genome_ZUHJZ.loom")
+
+vlm.normalize("S", size=True, log=True)
+vlm.S_norm  # contains log normalized
+
+vlm.plot_fractions()

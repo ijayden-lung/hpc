@@ -1,0 +1,21 @@
+#!/usr/bin/perl -w
+
+open FILE,"text";
+my %hash;
+while(<FILE>){
+	chomp;
+	my ($inf,$form) = (split)[0,-1];
+	$hash{$form} = $inf;
+}
+
+open HEK,"/home/bio-longyk/workspace/CRISPR/wntscreen/new_year/hek293_fpkm.tsv";
+<HEK>;
+open OUT,">hek293_fpkm.txt";
+print OUT "gene_name\tgene_symbol\tfpkm\n";
+while(<HEK>){
+	chomp;
+	my ($gene,$exp) = (split)[1,3];
+	if(exists $hash{$gene}){
+		print OUT "$hash{$gene}\t$gene\t$exp\n";
+	}
+}
