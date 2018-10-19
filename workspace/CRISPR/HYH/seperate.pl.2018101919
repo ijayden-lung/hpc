@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+
+open FILE,"Input_mageck_hKO-NP_crispr.tsv";
+my $header = <FILE>;
+my @head = split /\t/,$header;
+open OUT1,">Input_mageck_hKO-NP_AGGTAA.tsv";
+open OUT2,">Input_mageck_hKO-NP_GTAAGT.tsv";
+open OUT3,">Input_mageck_hKO-NP_U1-TC.tsv";
+
+print OUT1 "$head[0]\t$head[1]";
+print OUT2 "$head[0]\t$head[1]";
+print OUT3 "$head[0]\t$head[1]";
+for(my$i=2;$i<10;$i++){
+	print OUT1 "\t$head[$i]";
+}
+for(my$i=10;$i<18;$i++){
+	print OUT2 "\t$head[$i]";
+}
+for(my$i=18;$i<26;$i++){
+	print OUT3 "\t$head[$i]";
+}
+print OUT1 "\n";
+print OUT2 "\n";
+print OUT3 "\n";
+
+while(<FILE>){
+	chomp;
+	my @data = split;
+	print OUT1 "$data[0]\t$data[1]";
+	print OUT2 "$data[0]\t$data[1]";
+	print OUT3 "$data[0]\t$data[1]";
+	for(my$i=2;$i<10;$i++){
+		print OUT1 "\t$data[$i]";
+	}
+	for(my$i=10;$i<18;$i++){
+		print OUT2 "\t$data[$i]";
+	}
+	for(my$i=18;$i<26;$i++){
+		print OUT3 "\t$data[$i]";
+	}
+	print OUT1 "\n";
+	print OUT2 "\n";
+	print OUT3 "\n";
+}
