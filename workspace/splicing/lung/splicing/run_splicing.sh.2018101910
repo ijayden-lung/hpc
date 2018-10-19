@@ -1,0 +1,19 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N SPLICING
+#PBS -l nodes=1:ppn=1
+#PBS -j oe 
+#PBS -l walltime=100:00:00
+#PBS -V
+#export  OMP_NUM_THREADS=1
+
+echo `date`
+echo "staring"
+cd /home/bio-longyk/workspace/splicing/lung/splicing/
+sample_list="sample_list"
+gtf="/home/bio-longyk/cnda/ensembl/hg38.ensemblv92.nopsuedo.gtf"
+
+fastASE --sampleList "$sample_list" --gtf "$gtf" --libType fr-secondstrand --outDir Day3_Day4/
+
+echo "finished"
+echo `date`
