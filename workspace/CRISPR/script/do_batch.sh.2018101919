@@ -37,8 +37,8 @@ cd $dir
 ################MAGECK TEST######################
 #With control sgrna
 sub="U1-TC"
-mageck test -k Input_mageck_$lib\_$exp.tsv  -t $sub-Sort1,$sub-Sort2 -c $sub-Baseline5,$sub-Baseline6 -n $sub-7days --pdf-report --normcounts-to-file --sort-criteria pos --remove-zero control
-mageck test -k Input_mageck_$lib\_$exp.tsv  -t $sub-Sort3,$sub-Sort4 -c $sub-Baseline7,$sub-Baseline8 -n $sub-10days --pdf-report --normcounts-to-file --sort-criteria pos --remove-zero control
+#mageck test -k Input_mageck_$lib\_$exp.tsv  -t $sub-Sort1,$sub-Sort2 -c $sub-Baseline5,$sub-Baseline6 -n $sub-7days --pdf-report --normcounts-to-file --sort-criteria pos --remove-zero control
+#mageck test -k Input_mageck_$lib\_$exp.tsv  -t $sub-Sort3,$sub-Sort4 -c $sub-Baseline7,$sub-Baseline8 -n $sub-10days --pdf-report --normcounts-to-file --sort-criteria pos --remove-zero control
 #Without control sgrna
 #mageck test -k Input_mageck_$lib\_$exp.tsv  -t GFP+1,GFP+2 -c Baseline1,Baseline2 -n $exp --pdf-report --normcounts-to-file  --sort-criteria pos --remove-zero control
 
@@ -46,8 +46,11 @@ mageck test -k Input_mageck_$lib\_$exp.tsv  -t $sub-Sort3,$sub-Sort4 -c $sub-Bas
 
 ######Scatterplot and CDF 
 #~/workspace/CRISPR/script/cdf.r $lib $exp\_before Input_mageck_$lib\_$exp.tsv  #####Need to be modified every time
-#~/workspace/CRISPR/script/scatterplot.r $lib $exp $exp.normalized.txt
-#~/workspace/CRISPR/script/cdf.r $lib $exp $exp.normalized.txt  #####Need to be modified every time
+
+~/workspace/CRISPR/script/scatterplot.r $lib $sub-7days $sub-7days.normalized.txt
+~/workspace/CRISPR/script/cdf.r $lib $sub-7days $sub-7days.normalized.txt  #####Need to be modified every time
+~/workspace/CRISPR/script/scatterplot.r $lib $sub-10days $sub-10days.normalized.txt
+~/workspace/CRISPR/script/cdf.r $lib $sub-10days $sub-10days.normalized.txt  #####Need to be modified every time
 
 
 ######Add mrna to screen
