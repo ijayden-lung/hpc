@@ -1,0 +1,19 @@
+#!/usr/bin/perl -w
+open FILE,"U1-TC-10days.normalized.txt";
+my %hash;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	if($data[4]>1000 && $data[5]>1000){
+		$hash{$data[0]} = '';
+	}
+}
+
+open FILE,"AGGTAA-10days.normalized.txt";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	if(exists $hash{$data[0]}){
+		print $_,"\n";
+	}
+}
