@@ -1,0 +1,11 @@
+#!/usr/bin/perl -w
+
+open FILE,"Day3_Day4/ASEvent.tsv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($ase_id,$ase_type,$gene_id,$gene_name,$chromosome,$strand,$fixSplicingSite,$percentDiff,$pvalue,$qvalue,$splicingSite) = split;
+	if($gene_name eq "TEAD1"){
+		print "$_\n";
+	}
+}

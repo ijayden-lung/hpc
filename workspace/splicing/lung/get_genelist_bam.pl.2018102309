@@ -1,0 +1,17 @@
+#!/usr/bin/perl -w
+
+
+my ($sam,$path,$gtf) = @ARGV;
+open FILE, $gtf;
+system ("samtools view -H $path >WIG/$sam.sam") ;
+while(<FILE>){
+	chomp;
+	my ($chr,$source,$domain,$str,$end) = split;
+	next if $domain ne "gene";
+	$command = "samtools view $path $chr:$str-$end >>WIG/$sam.sam";
+	system "$command";
+}
+
+system("samtools sort WIG/$sam.sam -O bam -o WIG/$sam.sorted.bam");
+system("samtools index WIG/$sam.sorted.bam");
+system("rm WIG/$sam.sam")
