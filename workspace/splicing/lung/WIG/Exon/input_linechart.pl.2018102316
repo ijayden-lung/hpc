@@ -1,0 +1,33 @@
+#!/usr/bin/perl -w
+my @exon4;
+my @exon5;
+my @exon6;
+
+
+open FILE,"FC_counts.txt";
+my $head = <FILE>;
+my @head = split /\t/,$head;
+shift @head;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	shift @data;
+	if($. == 5){
+		@exon4 = @data;
+	}
+	if($. == 6){
+		@exon5 = @data;
+	}
+	if($. == 7){
+		@exon6 = @data;
+	}
+}
+
+open OUT,">Input_Linechart_exon5.txt";
+print OUT "Time\tQuan\tRep\n";
+for(my$i=0;$i<@head;$i++){
+	my ($time,$rep) = split /\_/,$head[$i];
+	next if $time =~ /^D/;
+	my $exon = $exon5[$i]/$exon6[$i];
+	print OUT "$time\t$exon\trep$rep\n";
+}
