@@ -1,0 +1,38 @@
+#!/home/bio-longyk/apps/R-3.5.0/bin/Rscript
+#suppressPackageStartupMessages(library("DESeq2"))
+#library("pheatmap")
+#library("RColorBrewer")
+
+#args<-commandArgs(T)
+
+cts = read.table("SigGene.txt",header=TRUE,sep="\t",row.names=1)
+pdf("Heatmap_day0day7.pdf")
+
+
+coldata<-data.frame(row.names=colnames(cts),condition=c("day0","day0","day0","day1","day1","day1","day2","day2","day2","day3","day3","day3","day4","day4","day4","day5","day5","day5","day6","day6","day6","day7","day7","day7"))
+
+coldata
+dds <- DESeqDataSetFromMatrix(countData = cts,colData = coldata, design = ~ condition)
+###Alternative Step;
+
+rld <- vst(dds, blind = FALSE)
+sampleDists <- dist(t(assay(rld)))
+sampleDistMatrix <- as.matrix( sampleDists )
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+pheatmap(sampleDistMatrix,
+clustering_distance_rows = sampleDists,
+clustering_distance_cols = sampleDists,
+col = colors)
+
+plotPCA(rld)
+
+
+mat  <- assay(rld)
+mat  <- mat - rowMeans(mat)
+anno <- as.data.frame(colData(rld)[, c("condition")])	
+mat_col <- data.frame(group = anno)
+rownames(mat_col) <- colnames(mat)
+colnames(mat_col) = c("time")
+pheatmap(mat,show_rownames=FALSE,show_colnames=FALSE,annotation_col = mat_col)
+dev.off()
