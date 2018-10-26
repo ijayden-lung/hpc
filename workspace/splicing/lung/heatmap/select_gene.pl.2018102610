@@ -1,0 +1,31 @@
+#!/usr/bin/perl -w
+
+my @day = qw/day0_1 day0_2 day0_3 day1_1 day1_2 day1_3 day2_1 day2_2 day2_3 day3_1 day3_2 day3_3 day4_1 day4_2 day4_3 day5_2 day5_3 day6_1 day6_2 day6_3 day7_1 day7_2 day7_3/;
+my %sigGene;
+open FILE,"../DESeq2/DESeq2_geneName.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	if($data[2]>2000 && $data[7]<0.05){
+		$sigGene{$data[0]} = $data[1];
+	}
+}
+
+
+open FILE,"FC_counts.txt";
+<FILE>;
+open OUT,">SigGene.txt";
+print OUT join ("\t","gene_name",@day),"\n";
+
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $gene_id = shift @data;
+	my @data1 = @data[0..14];
+	my @data2 = @data[16..$#data];
+	next if $gene_id eq "ENSG00000274827";
+	if(exists $sigGene{$gene_id}){
+		print OUT join ("\t",$sigGene{$gene_id},@data1,@data2),"\n";
+	}
+}
