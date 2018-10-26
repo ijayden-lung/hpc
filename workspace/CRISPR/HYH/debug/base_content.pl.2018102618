@@ -1,0 +1,35 @@
+#!/usr/bin/perl -w
+
+open FILE,'zcat ../fastq/HYH-CRISPR-1-CGATGT_TKD181000722-2_1.fq.gz |';
+my %hash;
+while(<FILE>){
+	chomp;
+	if($.%4 == 2){
+		my @string = split //,$_;
+		for(my $i=0;$i<@string;$i++){
+			#$hash{$i}->{$string[$i]}++;
+			$hash{$string[$i]}->{$i}++;
+		}
+		#print "$_\n";
+	}
+}
+
+open OUT,'>Input_seqlogo_norm.txt';
+for(my$i=1;$i<=150;$i++){
+	print OUT "\t$i";
+}
+print OUT "\n";
+
+while (my ($base,$val) = each %hash){
+	next if $base eq "N";
+	print OUT $base;
+	foreach my $pos (sort{$a<=>$b} keys %$val){
+		print "\t$pos";
+		print OUT "\t$val->{$pos}";
+	}
+	print "\n";
+	print OUT "\n";
+}
+
+#system("./linechart.r Input_linechart_baseContent_norm.txt Linechart_baseContent_norm.pdf");
+#system("./linechart.r Input_linechart_baseContent_norm.txt Linechart_baseContent_norm.pdf");

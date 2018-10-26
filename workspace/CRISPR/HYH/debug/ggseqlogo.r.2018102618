@@ -1,0 +1,23 @@
+#!/usr/bin/env Rscript
+
+require(ggplot2)
+require(ggseqlogo)
+library(grid)
+
+args<-commandArgs(T)
+
+pdf("Seqlogo_AGTAA_sort2.pdf",height=9,width=15)
+
+data = as.matrix(read.table("Input_seqlogo_norm.txt",header=TRUE,row.names=1))
+a<-ggseqlogo(data)+
+#labs(legend.position="none")+
+#labs(title="0A")+
+theme(plot.title = element_text(hjust = 0.2))
+
+
+
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 1)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+print(a, vp = vplayout(1, 1))
