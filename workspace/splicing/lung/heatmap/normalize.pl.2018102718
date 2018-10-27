@@ -1,0 +1,23 @@
+#!/usr/bin/perl -w
+
+open FILE,"FC_counts.txt";
+<FILE>;
+my @sum;
+my $sum=0;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $gene = shift @data;
+	for(my$i=0;$i<@data;$i++){
+		$sum[$i] += $data[$i];
+		$sum += $data[$i];
+	}
+}
+my @size_factor;
+my $ave = $sum/@sum;
+for(my$i=0;$i<@sum;$i++){
+	$size_factor[$i] = $sum[$i]/$ave;
+}
+
+print "@sum\n";
+print "@size_factor\n";
