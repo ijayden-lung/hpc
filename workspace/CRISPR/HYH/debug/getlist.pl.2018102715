@@ -1,0 +1,31 @@
+#!/usr/bin/perl -w
+
+my %enrich;
+my ($exp1,$exp2,$exp3,$exp4) = ("GTAAGT-7days-3","GTAAGT-7days-4");
+open FILE,"$exp1.gene_summary.txt";
+<FILE>;
+my $i=0;
+while(<FILE>){
+	chomp;
+	my ($gene,$num,$neg_score,$neg_pval,$neg_fdr,$neg_rank,$neg_num,$neg_lfc,$pos_score,$pos_pval,$pos_fdr,$pos_rank,$pos_num,$pos_lfc) = split;
+	if($pos_num>1 && $pos_pval<0.01){
+		$i++;
+		$enrich{$gene} = $pos_pval;
+	}
+}
+print "$i\n";
+open FILE,"$exp2.gene_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$num,$neg_score,$neg_pval,$neg_fdr,$neg_rank,$neg_num,$neg_lfc,$pos_score,$pos_pval,$pos_fdr,$pos_rank,$pos_num,$pos_lfc) = split;
+	if($pos_num>1 && $pos_pval<0.01){
+		$enrich{$gene} = $pos_pval;
+	}
+}
+
+open OUT,">GTAAGT-10days_union_pval0.01.txt";
+while(my($gene,$val) = each %enrich){
+	print OUT "$gene\n";
+}
+
