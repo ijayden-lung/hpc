@@ -1,0 +1,52 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+args<-commandArgs(T)
+
+#+++++++++++++++++++++++++
+# Function to calculate the mean and the standard deviation
+	  # for each group
+#+++++++++++++++++++++++++
+# data : a data frame
+# varname : the name of a column containing the variable
+	  #to be summariezed
+# groupnames : vector of column names to be used as
+	  # grouping variables
+data_summary <- function(data, varname, groupnames){
+	require(plyr)
+	summary_func <- function(x, col){
+		c(mean = mean(x[[col]], na.rm=TRUE),
+				sd = sd(x[[col]], na.rm=TRUE))
+	}
+	data_sum<-ddply(data, groupnames, .fun=summary_func,
+			                  varname)
+	data_sum <- rename(data_sum, c("mean" = varname))
+return(data_sum)
+}
+
+
+
+df = read.table("Input_Linechart_exon5.txt",header=TRUE)
+pdf("Linechart_genegowithtead.pdf")
+
+head(df)
+ggplot(df,aes(x = time, y = quan, color = gene, group = gene)) + 
+geom_point() + geom_smooth(se = FALSE, method = "loess")+
+scale_colour_discrete(breaks=c("exon", "exon5","exon6"),labels=c("exon5/exon6", "exon5/exon4", "exon6/exon4"))+
+guides(fill=guide_legend(title=NULL))+
+theme(legend.title=element_blank())
+
+
+
+df2 <- data_summary(df, varname="quan",  groupnames=c("gene", "time"))
+df2$time=as.factor(df2$time)
+head(df2)
+ggplot(data=df2,aes(x=time,y=quan,group=gene,color=gene))+
+geom_line()+
+geom_point()+
+geom_errorbar(aes(ymin=quan-sd, ymax=quan+sd), width=.2, position=position_dodge(0.05))+
+labs(y="log2(readCount)",title= paste("RBP in Cluster ", args[1],sep=""))+
+theme(axis.title=element_text(size=20),axis.text=element_text(size=15),legend.title=element_blank(),plot.title = element_text(size=20,face = "bold",hjust = 0.5))
+
+#scale_colour_discrete(breaks=c("exon", "exon5","exon6"),labels=c("exon5/exon6", "exon5/exon4", "exon6/exon4"))+
+#guides(fill=guide_legend(title=NULL))+
+#theme(legend.title=element_blank())

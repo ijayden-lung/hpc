@@ -1,0 +1,49 @@
+#!/usr/bin/perl -w
+my ($clu) = @ARGV;
+my %rbp;
+open RBP,"rna_binding_proteins.txt";
+<RBP>;
+while(<RBP>){
+	chomp;
+	my @data = split /;/;
+	$data[1]  =~ s/\"//g;
+	$rbp{$data[1]} = '';
+
+}
+
+open FILE,"SigGene.txt";
+my $head = <FILE>;
+my @head = split /\t/,$head;
+shift @head;
+my %hash;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $gene = shift @data;
+	$hash{$gene} = \@data;
+}
+
+my %cluster;
+open CLU,"cluster.gene";
+<CLU>;
+while(<CLU>){
+	chomp;
+	my ($gene,$cluster) = split;
+	$cluster{$gene} = '' if $cluster  eq $clu;
+}
+
+open OUT,">Input_Linechart_exon5.txt";
+print OUT "quan\tgene\ttime\n";
+
+while(my($gene,$val) = each %hash){
+	#if($gene eq "SPSB1" || $gene eq "TINAGL1" || $gene eq "SLC2A1"){
+	next if $gene eq "GAPDH";
+	if(exists $rbp{$gene} && exists $cluster{$gene}){
+		for(my$i=0;$i<@head;$i++){
+			my ($time,$rep) = split /\_/,$head[$i];
+			my $quan = log($val->[$i])/log(2);
+			print OUT "$quan\t$gene\t$time\n";
+		}
+	}
+}
+system("./linechart.r $clu" );
