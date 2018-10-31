@@ -1,0 +1,19 @@
+#!/bin/bash
+#PBS -q fatser
+#PBS -N cellranger_count
+#PBS -l nodes=1:ppn=36
+#PBS -j oe 
+#PBS -l walltime=24:00:00
+cd ~/workspace/single_cell/
+
+#cellranger count --id=LF17 --transcriptome=/home/bio-longyk/cnda/10x_index/mm10_and_exogenous --fastqs=/home/bio-longyk/workspace/single_cell/1.rawdata --sample=LF17
+
+#cellranger count --id=LF18 --transcriptome=/home/bio-longyk/cnda/10x_index/hg38_and_mm10_and_exogenous --fastqs=/home/bio-longyk/workspace/single_cell/1.rawdata --sample=LF18
+
+
+
+#cellranger count --id=LF17 --transcriptome=/home/bio-longyk/cnda/10x_index/mm10_plus_exo --fastqs=/home/bio-longyk/workspace/single_cell/fastq --sample=LF17
+
+cellranger count --id=LF18_mouse --transcriptome=/home/bio-longyk/cnda/10x_index/mm10_plus_exo --fastqs=/home/bio-longyk/workspace/single_cell/fastq --sample=LF18
+
+#velocyto run10x  -@ 18 LF17 /home/bio-longyk/cnda/10x_index/mm10_exo.gtf 
