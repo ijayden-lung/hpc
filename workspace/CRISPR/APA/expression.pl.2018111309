@@ -1,0 +1,51 @@
+#!/usr/bin/perl -w
+open FILE,"APA_New_list";
+my %gene;
+while(<FILE>){
+	chomp;
+	my ($name,$symbol) = split;
+	$gene{$symbol} = $name;
+}
+open FILE,"U1_New_list";
+while(<FILE>){
+	chomp;
+	my ($name,$symbol) = split;
+	$gene{$symbol} = $name;
+}
+open FILE,"Exosome_New_list";
+while(<FILE>){
+	chomp;
+	my ($name,$symbol) = split;
+	$gene{$symbol} = $name;
+}
+
+my %hek;
+open FILE,"/home/bio-longyk/workspace/CRISPR/wntscreen/new_year/hek293_fpkm.tsv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($symbol,$ctrl,$test) = (split)[1,3,4];
+	$hek{$symbol} = ($ctrl+$test)/2;
+}
+my %sw480;
+open DES,"/home/bio-longyk/workspace/splicing/colon/FPKM_colon_merge.tsv";
+<DES>;
+while(<DES>){
+	chomp;
+	my ($gene_id,$gene_name,$high1,$high2,$low1,$low2) = split;
+	$sw480{$gene_name} = ($high1+$high2+$low1+$low2)/4;
+}
+
+
+open OUT,">APA_Gene_sw480_hek293.txt";
+print OUT "Name\tSymbol\tHek293\tSw480\n";
+while(my ($symbol,$gene) = each %gene){
+	if(!exists $hek{$symbol}){
+		$hek{$symbol} = 0;
+	}
+	if(!exists $sw480{$symbol}){
+		$sw480{$symbol} = 0;
+	}
+	printf OUT ("%s\t%s\t%.1f\t%.1f\n",$gene,$symbol,$hek{$symbol},$sw480{$symbol});
+}
+
