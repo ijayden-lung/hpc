@@ -1,0 +1,55 @@
+#!/usr/bin/perl -w
+
+my %hash1;
+open FILE,"hek293";
+while(<FILE>){
+	chomp;
+	$hash1{$_} ='';
+}
+my %hash2;
+open FILE,"AGGTAA-10days_union_pval0.01.txt";
+while(<FILE>){
+	chomp;
+	$hash2{$_} ='';
+}
+
+
+&Venn(\%hash1,\%hash2);
+sub Venn{
+	my ($ref1,$ref2,$info) = @_;
+	my %enrich1 = %$ref1;
+	my %enrich2 = %$ref2;
+	my (%rmats,%fast,%both);
+
+	my @Venn = (0,0,0);
+	foreach my $key (keys %enrich1){
+		if(exists $enrich2{$key}){
+			$Venn[2]++;
+			$both{$key} = '';
+		}
+		else{
+			$Venn[0]++;
+			$fast{$key} = '';
+		}
+	}
+
+	foreach my $key (keys %enrich2){
+		if(!exists $enrich1{$key}){
+			$Venn[1]++;
+			$rmats{$key} = '';
+		}
+	}
+
+	print "plot(Venn(SetNames = c('7day', '10day'), Weight=c('10'=$Venn[0],'01'=$Venn[1],'11'=$Venn[2])),doWeights = TRUE)\n";
+
+	open OUT, '>Venn.txt';
+	foreach my $key (keys %fast){
+		print OUT "7day\t$key\n";
+	}
+	foreach my $key (keys %rmats){
+		print OUT "10day\t$key\n";
+	}
+	foreach my $key (keys %both){
+		print OUT "Common\t$key\n";
+	}
+}
