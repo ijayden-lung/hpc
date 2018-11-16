@@ -1,0 +1,38 @@
+#!/usr/bin/perl -w
+
+my %gene;
+my %old;
+open FILE,"../np/RC_hKO-NP_np.tsv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$nc1,$nc2,$nc3,$nc4) = split;
+	next if $gene eq "NotHits";
+	$nc1 = $nc1+$nc3;
+	$nc2 = $nc2+$nc4;
+	$gene{$sgrna} = $gene;
+	$old{$sgrna} = "$nc1\t$nc2";
+}
+
+my %new;
+open FILE,"RC_hKO-NP_hek293.tsv";
+open OUT,">Input_mageck_hKO-NP_oldnew_hek293.tsv";
+<FILE>;
+print OUT "sgRNA\tgene\told1\told2\tnew1\tnew2\n";
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$nc1,$nc2) = split;
+	next if $gene eq "NotHits";
+	if(!exists $old{$sgrna}){
+		$old{$sgrna} = "0\t0";
+	}
+	$gene{$sgrna} = $gene;
+	$new{$sgrna} = "$nc1\t$nc2";
+}
+	
+while(my ($sgrna,$val) = each %old){
+	if(!exists $new{$sgrna}){
+		$new{$sgrna} = "0\t0";
+	}
+	print OUT "$sgrna\t$gene{$sgrna}\t$old{$sgrna}\t$new{$sgrna}\n";
+}
