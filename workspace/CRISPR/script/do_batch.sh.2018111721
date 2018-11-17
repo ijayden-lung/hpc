@@ -1,0 +1,87 @@
+#!/bin/bash
+
+ #### Default: ACACC GTTTT
+ #### some ACT,REP: TGTTG GTTTA
+ #### TTFKO: GTTGG GTTTA
+
+lib=hKO-NP
+exp=hek293
+
+dir='/home/bio-longyk/workspace/CRISPR/wntscreen/np2'
+cd $dir
+if [ ! -d OUT ];then
+	mkdir -p OUT
+fi
+for file in *fq.gz
+do
+	base=${file#*\/}
+	#arrIN=(${base//\_/ })
+	sam=${base%%.*}
+	#sam=${sam#*\-}
+	if [ ! -d OUT/$sam ];then
+		mkdir -p OUT/$sam
+	fi
+	#echo "mapping $sam"
+	#~/workspace/CRISPR/script/extract_gRNA2.pl $file $lib ACACC GTTTT OUT/$sam
+done
+
+
+
+cd $dir
+### Do this after finishing mapping job;
+#~/workspace/CRISPR/script/merge_log.pl $lib $exp
+#~/workspace/CRISPR/script/normalize.pl $lib $exp
+
+#~/workspace/CRISPR/script/input_mageck.pl $lib $exp
+
+################MAGECK TEST######################
+#With control sgrna
+#sub="AGGTAA"
+mageck test -k Input_mageck_$lib\_$exp.tsv  -c hek293_nc1,hek293_nc2,hek293_nc3,hek293_nc4 -t hek293_s1,hek293_s2 -n $exp --pdf-report --normcounts-to-file --sort-criteria pos --remove-zero control
+#mageck test -k Input_mageck_$lib\_$exp.tsv  -t gneg_seq_s1,gneg_seq_s2 -c gneg_seq_nc1,gneg_seq_nc2 -n $exp --pdf-report --normcounts-to-file --sort-criteria pos --remove-zero control --control-sgrna control_sgrna
+#mageck test -k Input_mageck_$lib\_$exp.tsv  -t $sub-Sort3 -c $sub-Baseline7,$sub-Baseline8 -n $sub-7days-3 --pdf-report --normcounts-to-file --sort-criteria pos --remove-zero control
+#mageck test -k Input_mageck_$lib\_$exp.tsv  -t $sub-Sort4 -c $sub-Baseline7,$sub-Baseline8 -n $sub-7days-4 --pdf-report --normcounts-to-file --sort-criteria pos --remove-zero control
+#Without control sgrna
+#mageck test -k Input_mageck_$lib\_$exp.tsv  -t GFP+1,GFP+2 -c Baseline1,Baseline2 -n $exp --pdf-report --normcounts-to-file  --sort-criteria pos --remove-zero control
+
+
+
+######Scatterplot and CDF 
+#~/workspace/CRISPR/script/cdf.r $lib $exp Input_mageck_$lib\_$exp.tsv  #####Need to be modified every time
+
+~/workspace/CRISPR/script/scatterplot.r $lib  $exp $exp.normalized.txt
+~/workspace/CRISPR/script/cdf.r $lib $exp $exp.normalized.txt  #####Need to be modified every time
+
+#~/workspace/CRISPR/script/scatterplot.r $lib $sub-10days $sub-10days.normalized.txt
+#~/workspace/CRISPR/script/cdf.r $lib $sub-10days $sub-10days.normalized.txt  #####Need to be modified every time
+
+
+######Add mrna to screen
+#~/workspace/CRISPR/script/add_mRNA2Sceen.pl $lib $exp
+
+#####Linechart
+#~/workspace/CRISPR/script/generate_ref.pl $lib
+#bowtie -p 18 -f -n 2 -l 23 --best ~/cnda/bt1_index/hg38 --al aligned_$lib.fa --un unaligned_$lib.fa ~/workspace/CRISPR/Library/$lib.fa >~/workspace/CRISPR/Library/$lib.sam
+#####Pos
+#~/workspace/CRISPR/script/input_linechart.pl hg38 pos $lib $exp
+#~/workspace/CRISPR/script/linechart.r pos $exp 
+#####Neg
+#~/workspace/CRISPR/script/input_linechart.pl hg38 neg $lib $exp
+#~/workspace/CRISPR/script/linechart.r neg $exp 
+
+
+
+#######GO pos
+#~/workspace/CRISPR/script/input_go.pl hg38 pos $lib $exp
+#~/workspace/CRISPR/script/goseq_hg38.R go.$lib.pos.$exp bg.$lib.$exp
+#mageckGSEA -s -o GSEA_kegg_hKO-NP.pos.sw480-np.txt -r rank.hKO-NP.pos.sw480-np -g ~/GSEA/c2.cp.kegg.v6.2.symbols.gmt -p 100000
+#mageckGSEA -s -o GSEA_gobp_hKO-NP.pos.sw480-np.txt -r rank.hKO-NP.pos.sw480-np -g ~/GSEA/c5.bp.v6.2.symbols.gmt -p 1000
+
+#######GO neg
+#~/workspace/CRISPR/script/input_go.pl hg38 neg $lib $exp
+#~/workspace/CRISPR/script/goseq_hg38.R go.$lib.neg.hek293-sw480 $lib.bg
+
+
+#./generate_ref.pl $lib
+#./generate_query.pl $lib $exp
+#./retrieve_notHits.pl $lib $exp
