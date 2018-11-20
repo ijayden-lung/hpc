@@ -1,0 +1,21 @@
+#!/bin/bash
+#PBS -q cal
+#PBS -N STAR
+#PBS -l nodes=1:ppn=12
+#PBS -o ${out}
+#PBS -j oe 
+#PBS -l walltime=06:00:00
+
+if [ ! -d ${inp} ];then
+	mkdir -p ${inp}
+fi
+cd $inp
+
+echo 'starting mapping with STAR'
+graphmap align -r /home/bio-longyk/cnda/lambda_phage.fa -d $fq1 -o $sam.sam
+####INDEX for sorted bam file
+#echo 'generating index with samtools'
+#samtools index -@ 12 Aligned.sortedByCoord.out.bam
+
+
+

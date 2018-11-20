@@ -1,0 +1,26 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+data = read.table("DESeq2/DESeq2_geneName_WHMvsWHE.txt",header=TRUE,row.names=1)
+pdf(paste("Density_colon.pdf",sep=''),width=12,height=12)
+
+#### Add psudo counts
+up.data  <-  data[data$Tag == "Up",]
+down.data <- data[data$Tag == "Down",]
+
+nrow(data)
+data = data[data$baseMean > min(up.data$baseMean),]
+
+nrow(data)
+nrow(up.data)
+nrow(down.data)
+
+ggplot()+geom_density(data=data,aes(x=log2(baseMean),colour="background"))+
+geom_density(data=up.data,aes(x=log2(baseMean),colour="up"))+
+geom_density(data=down.data,aes(x=log2(baseMean),colour="down"))+
+theme_bw()+
+theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank())
+
+
