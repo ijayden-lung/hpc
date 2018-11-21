@@ -1,0 +1,23 @@
+#!/bin/bash
+#PBS -q cal
+#PBS -N STAR
+#PBS -l nodes=1:ppn=24
+#PBS -o ${out}
+#PBS -j oe 
+#PBS -l walltime=06:00:00
+
+if [ ! -d ${inp} ];then
+	mkdir -p ${inp}
+fi
+cd $inp
+
+echo 'starting mapping with STAR'
+#graphmap align -r /home/bio-longyk/cnda/lambda_phage.fa -d $fq1 -o $sam.sam
+####INDEX for sorted bam file
+#echo 'generating index with samtools'
+#samtools sort -@ 24 $sam.sam -o $sam.sorted.bam
+#samtools index -@ 24 $sam.sorted.bam
+#rm $sam.sam
+qualimap bamqc -bam mapped2phage.sorted.bam -outformat PDF -outfile result.pdf -nt 24
+
+
