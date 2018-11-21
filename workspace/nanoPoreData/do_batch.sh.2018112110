@@ -1,16 +1,17 @@
 #!/bin/bash
 
 nodes=1
-ppn=24
+ppn=18
 threads=$[$nodes*$ppn]
 cat >star.sh << EOF
 #!/bin/bash
-#PBS -q cal
+#PBS -q fat
 #PBS -N STAR
 #PBS -l nodes=$nodes:ppn=$ppn
 #PBS -o \${out}
 #PBS -j oe 
 #PBS -l walltime=06:00:00
+#PBS -l mem=1500mb
 
 if [ ! -d \${inp} ];then
 	mkdir -p \${inp}
@@ -24,7 +25,7 @@ echo 'starting mapping with STAR'
 #samtools sort -@ $threads \$sam.sam -o \$sam.sorted.bam
 #samtools index -@ $threads \$sam.sorted.bam
 #rm \$sam.sam
-qualimap bamqc -bam mapped2phage.sorted.bam -outformat PDF -outfile result.pdf -nt 24
+qualimap bamqc -bam mapped2phage.sorted.bam -outformat PDF -outfile result.pdf -nt $threads #--java-mem-size=30M
 
 
 EOF
