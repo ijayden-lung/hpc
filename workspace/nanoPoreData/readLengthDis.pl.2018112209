@@ -1,0 +1,38 @@
+#!/usr/bin/perl -w
+
+open FILE,"samtools view STAR/nanoPoreData/nanoPoreData.sorted.bam | awk '{print \$2,\$10}'|";
+my %map;
+my %unmap;
+open OUT,">Input_readLengthDisturibution.txt";
+print OUT "readLength\tclass\n";
+while(<FILE>){
+	chomp;
+	my ($flag,$seq) = split;
+	my $len = length($seq);
+	if($flag != 4){
+		print OUT "$len\tmap\n";
+		#$map{$len}++;
+	}
+	else{
+		print OUT "$len\tunmap\n";
+		#$unmap{$len}++;
+	}
+}
+
+=pod
+open OUT,">Input_readLengthDisturibution.txt";
+#print OUT "readLength\tmap\tunmap\n";
+print OUT "readLength\tfrequency\tclass\n";
+foreach my $key (sort{$a<=>$b} keys %map){
+	print OUT "$key\t$map{$key}\tmap\n";
+	#$unmap{$key} = 0 if ! exists $unmap{$key};
+	#print OUT "$key\t$map{$key}\t$unmap{$key}\n";
+	#delete $unmap{$key};
+}
+
+
+foreach my $key (sort{$a<=>$b} keys %unmap){
+	print OUT "$key\t$unmap{$key}\tunmap\n";
+#	print OUT "$key\t0\t$unmap{$key}\n";
+}
+=cut
