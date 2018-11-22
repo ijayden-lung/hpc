@@ -1,0 +1,9 @@
+#!/usr/bin/perl -w
+
+open FILE,"samtools view STAR/nanoPoreData/mapped2phage.sorted.bam | awk '{print \$10,\$11}' |";
+open OUT,">fastq/phage.fq";
+while(<FILE>){
+	chomp;
+	my ($seq,$qual) = split;
+	print OUT "\@$.\n$seq\n+\n$qual\n";
+}
