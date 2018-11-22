@@ -1,0 +1,10 @@
+#!/usr/bin/env Rscript
+library(grid)
+library(ggplot2)
+args<-commandArgs(T)
+pdf("CDF_readLengthDisturibution.pdf",height=6,width=8)
+
+data = read.table('Input_readLengthDisturibution.txt',header=TRUE)
+#ggplot(data, aes(x=readLength,..density..,color=class,fill=class))+stat_ecdf(geom = "step",pad=FALSE)+scale_x_continuous("log10 read length")+scale_y_continuous("Cumulative percentage",breaks=0.1*(0:10),labels=scales::percent)
+ggplot(data, aes(x=readLength,..density..,colour =class,fill=class))+geom_density()+
+xlim(0,25000)#geom_histogram(bins = 100)

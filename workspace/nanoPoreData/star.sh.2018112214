@@ -1,0 +1,26 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N STAR
+#PBS -l nodes=1:ppn=18
+#PBS -o ${out}
+#PBS -j oe 
+#PBS -l walltime=06:00:00
+#PBS -l mem=1500mb
+
+if [ ! -d ${inp} ];then
+	mkdir -p ${inp}
+fi
+cd $inp
+
+echo 'starting mapping with STAR'
+#graphmap align -r /home/bio-longyk/cnda/lambda_phage.fa -d $fq1 -o $sam.sam
+#graphmap owler -r $fq1 -d $fq1 -o overlaps.mhap 
+graphmap owler -r $fq1 -d $fq1  -o overlaps.paf -L paf  
+####INDEX for sorted bam file
+#echo 'generating index with samtools'
+#samtools sort -@ 18 $sam.sam -o $sam.sorted.bam
+#samtools index -@ 18 $sam.sorted.bam
+#rm $sam.sam
+#qualimap bamqc -bam mapped2phage.sorted.bam -outformat PDF -outfile result.pdf -nt 18 #--java-mem-size=30M
+
+
