@@ -1,0 +1,65 @@
+#!/bin/sh
+
+
+#  Path to Canu.
+
+syst=`uname -s`
+arch=`uname -m | sed s/x86_64/amd64/`
+
+bin="/home/bio-longyk/apps/Miniconda3/libexec/bin/$syst-$arch/bin"
+
+if [ ! -d "$bin" ] ; then
+  bin="/home/bio-longyk/apps/Miniconda3/libexec/bin"
+fi
+
+#  Report paths.
+
+echo ""
+echo "Found perl:"
+echo "  " `which perl`
+echo "  " `perl --version | grep version`
+echo ""
+echo "Found java:"
+echo "  " `which /home/bio-longyk/jdk1.8.0_151/bin/java`
+echo "  " `/home/bio-longyk/jdk1.8.0_151/bin/java -showversion 2>&1 | head -n 1`
+echo ""
+echo "Found canu:"
+echo "  " $bin/canu
+echo "  " `$bin/canu -version`
+echo ""
+
+
+#  Environment for any object storage.
+
+export CANU_OBJECT_STORE_CLIENT=
+export CANU_OBJECT_STORE_NAMESPACE=lambda
+export CANU_OBJECT_STORE_PROJECT=
+
+
+
+
+/home/bio-longyk/apps/Miniconda3/libexec/bin/meryl -C k=16 threads=4 memory=12 \
+  count segment=1/01 ../../lambda.seqStore \
+> lambda.ms16.config.01.out 2>&1
+/home/bio-longyk/apps/Miniconda3/libexec/bin/meryl -C k=16 threads=4 memory=12 \
+  count segment=1/02 ../../lambda.seqStore \
+> lambda.ms16.config.02.out 2>&1
+/home/bio-longyk/apps/Miniconda3/libexec/bin/meryl -C k=16 threads=4 memory=12 \
+  count segment=1/04 ../../lambda.seqStore \
+> lambda.ms16.config.04.out 2>&1
+/home/bio-longyk/apps/Miniconda3/libexec/bin/meryl -C k=16 threads=4 memory=12 \
+  count segment=1/06 ../../lambda.seqStore \
+> lambda.ms16.config.06.out 2>&1
+/home/bio-longyk/apps/Miniconda3/libexec/bin/meryl -C k=16 threads=4 memory=12 \
+  count segment=1/08 ../../lambda.seqStore \
+> lambda.ms16.config.08.out 2>&1
+/home/bio-longyk/apps/Miniconda3/libexec/bin/meryl -C k=16 threads=4 memory=12 \
+  count segment=1/12 ../../lambda.seqStore \
+> lambda.ms16.config.12.out 2>&1
+/home/bio-longyk/apps/Miniconda3/libexec/bin/meryl -C k=16 threads=4 memory=12 \
+  count segment=1/16 ../../lambda.seqStore \
+> lambda.ms16.config.16.out 2>&1
+/home/bio-longyk/apps/Miniconda3/libexec/bin/meryl -C k=16 threads=4 memory=12 \
+  count segment=1/20 ../../lambda.seqStore \
+> lambda.ms16.config.20.out 2>&1
+exit 0

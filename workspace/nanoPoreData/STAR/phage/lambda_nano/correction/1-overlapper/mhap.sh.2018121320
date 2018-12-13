@@ -1,0 +1,659 @@
+#!/bin/sh
+
+
+#  Path to Canu.
+
+syst=`uname -s`
+arch=`uname -m | sed s/x86_64/amd64/`
+
+bin="/home/bio-longyk/apps/Miniconda3/libexec/bin/$syst-$arch/bin"
+
+if [ ! -d "$bin" ] ; then
+  bin="/home/bio-longyk/apps/Miniconda3/libexec/bin"
+fi
+
+#  Report paths.
+
+echo ""
+echo "Found perl:"
+echo "  " `which perl`
+echo "  " `perl --version | grep version`
+echo ""
+echo "Found java:"
+echo "  " `which /home/bio-longyk/jdk1.8.0_151/bin/java`
+echo "  " `/home/bio-longyk/jdk1.8.0_151/bin/java -showversion 2>&1 | head -n 1`
+echo ""
+echo "Found canu:"
+echo "  " $bin/canu
+echo "  " `$bin/canu -version`
+echo ""
+
+
+#  Environment for any object storage.
+
+export CANU_OBJECT_STORE_CLIENT=
+export CANU_OBJECT_STORE_NAMESPACE=lambda
+export CANU_OBJECT_STORE_PROJECT=
+
+
+
+
+#  Discover the job ID to run, from either a grid environment variable and a
+#  command line offset, or directly from the command line.
+#
+if [ x$CANU_LOCAL_JOB_ID = x -o x$CANU_LOCAL_JOB_ID = xundefined -o x$CANU_LOCAL_JOB_ID = x0 ]; then
+  baseid=$1
+  offset=0
+else
+  baseid=$CANU_LOCAL_JOB_ID
+  offset=$1
+fi
+if [ x$offset = x ]; then
+  offset=0
+fi
+if [ x$baseid = x ]; then
+  echo Error: I need CANU_LOCAL_JOB_ID set, or a job index on the command line.
+  exit
+fi
+jobid=`expr $baseid + $offset`
+if [ x$CANU_LOCAL_JOB_ID = x ]; then
+  echo Running job $jobid based on command line options.
+else
+  echo Running job $jobid based on CANU_LOCAL_JOB_ID=$CANU_LOCAL_JOB_ID and offset=$offset.
+fi
+
+if [ $jobid -eq 1 ] ; then
+  blk="000001"
+  slf=""
+  qry="000001"
+fi
+
+if [ $jobid -eq 2 ] ; then
+  blk="000001"
+  slf="--no-self"
+  qry="000002"
+fi
+
+if [ $jobid -eq 3 ] ; then
+  blk="000001"
+  slf="--no-self"
+  qry="000003"
+fi
+
+if [ $jobid -eq 4 ] ; then
+  blk="000001"
+  slf="--no-self"
+  qry="000004"
+fi
+
+if [ $jobid -eq 5 ] ; then
+  blk="000002"
+  slf=""
+  qry="000005"
+fi
+
+if [ $jobid -eq 6 ] ; then
+  blk="000002"
+  slf="--no-self"
+  qry="000006"
+fi
+
+if [ $jobid -eq 7 ] ; then
+  blk="000002"
+  slf="--no-self"
+  qry="000007"
+fi
+
+if [ $jobid -eq 8 ] ; then
+  blk="000002"
+  slf="--no-self"
+  qry="000008"
+fi
+
+if [ $jobid -eq 9 ] ; then
+  blk="000003"
+  slf=""
+  qry="000009"
+fi
+
+if [ $jobid -eq 10 ] ; then
+  blk="000003"
+  slf="--no-self"
+  qry="000010"
+fi
+
+if [ $jobid -eq 11 ] ; then
+  blk="000003"
+  slf="--no-self"
+  qry="000011"
+fi
+
+if [ $jobid -eq 12 ] ; then
+  blk="000003"
+  slf="--no-self"
+  qry="000012"
+fi
+
+if [ $jobid -eq 13 ] ; then
+  blk="000004"
+  slf=""
+  qry="000013"
+fi
+
+if [ $jobid -eq 14 ] ; then
+  blk="000004"
+  slf="--no-self"
+  qry="000014"
+fi
+
+if [ $jobid -eq 15 ] ; then
+  blk="000004"
+  slf="--no-self"
+  qry="000015"
+fi
+
+if [ $jobid -eq 16 ] ; then
+  blk="000004"
+  slf="--no-self"
+  qry="000016"
+fi
+
+if [ $jobid -eq 17 ] ; then
+  blk="000005"
+  slf=""
+  qry="000017"
+fi
+
+if [ $jobid -eq 18 ] ; then
+  blk="000005"
+  slf="--no-self"
+  qry="000018"
+fi
+
+if [ $jobid -eq 19 ] ; then
+  blk="000005"
+  slf="--no-self"
+  qry="000019"
+fi
+
+if [ $jobid -eq 20 ] ; then
+  blk="000005"
+  slf="--no-self"
+  qry="000020"
+fi
+
+if [ $jobid -eq 21 ] ; then
+  blk="000006"
+  slf=""
+  qry="000021"
+fi
+
+if [ $jobid -eq 22 ] ; then
+  blk="000006"
+  slf="--no-self"
+  qry="000022"
+fi
+
+if [ $jobid -eq 23 ] ; then
+  blk="000006"
+  slf="--no-self"
+  qry="000023"
+fi
+
+if [ $jobid -eq 24 ] ; then
+  blk="000006"
+  slf="--no-self"
+  qry="000024"
+fi
+
+if [ $jobid -eq 25 ] ; then
+  blk="000007"
+  slf=""
+  qry="000025"
+fi
+
+if [ $jobid -eq 26 ] ; then
+  blk="000007"
+  slf="--no-self"
+  qry="000026"
+fi
+
+if [ $jobid -eq 27 ] ; then
+  blk="000007"
+  slf="--no-self"
+  qry="000027"
+fi
+
+if [ $jobid -eq 28 ] ; then
+  blk="000007"
+  slf="--no-self"
+  qry="000028"
+fi
+
+if [ $jobid -eq 29 ] ; then
+  blk="000008"
+  slf=""
+  qry="000029"
+fi
+
+if [ $jobid -eq 30 ] ; then
+  blk="000008"
+  slf="--no-self"
+  qry="000030"
+fi
+
+if [ $jobid -eq 31 ] ; then
+  blk="000008"
+  slf="--no-self"
+  qry="000031"
+fi
+
+if [ $jobid -eq 32 ] ; then
+  blk="000008"
+  slf="--no-self"
+  qry="000032"
+fi
+
+if [ $jobid -eq 33 ] ; then
+  blk="000009"
+  slf=""
+  qry="000033"
+fi
+
+if [ $jobid -eq 34 ] ; then
+  blk="000009"
+  slf="--no-self"
+  qry="000034"
+fi
+
+if [ $jobid -eq 35 ] ; then
+  blk="000009"
+  slf="--no-self"
+  qry="000035"
+fi
+
+if [ $jobid -eq 36 ] ; then
+  blk="000010"
+  slf=""
+  qry="000036"
+fi
+
+if [ $jobid -eq 37 ] ; then
+  blk="000010"
+  slf="--no-self"
+  qry="000037"
+fi
+
+if [ $jobid -eq 38 ] ; then
+  blk="000010"
+  slf="--no-self"
+  qry="000038"
+fi
+
+if [ $jobid -eq 39 ] ; then
+  blk="000011"
+  slf=""
+  qry="000039"
+fi
+
+if [ $jobid -eq 40 ] ; then
+  blk="000011"
+  slf="--no-self"
+  qry="000040"
+fi
+
+if [ $jobid -eq 41 ] ; then
+  blk="000011"
+  slf="--no-self"
+  qry="000041"
+fi
+
+if [ $jobid -eq 42 ] ; then
+  blk="000012"
+  slf=""
+  qry="000042"
+fi
+
+if [ $jobid -eq 43 ] ; then
+  blk="000012"
+  slf="--no-self"
+  qry="000043"
+fi
+
+if [ $jobid -eq 44 ] ; then
+  blk="000012"
+  slf="--no-self"
+  qry="000044"
+fi
+
+if [ $jobid -eq 45 ] ; then
+  blk="000013"
+  slf=""
+  qry="000045"
+fi
+
+if [ $jobid -eq 46 ] ; then
+  blk="000013"
+  slf="--no-self"
+  qry="000046"
+fi
+
+if [ $jobid -eq 47 ] ; then
+  blk="000013"
+  slf="--no-self"
+  qry="000047"
+fi
+
+if [ $jobid -eq 48 ] ; then
+  blk="000014"
+  slf=""
+  qry="000048"
+fi
+
+if [ $jobid -eq 49 ] ; then
+  blk="000014"
+  slf="--no-self"
+  qry="000049"
+fi
+
+if [ $jobid -eq 50 ] ; then
+  blk="000014"
+  slf="--no-self"
+  qry="000050"
+fi
+
+if [ $jobid -eq 51 ] ; then
+  blk="000015"
+  slf=""
+  qry="000051"
+fi
+
+if [ $jobid -eq 52 ] ; then
+  blk="000015"
+  slf="--no-self"
+  qry="000052"
+fi
+
+if [ $jobid -eq 53 ] ; then
+  blk="000015"
+  slf="--no-self"
+  qry="000053"
+fi
+
+if [ $jobid -eq 54 ] ; then
+  blk="000016"
+  slf=""
+  qry="000054"
+fi
+
+if [ $jobid -eq 55 ] ; then
+  blk="000016"
+  slf="--no-self"
+  qry="000055"
+fi
+
+if [ $jobid -eq 56 ] ; then
+  blk="000016"
+  slf="--no-self"
+  qry="000056"
+fi
+
+if [ $jobid -eq 57 ] ; then
+  blk="000017"
+  slf=""
+  qry="000057"
+fi
+
+if [ $jobid -eq 58 ] ; then
+  blk="000017"
+  slf="--no-self"
+  qry="000058"
+fi
+
+if [ $jobid -eq 59 ] ; then
+  blk="000017"
+  slf="--no-self"
+  qry="000059"
+fi
+
+if [ $jobid -eq 60 ] ; then
+  blk="000018"
+  slf=""
+  qry="000060"
+fi
+
+if [ $jobid -eq 61 ] ; then
+  blk="000018"
+  slf="--no-self"
+  qry="000061"
+fi
+
+if [ $jobid -eq 62 ] ; then
+  blk="000019"
+  slf=""
+  qry="000062"
+fi
+
+if [ $jobid -eq 63 ] ; then
+  blk="000019"
+  slf="--no-self"
+  qry="000063"
+fi
+
+if [ $jobid -eq 64 ] ; then
+  blk="000020"
+  slf=""
+  qry="000064"
+fi
+
+if [ $jobid -eq 65 ] ; then
+  blk="000020"
+  slf="--no-self"
+  qry="000065"
+fi
+
+if [ $jobid -eq 66 ] ; then
+  blk="000021"
+  slf=""
+  qry="000066"
+fi
+
+if [ $jobid -eq 67 ] ; then
+  blk="000021"
+  slf="--no-self"
+  qry="000067"
+fi
+
+if [ $jobid -eq 68 ] ; then
+  blk="000022"
+  slf=""
+  qry="000068"
+fi
+
+if [ $jobid -eq 69 ] ; then
+  blk="000022"
+  slf="--no-self"
+  qry="000069"
+fi
+
+if [ $jobid -eq 70 ] ; then
+  blk="000023"
+  slf=""
+  qry="000070"
+fi
+
+if [ $jobid -eq 71 ] ; then
+  blk="000023"
+  slf="--no-self"
+  qry="000071"
+fi
+
+if [ $jobid -eq 72 ] ; then
+  blk="000024"
+  slf=""
+  qry="000072"
+fi
+
+if [ $jobid -eq 73 ] ; then
+  blk="000024"
+  slf="--no-self"
+  qry="000073"
+fi
+
+if [ $jobid -eq 74 ] ; then
+  blk="000025"
+  slf=""
+  qry="000074"
+fi
+
+if [ $jobid -eq 75 ] ; then
+  blk="000025"
+  slf="--no-self"
+  qry="000075"
+fi
+
+if [ $jobid -eq 76 ] ; then
+  blk="000026"
+  slf=""
+  qry="000076"
+fi
+
+if [ $jobid -eq 77 ] ; then
+  blk="000026"
+  slf="--no-self"
+  qry="000077"
+fi
+
+if [ $jobid -eq 78 ] ; then
+  blk="000027"
+  slf=""
+  qry="000078"
+fi
+
+if [ $jobid -eq 79 ] ; then
+  blk="000028"
+  slf=""
+  qry="000079"
+fi
+
+if [ $jobid -eq 80 ] ; then
+  blk="000029"
+  slf=""
+  qry="000080"
+fi
+
+if [ $jobid -eq 81 ] ; then
+  blk="000030"
+  slf=""
+  qry="000081"
+fi
+
+if [ $jobid -eq 82 ] ; then
+  blk="000031"
+  slf=""
+  qry="000082"
+fi
+
+if [ $jobid -eq 83 ] ; then
+  blk="000032"
+  slf=""
+  qry="000083"
+fi
+
+if [ $jobid -eq 84 ] ; then
+  blk="000033"
+  slf=""
+  qry="000084"
+fi
+
+if [ $jobid -eq 85 ] ; then
+  blk="000034"
+  slf=""
+  qry="000085"
+fi
+
+if [ $jobid -eq 86 ] ; then
+  blk="000035"
+  slf=""
+  qry="000086"
+fi
+
+if [ $jobid -eq 87 ] ; then
+  blk="000036"
+  slf=""
+  qry="000087"
+fi
+
+
+if [ x$qry = x ]; then
+  echo Error: Job index out of range.
+  exit 1
+fi
+
+if [ -e ./results/$qry.ovb ]; then
+  echo Job previously completed successfully.
+  exit
+fi
+
+
+if [ -e ./queries.tar -a ! -d ./queries ] ; then
+  tar -xf ./queries.tar
+fi
+
+if [ ! -d ./results ]; then
+  mkdir -p ./results
+fi
+
+if [ ! -d ./blocks ] ; then
+  mkdir -p ./blocks
+fi
+for ii in `ls ./queries/$qry` ; do
+  echo Fetch blocks/$ii
+done
+
+
+echo ""
+echo Running block $blk in query $qry
+echo ""
+
+if [ ! -e ./results/$qry.mhap ] ; then
+  /home/bio-longyk/jdk1.8.0_151/bin/java -d64 -XX:ParallelGCThreads=16 -server -Xms5530m -Xmx5530m \
+    -jar  $bin/../share/java/classes/mhap-2.1.3.jar  \
+    --repeat-weight 0.9 --repeat-idf-scale 10 -k 16 \
+    --store-full-id \
+    --num-hashes 256 \
+    --num-min-matches 3 \
+    --threshold 0.85 \
+    --filter-threshold 0.0000001 \
+    --ordered-sketch-size 1000 \
+    --ordered-kmer-size 14 \
+    --min-olap-length 500 \
+    --num-threads 16 \
+    -s  ./blocks/$blk.dat $slf  \
+    -q  queries/$qry  \
+  > ./results/$qry.mhap.WORKING \
+  && \
+  mv -f ./results/$qry.mhap.WORKING ./results/$qry.mhap
+fi
+
+if [   -e ./results/$qry.mhap -a \
+     ! -e ./results/$qry.ovb ] ; then
+  $bin/mhapConvert \
+    -S ../../lambda.seqStore \
+    -o ./results/$qry.mhap.ovb.WORKING \
+    ./results/$qry.mhap \
+  && \
+  mv ./results/$qry.mhap.ovb.WORKING ./results/$qry.mhap.ovb
+fi
+
+if [   -e ./results/$qry.mhap -a \
+       -e ./results/$qry.mhap.ovb ] ; then
+  rm -f ./results/$qry.mhap
+fi
+
+if [ -e ./results/$qry.mhap.ovb ] ; then
+  mv -f ./results/$qry.mhap.ovb ./results/$qry.ovb
+fi
+
+
+exit 0

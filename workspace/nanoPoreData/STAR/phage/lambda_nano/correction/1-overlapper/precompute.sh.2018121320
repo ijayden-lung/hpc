@@ -1,0 +1,320 @@
+#!/bin/sh
+
+
+#  Path to Canu.
+
+syst=`uname -s`
+arch=`uname -m | sed s/x86_64/amd64/`
+
+bin="/home/bio-longyk/apps/Miniconda3/libexec/bin/$syst-$arch/bin"
+
+if [ ! -d "$bin" ] ; then
+  bin="/home/bio-longyk/apps/Miniconda3/libexec/bin"
+fi
+
+#  Report paths.
+
+echo ""
+echo "Found perl:"
+echo "  " `which perl`
+echo "  " `perl --version | grep version`
+echo ""
+echo "Found java:"
+echo "  " `which /home/bio-longyk/jdk1.8.0_151/bin/java`
+echo "  " `/home/bio-longyk/jdk1.8.0_151/bin/java -showversion 2>&1 | head -n 1`
+echo ""
+echo "Found canu:"
+echo "  " $bin/canu
+echo "  " `$bin/canu -version`
+echo ""
+
+
+#  Environment for any object storage.
+
+export CANU_OBJECT_STORE_CLIENT=
+export CANU_OBJECT_STORE_NAMESPACE=lambda
+export CANU_OBJECT_STORE_PROJECT=
+
+
+
+
+#  Discover the job ID to run, from either a grid environment variable and a
+#  command line offset, or directly from the command line.
+#
+if [ x$CANU_LOCAL_JOB_ID = x -o x$CANU_LOCAL_JOB_ID = xundefined -o x$CANU_LOCAL_JOB_ID = x0 ]; then
+  baseid=$1
+  offset=0
+else
+  baseid=$CANU_LOCAL_JOB_ID
+  offset=$1
+fi
+if [ x$offset = x ]; then
+  offset=0
+fi
+if [ x$baseid = x ]; then
+  echo Error: I need CANU_LOCAL_JOB_ID set, or a job index on the command line.
+  exit
+fi
+jobid=`expr $baseid + $offset`
+if [ x$CANU_LOCAL_JOB_ID = x ]; then
+  echo Running job $jobid based on command line options.
+else
+  echo Running job $jobid based on CANU_LOCAL_JOB_ID=$CANU_LOCAL_JOB_ID and offset=$offset.
+fi
+
+if [ $jobid -eq 1 ] ; then
+  rge="-b 1 -e 16200"
+  job="000001"
+fi
+
+if [ $jobid -eq 2 ] ; then
+  rge="-b 16201 -e 32400"
+  job="000002"
+fi
+
+if [ $jobid -eq 3 ] ; then
+  rge="-b 32401 -e 48600"
+  job="000003"
+fi
+
+if [ $jobid -eq 4 ] ; then
+  rge="-b 48601 -e 64800"
+  job="000004"
+fi
+
+if [ $jobid -eq 5 ] ; then
+  rge="-b 64801 -e 81000"
+  job="000005"
+fi
+
+if [ $jobid -eq 6 ] ; then
+  rge="-b 81001 -e 97200"
+  job="000006"
+fi
+
+if [ $jobid -eq 7 ] ; then
+  rge="-b 97201 -e 113400"
+  job="000007"
+fi
+
+if [ $jobid -eq 8 ] ; then
+  rge="-b 113401 -e 129600"
+  job="000008"
+fi
+
+if [ $jobid -eq 9 ] ; then
+  rge="-b 129601 -e 145800"
+  job="000009"
+fi
+
+if [ $jobid -eq 10 ] ; then
+  rge="-b 145801 -e 162000"
+  job="000010"
+fi
+
+if [ $jobid -eq 11 ] ; then
+  rge="-b 162001 -e 178200"
+  job="000011"
+fi
+
+if [ $jobid -eq 12 ] ; then
+  rge="-b 178201 -e 194400"
+  job="000012"
+fi
+
+if [ $jobid -eq 13 ] ; then
+  rge="-b 194401 -e 210600"
+  job="000013"
+fi
+
+if [ $jobid -eq 14 ] ; then
+  rge="-b 210601 -e 226800"
+  job="000014"
+fi
+
+if [ $jobid -eq 15 ] ; then
+  rge="-b 226801 -e 243000"
+  job="000015"
+fi
+
+if [ $jobid -eq 16 ] ; then
+  rge="-b 243001 -e 259200"
+  job="000016"
+fi
+
+if [ $jobid -eq 17 ] ; then
+  rge="-b 259201 -e 275400"
+  job="000017"
+fi
+
+if [ $jobid -eq 18 ] ; then
+  rge="-b 275401 -e 291600"
+  job="000018"
+fi
+
+if [ $jobid -eq 19 ] ; then
+  rge="-b 291601 -e 307800"
+  job="000019"
+fi
+
+if [ $jobid -eq 20 ] ; then
+  rge="-b 307801 -e 324000"
+  job="000020"
+fi
+
+if [ $jobid -eq 21 ] ; then
+  rge="-b 324001 -e 340200"
+  job="000021"
+fi
+
+if [ $jobid -eq 22 ] ; then
+  rge="-b 340201 -e 356400"
+  job="000022"
+fi
+
+if [ $jobid -eq 23 ] ; then
+  rge="-b 356401 -e 372600"
+  job="000023"
+fi
+
+if [ $jobid -eq 24 ] ; then
+  rge="-b 372601 -e 388800"
+  job="000024"
+fi
+
+if [ $jobid -eq 25 ] ; then
+  rge="-b 388801 -e 405000"
+  job="000025"
+fi
+
+if [ $jobid -eq 26 ] ; then
+  rge="-b 405001 -e 421200"
+  job="000026"
+fi
+
+if [ $jobid -eq 27 ] ; then
+  rge="-b 421201 -e 437400"
+  job="000027"
+fi
+
+if [ $jobid -eq 28 ] ; then
+  rge="-b 437401 -e 453600"
+  job="000028"
+fi
+
+if [ $jobid -eq 29 ] ; then
+  rge="-b 453601 -e 469800"
+  job="000029"
+fi
+
+if [ $jobid -eq 30 ] ; then
+  rge="-b 469801 -e 486000"
+  job="000030"
+fi
+
+if [ $jobid -eq 31 ] ; then
+  rge="-b 486001 -e 502200"
+  job="000031"
+fi
+
+if [ $jobid -eq 32 ] ; then
+  rge="-b 502201 -e 518400"
+  job="000032"
+fi
+
+if [ $jobid -eq 33 ] ; then
+  rge="-b 518401 -e 534600"
+  job="000033"
+fi
+
+if [ $jobid -eq 34 ] ; then
+  rge="-b 534601 -e 550800"
+  job="000034"
+fi
+
+if [ $jobid -eq 35 ] ; then
+  rge="-b 550801 -e 567000"
+  job="000035"
+fi
+
+if [ $jobid -eq 36 ] ; then
+  rge="-b 567001 -e 570425"
+  job="000036"
+fi
+
+
+if [ x$job = x ] ; then
+  echo Job partitioning error.  jobid $jobid is invalid.
+  exit 1
+fi
+
+if [ ! -d ./blocks ]; then
+  mkdir -p ./blocks
+fi
+
+
+if [ -e blocks/$job.dat ]; then
+  exists=true
+else
+  exists=false
+fi
+if [ $exists = true ] ; then
+  echo Job previously completed successfully.
+  exit
+fi
+
+#  Remove any previous result.
+rm -f ./blocks/$job.input.dat
+
+$bin/sqStoreDumpFASTQ \
+  -S ../../lambda.seqStore \
+  $rge \
+  -nolibname \
+  -noreadname \
+  -fasta \
+  -o ./blocks/$job.input \
+|| \
+mv -f ./blocks/$job.input.fasta ./blocks/$job.input.fasta.FAILED
+
+
+if [ ! -e ./blocks/$job.input.fasta ] ; then
+  echo Failed to extract fasta.
+  exit 1
+fi
+
+
+echo ""
+echo Starting mhap precompute.
+echo ""
+
+#  So mhap writes its output in the correct spot.
+cd ./blocks
+
+/home/bio-longyk/jdk1.8.0_151/bin/java -d64 -XX:ParallelGCThreads=16 -server -Xms5530m -Xmx5530m \
+  -jar  $bin/../share/java/classes/mhap-2.1.3.jar  \
+  --repeat-weight 0.9 --repeat-idf-scale 10 -k 16 \
+  --store-full-id \
+  --num-hashes 256 \
+  --num-min-matches 3 \
+  --ordered-sketch-size 1000 \
+  --ordered-kmer-size 14 \
+  --threshold 0.85 \
+  --filter-threshold 0.0000001 \
+  --min-olap-length 500 \
+  --num-threads 16 \
+  -f  ../../0-mercounts/lambda.ms16.ignore.gz  \
+  -p  ./$job.input.fasta  \
+  -q  .  \
+&& \
+mv -f ./$job.input.dat ./$job.dat
+
+if [ ! -e ./$job.dat ] ; then
+  echo Mhap failed.
+  exit 1
+fi
+
+#  Clean up, remove the fasta input
+rm -f ./$job.input.fasta
+
+
+exit 0
