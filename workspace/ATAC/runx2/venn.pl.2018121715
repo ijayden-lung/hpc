@@ -1,0 +1,160 @@
+#!/usr/bin/perl -w
+
+my %exp;
+open FILE,"/home/bio-longyk/workspace/splicing/colon/DESeq2/DESeq2_geneName_WHMvsWLE.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my (undef,$gene_name,$baseMean,$l2fc) = split;
+	$exp{$gene_name} = "$baseMean\t$l2fc";
+}
+
+my $seq1_ref = &Extract_tf("seq1");
+my $seq2_ref = &Extract_tf("seq2");
+my $seq3_ref = &Extract_tf("seq3");
+my $seq4_ref = &Extract_tf("seq4");
+
+&Venn($seq1_ref,$seq2_ref,$seq3_ref,$seq4_ref);
+
+sub Extract_tf{
+	my ($seq) = @_;
+	my %hash;
+	open FILE,"$seq\.fimo.txt";
+	<FILE>;
+	while(<FILE>){
+		chomp;
+		my ($gene,$qval) = (split)[0,7];
+		my ($gene_name) = split /\_/;
+		$gene_name = "TP53" if $gene_name eq "P53"; 
+		if($qval>0.1){
+			$hash{$gene_name} = '';
+		}
+	}
+	return \%hash;
+}
+
+
+
+
+sub Venn{
+	my ($ref1,$ref2,$ref3,$ref4) = @_;
+	my %venn;
+	open OUT,">TF_l2fc.txt";
+	print OUT "overlap\tgene\tbaseMean\tL2FC\n";
+	my $i = 0;
+	my $j = 0;
+	my $k = 0;
+	my $l = 0;
+	foreach my $key (keys %$ref1){
+		if(exists $ref2->{$key} && exists $ref3->{$key} && exists $ref4->{$key}){
+			print OUT "seq1,seq2,seq3,seq4\t$key\t$exp{$key}\n";
+			$i++;
+		}
+		if(!exists $ref2->{$key} && exists $ref3->{$key} && exists $ref4->{$key}){
+			print OUT "seq1,seq3,seq4\t$key\t$exp{$key}\n";
+			$j++;
+		}
+		if(exists $ref2->{$key} && !exists $ref3->{$key} && exists $ref4->{$key}){
+			print OUT "seq1,seq2,seq4\t$key\t$exp{$key}\n";
+			$k++;
+		}
+		if(exists $ref2->{$key} && exists $ref3->{$key} && !exists $ref4->{$key}){
+			print OUT "seq1,seq2,seq3\t$key\t$exp{$key}\n";
+			$l++;
+		}
+	}
+	$venn{'1111'} = $i;
+	$venn{'1011'} = $j;
+	$venn{'1101'} = $k;
+	$venn{'1110'} = $l;
+	$i = 0;
+	foreach my $key (keys %$ref2){
+		if(!exists $ref1->{$key} && exists $ref3->{$key} && exists $ref4->{$key}){
+			print OUT "seq2,seq3,seq4\t$key\t$exp{$key}\n";
+			$i++;
+		}
+	}
+	$venn{'0111'} = $i;
+	$i = 0;
+	$j = 0;
+	$k = 0;
+	foreach my $key (keys %$ref2){
+		if(exists $ref1->{$key} && !exists $ref3->{$key} && !exists $ref4->{$key}){
+			print OUT "seq1,seq2\t$key\t$exp{$key}\n";
+			$i++;
+		}
+		if(!exists $ref1->{$key} && exists $ref3->{$key} && !exists $ref4->{$key}){
+			print OUT "seq2,seq3\t$key\t$exp{$key}\n";
+			$j++;
+		}
+		if(!exists $ref1->{$key} && !exists $ref3->{$key} && exists $ref4->{$key}){
+			print OUT "seq2,seq4\t$key\t$exp{$key}\n";
+			$k++;
+		}
+	}
+	$venn{'1100'} = $i;
+	$venn{'0110'} = $j;
+	$venn{'0101'} = $k;
+	$i = 0;
+	$j = 0;
+	foreach my $key (keys %$ref3){
+		if(exists $ref1->{$key} && !exists $ref2->{$key} && !exists $ref4->{$key}){
+			print OUT "seq1,seq3\t$key\t$exp{$key}\n";
+			$i++;
+		}
+		if(!exists $ref1->{$key} && !exists $ref2->{$key} && !exists $ref4->{$key}){
+			print OUT "seq3,seq4\t$key\t$exp{$key}\n";
+			$j++;
+		}
+	}
+	$venn{'1010'} = $i;
+	$venn{'0011'} = $j;
+	$i = 0;
+	foreach my $key (keys %$ref4){
+		if(exists $ref1->{$key} && !exists $ref2->{$key} && !exists $ref3->{$key}){
+			print OUT "seq1,seq4\t$key\t$exp{$key}\n";
+			$i++;
+		}
+	}
+	$venn{'1001'} = $i;
+	$i = 0;
+	foreach my $key (keys %$ref4){
+		if(!exists $ref1->{$key} && !exists $ref2->{$key} && !exists $ref3->{$key}){
+			print OUT "seq4\t$key\t$exp{$key}\n";
+			$i++;
+		}
+	}
+	$venn{'0001'} = $i;
+	$i = 0;
+	foreach my $key (keys %$ref3){
+		if(!exists $ref1->{$key} && !exists $ref2->{$key} && !exists $ref4->{$key}){
+			print OUT "seq3\t$key\t$exp{$key}\n";
+			$i++;
+		}
+	}
+	$venn{'0010'} = $i;
+	$i = 0;
+	foreach my $key (keys %$ref2){
+		if(!exists $ref1->{$key} && !exists $ref3->{$key} && !exists $ref4->{$key}){
+			print OUT "seq2\t$key\t$exp{$key}\n";
+			$i++;
+		}
+	}
+	$venn{'0100'} = $i;
+	$i = 0;
+	foreach my $key (keys %$ref1){
+		if(!exists $ref2->{$key} && !exists $ref3->{$key} && !exists $ref4->{$key}){
+			print OUT "seq1\t$key\t$exp{$key}\n";
+			$i++;
+		}
+	}
+	$venn{'1000'} = $i;
+
+	#print "plot(Venn(SetNames = c('seq1', 'seq2','seq3'), Weight=c('100'=$Venn[0],'010'=$Venn[1],'001'=$Venn[2],'110'=$Venn[3],'011'=$Venn[4],'101'=$Venn[5],'111'=$Venn[6])),doWeights = TRUE)\n";
+	print "plot(Venn(SetNames = c('seq1', 'seq2','seq3'), Weight=c(";
+	while(my ($key,$val) = each %venn){
+		print "'$key'=$val,";
+	}
+	print ")),doWeights = TRUE)\n";
+
+}
