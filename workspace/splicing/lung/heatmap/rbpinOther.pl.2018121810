@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w
+my %hash;
+open FILE,"Input_Linechart_exon5.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my (undef,$gene) = split;
+	$hash{$gene} = '';
+}
+
+foreach my $key (keys %hash){
+	print "$key\n";
+}
+
