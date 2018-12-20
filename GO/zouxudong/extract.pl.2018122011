@@ -1,0 +1,39 @@
+#!/usr/bin/perl -w
+
+my %hash;
+open FILE,"/home/bio-longyk/workspace/splicing/mouse/DESeq2/FC_annotation.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$length) = (split)[1,-1];
+	$hash{$gene} = $length;
+}
+
+
+
+
+
+
+open FILE,"cortex.m.unique.csv";
+<FILE>;
+open OUT,">bg";
+print OUT "gene\tlength\n";
+open OUT2,">fg";
+print OUT2 ">ensg\n";
+
+
+my %fg;
+my %bg;
+while(<FILE>){
+	chomp;
+	my ($gene_id,$tag) = (split /,/)[0,-1];
+	$bg{$gene_id} = '';
+	$fg{$gene_id} = '' if $tag =~ /FF/;
+}
+
+foreach my $key (keys %bg){
+	print OUT "$key\t$hash{$key}\n" if exists $hash{$key};
+}
+foreach my $key (keys %fg){
+	print OUT2 "$key\n"  if exists $hash{$key};
+}
