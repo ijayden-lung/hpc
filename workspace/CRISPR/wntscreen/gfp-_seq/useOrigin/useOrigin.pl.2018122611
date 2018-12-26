@@ -1,0 +1,27 @@
+#!/usr/bin/perl -w
+
+my %seq_sort;
+open FILE,"../Input_mageck_hKO_gfp-_seq.tsv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$nc1,$nc2,$s1,$s2) = split;
+	$seq_sort{"$sgrna\t$gene"} = "$s1\t$s2"; 
+}
+
+
+my %origin;
+open FILE,"../../new_year/Input_mageck_hKO_gfp-.tsv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$neg1,$neg2,$bl1,$bl2) = split;
+	$origin{"$sgrna\t$gene"} = "$neg1\t$neg2";
+}
+
+open OUT,">Input_mageck_hKO_gfp-_merge.tsv";
+print OUT "sgRNA\tgene\torigin_s1\torigin_s2\tseq_s1\tseq_s2\n";
+while(my ($name,$val) = each %seq_sort){
+	print OUT "$name\t$origin{$name}\t$val\n" if exists $origin{$name};
+}
+
