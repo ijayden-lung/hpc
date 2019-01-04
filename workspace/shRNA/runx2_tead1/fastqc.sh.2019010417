@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N FASTQC
+#PBS -l nodes=1:ppn=18
+#PBS -j oe 
+#PBS -l walltime=08:00:00
+cd ~/workspace/shRNA/runx2_tead1/
+mkdir FASTQC_OUT
+for i in fastq/*trim*fq.gz
+do
+	fastqc -t 12 -o FASTQC_OUT  $i
+done
+
+
+
