@@ -1,0 +1,41 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N featureCounts
+#PBS -l nodes=1:ppn=36
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+#PBS -V
+
+ctrl='low'							###Modified
+trea='high'							###Modified
+spe='hg38'							###Modified	
+cd ~/workspace/shRNA/runx2_tead1		###Modified
+if [ ! -d $dir/DESeq2];then
+	mkdir -p $dir/DESeq2
+fi
+
+c=0
+for i in STAR/*/Aligned.sortedByCoord.out.bam
+do
+	sample[$c]=$i
+	((c++))
+done
+
+
+gtf=/home/bio-longyk/cnda/ensembl/$spe.ensemblv92.nopsuedo.gtf
+count='FC_counts.txt'
+stat='FC_stat.txt'
+anno='FC_annotation.txt'
+deseq='DESeq2/DESeq2_out.txt'
+pdf='DESeq2/DESeq2_summary.pdf'
+~/workspace/splicing/feature_count.r $gtf $count $stat $anno 36 ${sample[@]}  #Modified
+
+
+#./deseq2.r $ctrl $trea $count  $deseq $pdf
+#compare=WHMvsWLE
+#./deseq2.r WntHighMes WntLowEpi DESeq2/Count_$compare.txt DESeq2/DESeq2_$compare.txt DESeq2/DESeq2_$compare.pdf
+#./add_genename.pl DESeq2/DESeq2_$compare.txt  DESeq2/DESeq2_geneName_$compare.txt
+#./maplot.r DESeq2/DESeq2_geneName_$compare.txt DESeq2/MAPlot_$compare.pdf
+#./input_gobp.pl $compare
+#cd go
+#./goseq_hg38.R $compare 
