@@ -1,0 +1,8 @@
+
+
+open FILE,"lib_GPCRPool.csv";
+while(<FILE>){
+	chomp;
+	my @data = split /\t/;
+	print "$data[6]\n";
+}
