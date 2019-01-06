@@ -1,0 +1,56 @@
+#!/usr/bin/perl -w
+
+open FILE,"FC_annotation.txt";
+while(<FILE>){
+	chomp;
+	my ($id,$length) = (split)[1,-1];
+	$length{$id} = $length;
+}
+
+
+
+open FILE,"FC_counts.txt";
+<FILE>;
+my @sum;
+my $sum=0;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $gene = shift @data;
+	for(my$i=0;$i<@data;$i++){
+		$sum[$i] += $data[$i];
+		$sum += $data[$i];
+	}
+}
+my @size_factor;
+my $ave = $sum/@sum;
+for(my$i=0;$i<@sum;$i++){
+	$size_factor[$i] = $sum[$i]/$ave;
+}
+
+print "@sum\n";
+print "@size_factor\n";
+
+open FILE,"FC_counts.txt";
+my $header = <FILE>;
+open OUT,">Norm_counts.txt";
+print OUT "$header";
+open OUT2,">FPKM_counts.txt";
+print OUT2 "$header";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $gene = shift @data;
+	print OUT "$gene";
+	print OUT2 "$gene";
+	for(my$i=0;$i<@data;$i++){
+		my $read = $data[$i]/$sum[$i]/$length{$gene}*1e9;
+		printf OUT2 ("\t%.2f",$read);
+	}
+	print OUT2 "\n";
+	for(my$i=0;$i<@data;$i++){
+		my $read = $data[$i]/$size_factor[$i];
+		printf OUT ("\t%.0f",$read);
+	}
+	print OUT "\n";
+}

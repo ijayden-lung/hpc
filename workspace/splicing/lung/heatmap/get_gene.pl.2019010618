@@ -1,0 +1,48 @@
+#!/usr/bin/perl -w
+
+my @gene_list1 = qw/ACTB ACTL6A ACTL6B ARID1A ARID1B BCL7A BCL7B BCL7C BCL11A BCL11B BRD9 DPF1 DPF2 DPF3 PHF10 SMARCA2 SMARCA4 SMARCB1 SMARCC1 SMARCC2 SMARCD1 SMARCD2 SMARCD3 SMARCE1 SS18 SS18L1/;
+
+my @gene_list2 = qw/CHEK2 GLIPR2 KIF2A KIF2C LTV1 MSN PLCB4 RDX EZR SLIT2 TAOK1 TAOK2 VAPA/;
+my %name;
+open FILE,"/home/bio-longyk/cnda/ensembl/hg38_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($id,$name) = split;
+	$name{$name} = $id;
+}
+
+my %fpkm;
+open FILE,"FPKM_counts.txt";
+my $header = <FILE>;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $id = shift @data;
+	$fpkm{$id} = \@data;
+}
+
+
+open OUT,">GeneList1_fpkm.txt";
+print OUT $header;
+foreach my $gene (@gene_list1){
+	print OUT "$name{$gene}\t$gene";
+	my @fpkm = @{$fpkm{$name{$gene}}};
+	print OUT join "\t",@fpkm;
+	print OUT "\n";
+}
+	
+
+open OUT,">GeneList2_fpkm.txt";
+print OUT $header;
+foreach my $gene (@gene_list2){
+	print OUT "$name{$gene}\t$gene";
+	my @fpkm = @{$fpkm{$name{$gene}}};
+	print OUT join "\t",@fpkm;
+	print OUT "\n";
+}
+	
+
+
+
+
+
