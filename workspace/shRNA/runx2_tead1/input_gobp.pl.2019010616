@@ -1,0 +1,51 @@
+#!/usr/bin/perl -w
+my %conventer;
+my %length;
+open FILE,'/home/bio-longyk/cnda/ensembl/hg38_ID2Name.txt';
+while(<FILE>){
+	chomp;
+	my ($id,$name,$strad) = split;
+	$conventer{$id} = $name;
+}
+
+open FILE,"DESeq2/FC_annotation.txt";
+while(<FILE>){
+	chomp;
+	my ($id,$length) = (split)[1,-1];
+	$length{$id} = $length;
+}
+
+
+my ($prefix) = @ARGV;
+
+print $prefix,"\n";
+open FILE,"DESeq2/DESeq2_geneName_$prefix.txt";
+print "DESeq2/DESeq2_geneName_$prefix.txt\n";
+open OUT1,'>',"go/Input_fg_$prefix.txt";
+open OUT3,'>',"go/Input_bg_$prefix.txt";
+my $header = <FILE>;
+print OUT1 ">ensg\n";
+print OUT3 "gene\tlength\n";
+my $i=0;
+my $min = 1000000;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	#if($data[-2] eq "Up" || $data[-2] eq "Down"){
+	if($data[-2] eq "Down"){
+		print OUT1 "$data[0]\n";
+		if($min > $data[2]){
+			$min = $data[2];
+		}
+	}
+}
+
+open FILE,"DESeq2/DESeq2_geneName_$prefix.txt";
+$header = <FILE>;
+while(<FILE>){
+	chomp;
+	my @data = split;
+	if($data[2] >= $min){
+		print OUT3 "$data[0]\t$length{$data[0]}\n";
+	}
+}

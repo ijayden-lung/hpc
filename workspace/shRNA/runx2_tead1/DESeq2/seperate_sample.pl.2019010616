@@ -1,0 +1,23 @@
+#!/usr/bin/perl -w
+
+open FILE,"FC_counts.txt";
+<FILE>;
+
+open OUT3,">FC_Tead1shRNA1";
+open OUT4,">FC_Tead1shRNA2";
+open OUT1,">FC_Runx2shRNA1";
+open OUT2,">FC_Runx2shRNA2";
+print OUT1 "gene_id\tcontrolA\tcontrolB\tshA\tshB\n";
+print OUT2 "gene_id\tcontrolA\tcontrolB\tshA\tshB\n";
+print OUT3 "gene_id\tcontrolA\tcontrolB\tshA\tshB\n";
+print OUT4 "gene_id\tcontrolA\tcontrolB\tshA\tshB\n";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $gene_id = shift @data;
+	print OUT1 "$gene_id\t$data[0]\t$data[1]\t$data[2]\t$data[3]\n";
+	print OUT2 "$gene_id\t$data[0]\t$data[1]\t$data[4]\t$data[5]\n";
+	print OUT3 "$gene_id\t$data[0]\t$data[1]\t$data[6]\t$data[7]\n";
+	print OUT4 "$gene_id\t$data[0]\t$data[1]\t$data[8]\t$data[9]\n";
+}
+	

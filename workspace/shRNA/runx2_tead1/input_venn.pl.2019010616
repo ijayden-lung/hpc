@@ -1,0 +1,78 @@
+#!/usr/bin/perl -w
+
+
+my %rna;
+open FILE,"/home/bio-longyk/workspace/splicing/colon/DESeq2/DESeq2_geneName_WHMvsWLE.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my($gene_id,$gene_name,$baseMean,$log2FoldChange,$lfcSE,$stat,$pval,$padj,$Rank,$Tag,$FPKM)=split;
+	$rna{$gene_name} = $log2FoldChange;
+}
+
+
+
+my %sh1;
+my %sh1_fp;
+open FILE,"DESeq2/DESeq2_geneName_Runx2shRNA1.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my($gene_id,$gene_name,$baseMean,$log2FoldChange,$lfcSE,$stat,$pval,$padj,$Rank,$Tag,$FPKM)=split;
+	if($padj ne "NA" && $padj < 0.05){
+		$sh1{$gene_name} = $log2FoldChange;
+		$sh1_fp{$gene_name} = $FPKM;
+	}
+}
+my %sh2;
+my %sh2_fp;
+open FILE,"DESeq2/DESeq2_geneName_Runx2shRNA2.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my($gene_id,$gene_name,$baseMean,$log2FoldChange,$lfcSE,$stat,$pval,$padj,$Rank,$Tag,$FPKM)=split;
+	if($padj ne "NA" && $padj < 0.01 && $log2FoldChange<-1){
+	#if($padj ne "NA" && $padj < 0.05){
+		$sh2{$gene_name} = $log2FoldChange;
+		$sh2_fp{$gene_name} = $FPKM;
+	}
+}
+
+
+#my $both_ref = &Venn2(\%sh1,\%sh2,"RUNX2-shRNA1","RUNX2-shRNA2");
+open OUT,">CommonGene_Runx2.txt";
+#foreach my $key (keys %$both_ref){
+foreach my $key (keys %sh2){
+	#print OUT "$key\t$sh1{$key}\t$sh2{$key}\t$sh1_fp{$key}\t$sh2_fp{$key}\t$rna{$key}\n";
+	print OUT "$key\t$sh2{$key}\t$sh2_fp{$key}\t$rna{$key}\n";
+}
+
+
+sub Venn2{
+	my ($ref1,$ref2,$name1,$name2) = @_;
+	my %enrich1 = %$ref1;
+	my %enrich2 = %$ref2;
+	my (%rmats,%fast,%both);
+
+	my @Venn = (0,0,0);
+	foreach my $key (keys %enrich1){
+		if(exists $enrich2{$key}){
+			$Venn[2]++;
+			$both{$key} = '';
+		}
+		else{
+			$Venn[0]++;
+			$fast{$key} = $enrich1{$key};
+		}
+	}
+
+	foreach my $key (keys %enrich2){
+		if(!exists $enrich1{$key}){
+			$Venn[1]++;
+			$rmats{$key} = $enrich2{$key};
+		}
+	}
+	print "plot(Venn(SetNames = c('$name1','$name2'), Weight=c('10'=$Venn[0],'01'=$Venn[1],'11'=$Venn[2])),doWeights = TRUE)\n";
+	return \%both;
+
+}

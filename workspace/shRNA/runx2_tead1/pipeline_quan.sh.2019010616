@@ -1,0 +1,58 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N featureCounts
+#PBS -l nodes=1:ppn=36
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+#PBS -V
+
+spe='hg38'							###Modified	
+cd ~/workspace/shRNA/runx2_tead1		###Modified
+#if [ ! -d $dir/DESeq2];then
+#	mkdir -p $dir/DESeq2
+#fi
+
+c=0
+for i in STAR/*/Aligned.sortedByCoord.out.bam
+do
+	sample[$c]=$i
+	((c++))
+done
+
+
+gtf=/home/bio-longyk/cnda/ensembl/$spe.ensemblv92.nopsuedo.gtf
+count='FC_counts.txt'
+stat='FC_stat.txt'
+anno='FC_annotation.txt'
+deseq='DESeq2/DESeq2_out.txt'
+pdf='DESeq2/DESeq2_summary.pdf'
+#~/workspace/splicing/feature_count.r $gtf $count $stat $anno 36 ${sample[@]}  #Modified
+
+
+ctrl='low'							###Modified
+trea='high'							###Modified
+#./deseq2.r control shRNA1 DESeq2/FC_Runx2shRNA1 DESeq2/DESeq2_Runx2shRNA1.txt DESeq2/DESeq2_Runx2shRNA1.pdf
+#./deseq2.r control shRNA2 DESeq2/FC_Runx2shRNA2 DESeq2/DESeq2_Runx2shRNA2.txt DESeq2/DESeq2_Runx2shRNA2.pdf
+#./deseq2.r control shRNA1 DESeq2/FC_Tead1shRNA1 DESeq2/DESeq2_Tead1shRNA1.txt DESeq2/DESeq2_Tead1shRNA1.pdf
+#./deseq2.r control shRNA2 DESeq2/FC_Tead1shRNA2 DESeq2/DESeq2_Tead1shRNA2.txt DESeq2/DESeq2_Tead1shRNA2.pdf
+
+#./add_genename.pl DESeq2/DESeq2_Runx2shRNA1.txt  DESeq2/DESeq2_geneName_Runx2shRNA1.txt
+#./add_genename.pl DESeq2/DESeq2_Runx2shRNA2.txt  DESeq2/DESeq2_geneName_Runx2shRNA2.txt
+#./add_genename.pl DESeq2/DESeq2_Tead1shRNA1.txt  DESeq2/DESeq2_geneName_Tead1shRNA1.txt
+#./add_genename.pl DESeq2/DESeq2_Tead1shRNA2.txt  DESeq2/DESeq2_geneName_Tead1shRNA2.txt
+
+#./maplot.r DESeq2/DESeq2_geneName_Runx2shRNA1.txt DESeq2/MAPlot__Runx2shRNA1.pdf
+#./maplot.r DESeq2/DESeq2_geneName_Runx2shRNA2.txt DESeq2/MAPlot__Runx2shRNA2.pdf
+#./maplot.r DESeq2/DESeq2_geneName_Tead1shRNA1.txt DESeq2/MAPlot__Tead1shRNA1.pdf
+#./maplot.r DESeq2/DESeq2_geneName_Tead1shRNA2.txt DESeq2/MAPlot__Tead1shRNA2.pdf
+
+
+./input_gobp.pl Tead1shRNA1
+./goseq_hg38.R Tead1shRNA1 
+#./input_gobp.pl Tead1shRNA2
+#./goseq_hg38.R Tead1shRNA2
+
+#./input_gobp.pl Runx2shRNA1
+#./goseq_hg38.R Runx2shRNA1
+#./input_gobp.pl Runx2shRNA2
+#./goseq_hg38.R Runx2shRNA2
