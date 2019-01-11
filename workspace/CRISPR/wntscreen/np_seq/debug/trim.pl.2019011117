@@ -1,0 +1,5 @@
+#!/usr/bin/perl -w
+
+my ($exp) = @ARGV;
+open FILE , "Input_seqlogo_$exp.txt";
+opn 

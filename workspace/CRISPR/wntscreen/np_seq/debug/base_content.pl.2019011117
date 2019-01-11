@@ -32,3 +32,4 @@ while (my ($base,$val) = each %hash){
 	print OUT "\n";
 }
 
+system("./ggseqlogo.r Input_seqlogo_$exp.txt Seqlogo_$exp.pdf");

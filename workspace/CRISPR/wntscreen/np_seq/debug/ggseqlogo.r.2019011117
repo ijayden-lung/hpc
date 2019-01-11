@@ -6,9 +6,10 @@ library(grid)
 
 args<-commandArgs(T)
 
-pdf(args[2],height=9,width=15)
+pdf(args[2],height=6,width=30)
 
 data = as.matrix(read.table(args[1],header=TRUE,row.names=1))
+data = data[,1:80]
 a<-ggseqlogo(data)+
 #labs(legend.position="none")+
 #labs(title="0A")+
