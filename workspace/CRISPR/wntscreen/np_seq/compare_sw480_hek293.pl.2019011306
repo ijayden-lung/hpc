@@ -1,0 +1,107 @@
+#!/usr/bin/perl -w
+
+my %wnt;
+open FILE,"catBP_go.hKO-NP.pos.sw480_seq";
+while(<FILE>){
+	chomp;
+	my ($category,$term,$pval,$gene_id,$gene_name) = split /\t/; 
+	if($term =~/Wnt/){
+		$wnt{$gene_name} = $term;
+	}
+}
+open FILE,"catKEGG_go.hKO-NP.pos.sw480_seq";
+while(<FILE>){
+	chomp;
+	my ($category,$term,$pval,$gene_id,$gene_name) = split /\t/; 
+	if($term =~/Wnt/){
+		$wnt{$gene_name} = $term;
+	}
+}
+open FILE,"../np2/catBP_go.hKO-NP.pos.sw480";
+while(<FILE>){
+	chomp;
+	my ($category,$term,$pval,$gene_id,$gene_name) = split /\t/; 
+	if($term =~/Wnt/){
+		$wnt{$gene_name} = $term;
+	}
+}
+open FILE,"../np2/catKEGG_go.hKO-NP.pos.sw480";
+while(<FILE>){
+	chomp;
+	my ($category,$term,$pval,$gene_id,$gene_name) = split /\t/; 
+	if($term =~/Wnt/){
+		$wnt{$gene_name} = $term;
+	}
+}
+
+
+
+my %seq;
+open FILE,"../np_seq/sw480_seq.gene_summary.txt";
+<FILE>;
+my $rank=0;
+while(<FILE>){
+	chomp;
+	my ($gene,$num,$neg_score,$neg_pval,$neg_fdr,$neg_rank,$neg_good_sgrna,$neg_lfc,$pos_score,$pos_pval,$pos_fdr,$pos_rank,$pos_good_sgrna,$pos_lfc) = split;
+	if($pos_pval < 0.05 && $pos_good_sgrna >1){
+		$rank++;
+		$seq{$gene} = $rank;
+	}
+}
+
+my %ori;
+open FILE,"../np_seq/hek293_seq.gene_summary.txt";
+<FILE>;
+$rank=0;
+while(<FILE>){
+	chomp;
+	my ($gene,$num,$neg_score,$neg_pval,$neg_fdr,$neg_rank,$neg_good_sgrna,$neg_lfc,$pos_score,$pos_pval,$pos_fdr,$pos_rank,$pos_good_sgrna,$pos_lfc) = split;
+	if($pos_pval < 0.05 && $pos_good_sgrna >1){
+		$rank++;
+		$ori{$gene} = $rank;
+	}
+}
+
+&Venn2(\%seq,\%ori,"sw480_sequential","hek293_sequential");
+
+sub Venn2{
+	my ($ref1,$ref2,$name1,$name2) = @_;
+	my %enrich1 = %$ref1;
+	my %enrich2 = %$ref2;
+	my (%rmats,%fast,%both);
+
+	my @Venn = (0,0,0);
+	foreach my $key (keys %enrich1){
+		if(exists $enrich2{$key}){
+			$Venn[2]++;
+			$both{$key} = $enrich1{$key}+$enrich2{$key};
+		}
+		else{
+			$Venn[0]++;
+			$fast{$key} = $enrich1{$key};
+		}
+	}
+
+	foreach my $key (keys %enrich2){
+		if(!exists $enrich1{$key}){
+			$Venn[1]++;
+			$rmats{$key} = $enrich2{$key};
+		}
+	}
+
+	print "plot(Venn(SetNames = c('$name1','$name2'), Weight=c('10'=$Venn[0],'01'=$Venn[1],'11'=$Venn[2])),doWeights = TRUE)\n";
+
+	open OUT, '>Common_sw480_hek293_seq.txt';
+	foreach my $key (sort{$both{$a}<=>$both{$b}} keys %both){
+		$wnt{$key} = "NULL" if !exists $wnt{$key};
+		print OUT "Common\t$key\t$enrich1{$key}\t$enrich2{$key}\t$wnt{$key}\n";
+	}
+	foreach my $key (sort{$fast{$a}<=>$fast{$b}}keys %fast){
+		$wnt{$key} = "NULL" if !exists $wnt{$key};
+		print OUT "$name1\t$key\t$enrich1{$key}\t\t$wnt{$key}\n";
+	}
+	foreach my $key (sort{$rmats{$a}<=>$rmats{$b}}keys %rmats){
+		$wnt{$key} = "NULL" if !exists $wnt{$key};
+		print OUT "$name2\t$key\t\t$enrich2{$key}\t$wnt{$key}\n";
+	}
+}
