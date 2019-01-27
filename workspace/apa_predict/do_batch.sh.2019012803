@@ -1,7 +1,7 @@
 #!/bin/bash
 
 nodes=1
-ppn=36
+ppn=72
 threads=$[$nodes*$ppn]
 cat >star.sh << EOF
 #!/bin/bash
@@ -43,14 +43,15 @@ fi
 
 #sample=('WntHighEpi1' 'WntHighEpi2')   ##Modified
 genomeIndex="bl6len100"				##Modified
-genome="bl6"							##Modified
 root="/home/bio-longyk/workspace/apa_predict/Fibroblast/SW2_"
-inp=$dir/STAR/SW89_aa
-out=log_SW89_aa
-fq1=$root"89_1aa.gz"
-fq2=$root"89_2aa.gz"
-#fq1=$root"89_1aa.gz",$root"89_1ab.gz",$root"89_1ac.gz",$root"89_1ad.gz",$root"89_1ae.gz",$root"89_1af.gz"
-#fq2=$root"89_2aa.gz",$root"89_2ab.gz",$root"89_2ac.gz",$root"89_2ad.gz",$root"89_2ae.gz",$root"89_2af.gz"
+bl1="/home/bio-longyk/workspace/apa_predict/Fibroblast/Bl6.rep1.1.fq.gz"
+bl2="/home/bio-longyk/workspace/apa_predict/Fibroblast/Bl6.rep1.2.fq.gz"
+inp=$dir/STAR/Bl6_rep1
+out=log_Bl6_rep1
+#fq1=$root"89_1aa.gz"
+#fq2=$root"89_2aa.gz"
+fq1=$root"89_1aa.gz",$root"89_1ab.gz",$root"89_1ac.gz",$root"89_1ad.gz",$root"89_1ae.gz",$root"89_1af.gz",$bl1
+fq2=$root"89_2aa.gz",$root"89_2ab.gz",$root"89_2ac.gz",$root"89_2ad.gz",$root"89_2ae.gz",$root"89_2af.gz",$bl2
 
 
 qsub -v inp=$inp,out=$out,fq1=$fq1,fq2=$fq2,genomeIndex=$genomeIndex star.sh

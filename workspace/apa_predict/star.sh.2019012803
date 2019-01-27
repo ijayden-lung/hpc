@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -q fat
 #PBS -N STAR
-#PBS -l nodes=1:ppn=36
+#PBS -l nodes=1:ppn=72
 #PBS -o ${out}
 #PBS -j oe 
 #PBS -l walltime=12:00:00
@@ -12,11 +12,11 @@ fi
 cd $inp
 
 echo 'starting mapping with STAR'
-STAR --twopassMode Basic --runThreadN 36 --genomeDir /home/bio-longyk/cnda/STAR_INDEX/$genomeIndex  --readFilesIn $fq1 $fq2 --outSAMtype BAM SortedByCoordinate --outSAMattrIHstart 0  --outFilterMultimapScoreRange 0  --alignEndsType EndToEnd  --readFilesCommand zcat --outFilterIntronMotifs RemoveNoncanonicalUnannotated --outSAMstrandField intronMotif 
+STAR --twopassMode Basic --runThreadN 72 --genomeDir /home/bio-longyk/cnda/STAR_INDEX/$genomeIndex  --readFilesIn $fq1 $fq2 --outSAMtype BAM SortedByCoordinate --outSAMattrIHstart 0  --outFilterMultimapScoreRange 0  --alignEndsType EndToEnd  --readFilesCommand zcat --outFilterIntronMotifs RemoveNoncanonicalUnannotated --outSAMstrandField intronMotif 
 
 ####INDEX for sorted bam file
 echo 'generating index with samtools'
-samtools index -@ 36 Aligned.sortedByCoord.out.bam
+samtools index -@ 72 Aligned.sortedByCoord.out.bam
 
 ######Gene Abundance
 
@@ -24,6 +24,6 @@ samtools index -@ 36 Aligned.sortedByCoord.out.bam
 
 
 echo 'Stringtie'
-#stringtie --fr -e -p 36 -G ~/workspace/splicing/tead1/mouse_tead1_exon4-exon8.gtf -m 50 -o out.gtf -A gene_abund.tab -C cov_refs.gtf Aligned.sortedByCoord.out.bam 
-#stringtie --fr -p 36 -m 50 -G ~/cnda/ensembl/$genome\.ensemblv92.nopsuedo.gtf -o assembl.gtf Aligned.sortedByCoord.out.bam 
-#stringtie --rf -p 36 -m 50 -G ~/cnda/ensembl/$genome\.ensemblv92.nopsuedo.gtf -o assemblrf.gtf Aligned.sortedByCoord.out.bam 
+#stringtie --fr -e -p 72 -G ~/workspace/splicing/tead1/mouse_tead1_exon4-exon8.gtf -m 50 -o out.gtf -A gene_abund.tab -C cov_refs.gtf Aligned.sortedByCoord.out.bam 
+#stringtie --fr -p 72 -m 50 -G ~/cnda/ensembl/$genome\.ensemblv92.nopsuedo.gtf -o assembl.gtf Aligned.sortedByCoord.out.bam 
+#stringtie --rf -p 72 -m 50 -G ~/cnda/ensembl/$genome\.ensemblv92.nopsuedo.gtf -o assemblrf.gtf Aligned.sortedByCoord.out.bam 
