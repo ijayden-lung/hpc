@@ -1,0 +1,59 @@
+#!/bin/bash
+
+nodes=1
+ppn=72
+threads=$[$nodes*$ppn]
+cat >star.sh << EOF
+#!/bin/bash
+#PBS -q fat
+#PBS -N STAR
+#PBS -l nodes=$nodes:ppn=$ppn
+#PBS -o \${out}
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+
+if [ ! -d \${inp} ];then
+	mkdir -p \${inp}
+fi
+cd \$inp
+
+echo 'starting mapping with STAR'
+STAR --twopassMode Basic --runThreadN $threads --genomeDir /home/bio-longyk/cnda/STAR_INDEX/\$genomeIndex  --readFilesIn \$fq1 \$fq2 --outSAMtype BAM SortedByCoordinate --outSAMattrIHstart 0  --outFilterMultimapScoreRange 0  --alignEndsType EndToEnd  --readFilesCommand zcat --outFilterIntronMotifs RemoveNoncanonicalUnannotated --outSAMstrandField intronMotif 
+
+####INDEX for sorted bam file
+echo 'generating index with samtools'
+samtools index -@ $threads Aligned.sortedByCoord.out.bam
+
+######Gene Abundance
+
+#python -m HTSeq.scripts.count --mode=union -s reverse -r pos  -f bam  Aligned.sortedByCoord.out.bam /home/lyk/data1/cnda/ensembl/hg38.ensemblv89.nopsuedo.gtf  >htseq.reverse.count 
+
+
+echo 'Stringtie'
+#stringtie --fr -e -p $threads -G ~/workspace/splicing/tead1/mouse_tead1_exon4-exon8.gtf -m 50 -o out.gtf -A gene_abund.tab -C cov_refs.gtf Aligned.sortedByCoord.out.bam 
+#stringtie --fr -p $threads -m 50 -G ~/cnda/ensembl/\$genome\.ensemblv92.nopsuedo.gtf -o assembl.gtf Aligned.sortedByCoord.out.bam 
+#stringtie --rf -p $threads -m 50 -G ~/cnda/ensembl/\$genome\.ensemblv92.nopsuedo.gtf -o assemblrf.gtf Aligned.sortedByCoord.out.bam 
+EOF
+
+
+dir='/home/bio-longyk/workspace/apa_predict' ####Need to be modified everytime
+if [ ! -d $dir/STAR ];then
+	mkdir -p $dir/STAR
+fi
+
+#sample=('WntHighEpi1' 'WntHighEpi2')   ##Modified
+genomeIndex="bl6len100"				##Modified
+root="/home/bio-longyk/workspace/apa_predict/Fibroblast/SW2_"
+bl1="/home/bio-longyk/workspace/apa_predict/Fibroblast/Bl6.rep1.1.fq.gz"
+bl2="/home/bio-longyk/workspace/apa_predict/Fibroblast/Bl6.rep1.2.fq.gz"
+inp=$dir/STAR/Bl6_rep1
+out=log_Bl6_rep1
+#fq1=$root"89_1aa.gz"
+#fq2=$root"89_2aa.gz"
+fq1=$root"89_1aa.gz",$root"89_1ab.gz",$root"89_1ac.gz",$root"89_1ad.gz",$root"89_1ae.gz",$root"89_1af.gz",$bl1
+fq2=$root"89_2aa.gz",$root"89_2ab.gz",$root"89_2ac.gz",$root"89_2ad.gz",$root"89_2ae.gz",$root"89_2af.gz",$bl2
+echo $fq1
+
+qsub -v inp=$inp,out=$out,fq1=$fq1,fq2=$fq2,genomeIndex=$genomeIndex star.sh
+
+#./merge_log.pl tead1					###Change Every qsub finis
