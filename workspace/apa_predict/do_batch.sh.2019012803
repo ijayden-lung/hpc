@@ -45,12 +45,14 @@ fi
 genomeIndex="bl6len100"				##Modified
 genome="bl6"							##Modified
 root="/home/bio-longyk/workspace/apa_predict/Fibroblast/SW2_"
-fq1=$root"89_1aa.gz",$root"89_1ab.gz",$root"89_1ac.gz",$root"89_1ad.gz",$root"89_1ae.gz",$root"89_1af.gz"
-fq2=$root"89_2aa.gz",$root"89_2ab.gz",$root"89_2ac.gz",$root"89_2ad.gz",$root"89_2ae.gz",$root"89_2af.gz"
-echo $fq1
+inp=$dir/STAR/SW89_aa
+out=log_SW89_aa
+fq1=$root"89_1aa.gz"
+fq2=$root"89_2aa.gz"
+#fq1=$root"89_1aa.gz",$root"89_1ab.gz",$root"89_1ac.gz",$root"89_1ad.gz",$root"89_1ae.gz",$root"89_1af.gz"
+#fq2=$root"89_2aa.gz",$root"89_2ab.gz",$root"89_2ac.gz",$root"89_2ad.gz",$root"89_2ae.gz",$root"89_2af.gz"
 
 
-
-#qsub -v inp=$inp,out=$out,fq1=$fq1,fq2=$fq2,sam=$sam,genome=$genome,genomeIndex=$genomeIndex star.sh
+qsub -v inp=$inp,out=$out,fq1=$fq1,fq2=$fq2,genomeIndex=$genomeIndex star.sh
 
 #./merge_log.pl tead1					###Change Every qsub finis
