@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N STAR
+#PBS -l nodes=1:ppn=36
+#PBS -o log.test
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+
+cd ~/workspace/apa_predict/
+
+fq1=$root"1aa.gz",$root"1ab.gz",$root"1ac.gz",$root"1ad.gz",$root"1ae.gz",$root"1af.gz",$bl"1.fq.gz"
+echo $fq1
+
+fq2=$root"2aa.gz",$root"2ab.gz",$root"2ac.gz",$root"2ad.gz",$root"2ae.gz",$root"2af.gz",$bl"2.fq.gz"
+echo $fq2
