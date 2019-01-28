@@ -11,11 +11,13 @@ if [ ! -d ${inp} ];then
 fi
 cd $inp
 
-fq1="1aa.gz","1ab.gz","1ac.gz","1ad.gz","1ae.gz","1af.gz","1.fq.gz"
-fq2="2aa.gz","2ab.gz","2ac.gz","2ad.gz","2ae.gz","2af.gz","2.fq.gz"
-
-echo 'starting mapping with STAR'
+fq1=$root"1aa.gz",$root"1ab.gz",$root"1ac.gz",$root"1ad.gz",$root"1ae.gz",$root"1af.gz",$bl"1.fq.gz"
+fq2=$root"2aa.gz",$root"2ab.gz",$root"2ac.gz",$root"2ad.gz",$root"2ae.gz",$root"2af.gz",$bl"2.fq.gz"
+echo 'starting  mapping with STAR'
 STAR --twopassMode Basic --runThreadN 36 --genomeDir /home/bio-longyk/cnda/STAR_INDEX/$genomeIndex  --readFilesIn $fq1 $fq2 --outSAMtype BAM SortedByCoordinate --outSAMattrIHstart 0  --outFilterMultimapScoreRange 0  --alignEndsType EndToEnd  --readFilesCommand zcat --outFilterIntronMotifs RemoveNoncanonicalUnannotated --outSAMstrandField intronMotif --bamRemoveDuplicatesType UniqueIdenticalNotMulti
+
+echo 'starting first mapping with STAR'
+#STAR --runThreadN 36  --genomeLoad LoadAndRemove --genomeDir /home/bio-longyk/cnda/STAR_INDEX/$genomeIndex  --readFilesIn $fq1 $fq2 --outSAMattrIHstart 0  --outFilterMultimapScoreRange 0  --alignEndsType EndToEnd  --readFilesCommand zcat --outFilterIntronMotifs RemoveNoncanonicalUnannotated --outSAMstrandField intronMotif --bamRemoveDuplicatesType UniqueIdenticalNotMulti
 
 ####INDEX for sorted bam file
 echo 'generating index with samtools'
