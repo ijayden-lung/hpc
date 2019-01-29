@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N BAM2WIG
+#PBS -l nodes=1:ppn=1
+#PBS -o log_bam2wig1
+#PBS -j oe 
+#PBS -l walltime=24:00:00
+cd ~/workspace/apa_predict/
+
+bam2wig.py -i Mapping/BL6J_89.bam -s ~/cnda/STAR_INDEX/bl6len100/chrNameLength.txt -o WIG/Bl6_rep1
