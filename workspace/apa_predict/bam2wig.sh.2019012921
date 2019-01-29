@@ -1,0 +1,7 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N STAR
+#PBS -l nodes=$nodes:ppn=$ppn
+#PBS -o \${out}
+#PBS -j oe 
+#PBS -l walltime=12:00:00
