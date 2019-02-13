@@ -1,0 +1,106 @@
+#!/home/bio-longyk/apps/R-3.5.0/bin/Rscript
+
+#library(geneLenDataBase,warn.conflicts = FALSE)
+#library(goseq,warn.conflicts = FALSE)
+library(KEGGREST)
+suppressPackageStartupMessages(library(GO.db))
+library(annotate)
+suppressPackageStartupMessages(library(org.Hs.eg.db))
+suppressPackageStartupMessages(library(goseq))
+args<-commandArgs(T)
+
+data = read.delim(paste("./Input_gobp_",args[1],".txt", sep=""), row.names=1) # id for deseq
+bg = read.table(paste("./Input_gobg_",args[1],".txt",sep=""),header=TRUE)
+assayed.genes = bg$gene
+lengthbias = bg$length
+
+en2eg=as.list(org.Hs.egENSEMBL2EG)
+eg2kegg=as.list(org.Hs.egPATH)
+grepKEGG=function(id,mapkeys){unique(unlist(mapkeys[id],use.names=FALSE))}
+kegg=lapply(en2eg,grepKEGG,eg2kegg)
+
+getPathwayName <- function(x){
+	y <- keggGet(x)[[1]]$NAME
+	return (as.character(unlist(strsplit(y, ' - '))[1]))
+}
+
+de.genes = rownames(data)
+gene.vector = as.integer(assayed.genes%in%de.genes)
+names(gene.vector) = assayed.genes
+
+pdf(paste("./barplots.", args[1], ".pdf", sep=""), width=6, height=3)
+par(mar=c(4, 16, 3, 3)) 
+
+#pwf = nullp(gene.vector, "hg38", "ensGene")#, bias.data=rep(100, length(gene.vector)))
+# make a pwf, with no bias data
+#pwf = data.frame(DEgenes=gene.vector, bias.data=rep(1, length(assayed.genes)), pwf=rep(1, length(assayed.genes)), row.names=assayed.genes)                
+
+pwf = nullp(gene.vector,"hg38","ensGene",bias.data=lengthbias)
+GO.sig= goseq(pwf,"hg38","ensGene")
+KEGG=goseq(pwf,gene2cat=kegg)
+KEGG=goseq(pwf,'hg38','ensGene',test.cats="KEGG")
+
+#pwf = nullp(gene.vector,"hg38","ensGene")
+#GO.sig = goseq(pwf, "hg38", "ensGene", method='Wallenius', use_genes_without_cat=FALSE) # Hypergeometric
+#GO.sig = goseq(pwf, "hg19", "ensGene", method='Wallenius')
+
+#trimmedGO = GO.sig[GO.sig$numInCat > 40 & GO.sig$numInCat < 500,]# & GO.sig$numDEInCat>=4,]
+trimmedGO = GO.sig[GO.sig$numDEInCat > 4 & GO.sig$numInCat < 500,]# & GO.sig$numDEInCat>=4,]
+
+#trimmedGO$over_represented_pvalue = p.adjust(trimmedGO$over_represented_pvalue, method="BH")+1e-40
+enriched = trimmedGO[trimmedGO$over_represented_pvalue <0.05,] # q-value
+enrichedKEGG = KEGG[KEGG$over_represented_pvalue <0.05,] # q-value
+enrichedKEGG$category=paste0("hsa",enrichedKEGG$category)
+enrichedKEGG$term <- unlist(lapply(enrichedKEGG$category, getPathwayName))
+enrichedKEGG$ontology = "KEGG"
+enriched = merge(enriched,enrichedKEGG,all=T)
+#enriched[, "Ontology"] = Ontology(enriched$category)
+
+# Build a table for a barplot:
+
+for (ont in c("CC", "BP", "MF","KEGG")) {
+#for (ont in c("BP","KEGG")) {
+	this_ont = enriched[enriched$ontology == ont,]
+	tab = data.frame(term=this_ont$term,p=this_ont$over_represented_pvalue, numDEInCat=this_ont$numDEInCat,numInCat=this_ont$numInCat, row.names=this_ont$category)
+	write.table(tab, paste("tab", ont, '_', args[1], sep=""),quote=FALSE,sep="\t",col.names=NA,row.names=TRUE)
+
+
+	####Get DE genes in category
+	if(ont == "KEGG"){
+		allKEGGs <- stack(kegg)
+		enriched.kegg <-  KEGG[KEGG$over_represented_pvalue <0.05,]$category
+		allKEGG_sig <- allKEGGs[allKEGGs$values %in% enriched.kegg,]
+		allKEGG_sig <- allKEGG_sig[allKEGG_sig$ind %in% de.genes,]
+		write.table(allKEGG_sig,paste("cat",ont,'_',args[1],sep=""),quote=FALSE,sep="\t",col.names=NA,row.names=TRUE)
+	}else{
+		allGos <- stack(getgo(de.genes, 'hg38', 'ensGene',fetch.cats=paste('GO:',ont,sep="")))
+		allGos_sig <- allGos[allGos$values %in% enriched$category,]
+		allGos_sig <- allGos_sig[allGos_sig$ind %in% de.genes,]
+		write.table(allGos_sig,paste("cat",ont,'_',args[1],sep=""),quote=FALSE,sep="\t",col.names=NA,row.names=TRUE)
+	}
+	# Do the same for the barcharts
+	if (dim(this_ont)[1] > 1) { # It is a bug that the barcharts cannot deal with only a single sig entry... Not clear how to fix
+		tab = c("GO", "q")
+		for (r in 1:min(100, dim(this_ont)[1])) {
+			pp = paste(this_ont[r,]$term, " (", this_ont[r,]$category, ")", sep="")
+			if(this_ont[r,]$over_represented_pvalue == 0) {
+				this_ont[r,]$over_represented_pvalue = 1e-20
+			}
+			tab = rbind(tab, c(pp, this_ont[r,]$over_represented_pvalue)) 
+		}
+
+		colnames(tab) = tab[1,]
+		tab = (tab[-1,])
+		tab = data.frame(q=as.numeric(tab[,2]), row.names=tab[,1])
+		tab = -log10(tab)
+		tab = tab[order(tab[,1], decreasing=T),,drop=F]
+
+##original	#par(las=2, mar=c(2,27,1,0.5))#, mgp=c(3,1,0)) # perpendicular and margins
+		par(las=2, mar=c(2,27,1,0.5), mgp=c(3,1,0)) # perpendicular and margins
+		barplot(as.numeric(rev(tab[1:30,1])), names.arg=rev(rownames(tab)[1:30]), horiz=T, main=ont, cex.axis=0.7, 
+		space=0.4, cex=0.5)
+	}	
+}
+dev.off()
+#command = paste("./annotate.pl",args[1],"hg38",sep=" ")
+#system(command)

@@ -1,0 +1,106 @@
+## ----knitr-opts, include=FALSE-------------------------------------------
+knitr::opts_chunk$set(dpi = 90,dev = "png")
+
+## ----install_logolas_bio, eval=FALSE-------------------------------------
+#  source("http://bioconductor.org/biocLite.R")
+#  biocLite("Logolas")
+
+## ----install_logolas_git, eval=FALSE-------------------------------------
+#  devtools::install_github('kkdey/Logolas')
+
+## ----load, eval=TRUE-----------------------------------------------------
+library(Logolas)
+
+## ----seq, cache=FALSE, eval=TRUE,warning=FALSE---------------------------
+sequence <- c("CTATTGT", "CTCTTAT", "CTATTAA", "CTATTTA", "CTATTAT", "CTTGAAT",
+              "CTTAGAT", "CTATTAA", "CTATTTA", "CTATTAT", "CTTTTAT", "CTATAGT",
+              "CTATTTT", "CTTATAT", "CTATATT", "CTCATTT", "CTTATTT", "CAATAGT",
+              "CATTTGA", "CTCTTAT", "CTATTAT", "CTTTTAT", "CTATAAT", "CTTAGGT",
+              "CTATTGT", "CTCATGT", "CTATAGT", "CTCGTTA", "CTAGAAT", "CAATGGT")
+
+
+## ----message = FALSE, warning = FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+logomaker(sequence, type = "Logo")
+logomaker(sequence, type = "EDLogo")
+
+## ----message = FALSE, warning = FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+library(ggseqlogo)
+data(ggseqlogo_sample)
+sequence <- seqs_aa$AKT1
+logomaker(sequence, type = "EDLogo")
+
+## ------------------------------------------------------------------------
+data("seqlogo_example")
+seqlogo_example
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+logomaker(seqlogo_example, type = "Logo", return_heights = TRUE)
+logomaker(seqlogo_example, type = "EDLogo", return_heights = TRUE)
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+logomaker(seqlogo_example, color_type = "per_row",
+          colors = c("#7FC97F", "#BEAED4", "#FDC086", "#386CB0"),
+          type = "EDLogo")
+logomaker(seqlogo_example, type = "EDLogo", color_seed = 1500)
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+logomaker(seqlogo_example, type = "Logo",
+          logo_control = list(control = list(tofill= FALSE)), color_seed = 4000)
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+logomaker(seqlogo_example, type = "EDLogo",
+          logo_control = list(control = list(tofill_pos = TRUE,
+                                             tofill_neg = FALSE)))
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+bg <- c(0.05, 0.90, 0.03, 0.05)
+names(bg) <- c("A", "C", "G", "T")
+logomaker(seqlogo_example, bg=bg, type = "EDLogo")
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+logomaker(seqlogo_example, bg=(seqlogo_example+1e-02), type = "EDLogo")
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+sequence <- c("CTATTGT", "CTCTTAT", "CTATTAA", "CTATTTA", "CTATTAT", "CTTGAAT",
+              "CTTAGAT", "CTATTAA", "CTATTTA", "CTATTAT")
+logomaker(sequence, use_dash = FALSE, type = "Logo",
+          logo_control = list(pop_name = "use_dash = FALSE"))
+logomaker(sequence, type = "Logo", logo_control = list(pop_name = "use_dash = TRUE"))
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+data("histone_marks")
+logomaker(histone_marks$mat, bg=histone_marks$bgmat, type = "EDLogo")
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+data("mutation_sig")
+logomaker(mutation_sig, type = "Logo", color_seed = 3000)
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+logomaker(mutation_sig, type = "Logo", color_type = "per_symbol",  color_seed = 2300)
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+logomaker(mutation_sig, type = "EDLogo", color_type = "per_symbol",  color_seed = 2300)
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+sequence <- c("CTATTGT", "CTCTTAT", "CTATTAA", "CTATTTA", "CTATTAT", "CTTGAAT",
+              "CTTAGAT", "CTATTAA", "CTATTTA", "CTATTAT")
+GetConsensusSeq(sequence)
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+sequence <- c("CTATTGT", "CTCTTAT", "CTATTAA", "CTATTTA", "CTATTAT", "CTTGAAT",
+              "CTTAGAT", "CTATTAA", "CTATTTA", "CTATTAT")
+Logolas::get_viewport_logo(1, 2, heights_1 = 20)
+library(grid)
+seekViewport(paste0("plotlogo", 1))
+logomaker(sequence, type = "Logo", logo_control = list(newpage = FALSE))
+
+seekViewport(paste0("plotlogo", 2))
+logomaker(sequence, type = "EDLogo", logo_control = list(newpage = FALSE))
+
+## ----message = FALSE, warning=FALSE, fig.height=5, fig.width= 6, fig.align='center'----
+data(pssm)
+logo_pssm(pssm, control = list(round_off = 0))
+
+## ------------------------------------------------------------------------
+sessionInfo()
+

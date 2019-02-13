@@ -1,0 +1,46 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(ggpubr)
+library(DESeq2)
+library(hash)
+###################  ATAC counts  ########
+
+df_atac <- read.table('Mergegroup_peaks.fc4fdr6.narrowPeak.SAF_featureCount.tab',head=T)
+colnames(df_atac)[7:dim(df_atac)[2]] <- c('H1','H2','H3','H4','L1','L2','L3','L4')
+
+cts <- df_atac[,7:dim(df_atac)[2]]
+for (i in 1:8){
+	  cts[,i] <- as.integer(cts[,i]/sum(cts[,i])*15000000)
+}
+
+coldata <- data.frame(sample=colnames(cts), group=c(rep('H',4), rep('L',4)))
+
+dds <- DESeqDataSetFromMatrix(countData = cts,
+                              colData = coldata,
+							                                design= ~ group)
+
+
+dds <- DESeq(dds)
+
+res <- results(dds, contrast=c("group","H","L"), alpha=0.01,lfcThreshold=1)
+summary(res)
+resdf <- as.data.frame(res)
+
+
+resOrdered <- res[order(res$padj),]   ####Alternative Step;
+write.table(cbind(df_atac,resdf), file="CSC_HighvsLow.deg.ATAC.txt", sep="\t", quote = F, row.names = F)
+
+
+
+pdf('CSC_Diff_ATAC_MAplot.pdf')
+plotMA(res)
+ggmaplot(res, main = expression("HIGH vs LOW")
+		fdr = 0.05, fc = 3, size = 0.4,
+		palette = c("#B31B21", "#1465AC", "darkgray"),
+#		legend = "top", top = 0, select.top.method='fc',
+#		font.label = c("bold", 10),
+#		font.legend = "bold",
+#		font.main = "bold",
+		ggtheme = ggplot2::theme_bw(), xlab='Log2 mean reads count')
+#dev.off()
+

@@ -1,0 +1,71 @@
+#!/usr/bin/env Rscript
+
+#library(geneLenDataBase,warn.conflicts = FALSE)
+#library(goseq,warn.conflicts = FALSE)
+#library(org.Hg.eg.db)
+library(goseq)
+args<-commandArgs(T)
+filenames = list.files(path="./", pattern=args[1])
+bg = read.table(args[2],header = TRUE)
+assayed.genes = bg$gene
+lengthbias = bg$length
+
+length(assayed.genes)
+length(lengthbias)
+for (filename in filenames) {
+	data = read.delim(paste("./", filename, sep=""), row.names=1) # id for deseq
+	de.genes = rownames(data)
+	gene.vector = as.integer(assayed.genes%in%de.genes)
+	names(gene.vector) = assayed.genes
+
+	pdf(paste("barplots.", filename, ".pdf", sep=""), width=6, height=1.8)
+	par(mar=c(4, 16, 3, 3)) 
+
+	#pwf = nullp(gene.vector, "mm10", "ensGene")#, bias.data=rep(100, length(gene.vector)))
+	# make a pwf, with no bias data
+	#pwf = data.frame(DEgenes=gene.vector, bias.data=rep(1, length(assayed.genes)), pwf=rep(1, length(assayed.genes)), row.names=assayed.genes)                
+	pwf = nullp(gene.vector,"hg38","ensGene",bias.data=lengthbias)
+	GO.sig= goseq(pwf,"hg38","ensGene")
+	KEGG=goseq(pwf,'hg38','ensGene',test.cats="KEGG")
+	head(KEGG)
+	#pwf = nullp(gene.vector,"hg38","ensGene")
+	#GO.sig = goseq(pwf, "hg38", "ensGene", method='Wallenius', use_genes_without_cat=FALSE) # Hypergeometric
+	#GO.sig = goseq(pwf, "hg19", "ensGene", method='Wallenius')
+
+	#trimmedGO = GO.sig[GO.sig$numInCat > 40 & GO.sig$numInCat < 500,]# & GO.sig$numDEInCat>=4,]
+	trimmedGO = GO.sig[GO.sig$numDEInCat > 4 & GO.sig$numInCat < 500,]# & GO.sig$numDEInCat>=4,]
+
+	#trimmedGO$over_represented_pvalue = p.adjust(trimmedGO$over_represented_pvalue, method="BH")+1e-40
+	enriched = trimmedGO[trimmedGO$over_represented_pvalue <0.01,] # q-value
+	#enriched[, "Ontology"] = Ontology(enriched$category)
+
+	# Build a table for a barplot:
+
+	for (ont in c("CC", "BP", "MF")) {
+		this_ont = enriched[enriched$ontology == ont,]
+		if (dim(this_ont)[1] > 1) {
+			tab = data.frame(p=this_ont$over_represented_pvalue, numInCat=this_ont$numInCat, row.names=paste(this_ont$category, " ", this_ont$term, sep=""))
+			write.table(tab, paste("tab", ont, '_', filename, sep=""), sep="\t", col.names=NA)
+		}
+		# Do the same for the barcharts
+		this_ont = enriched[enriched$ontology == ont,]
+		if (dim(this_ont)[1] > 1) { # It is a bug that the barcharts cannot deal with only a single sig entry... Not clear how to fix
+			tab = c("GO", "q")
+			for (r in 1:min(100, dim(this_ont)[1])) {
+				pp = paste(Term(this_ont[r,]$category), " (", this_ont[r,]$category, ")", sep="")
+				tab = rbind(tab, c(pp, this_ont[r,]$over_represented_pvalue)) 
+			}
+
+		colnames(tab) = tab[1,]
+		tab = (tab[-1,])
+		tab = data.frame(q=as.numeric(tab[,2]), row.names=tab[,1])
+		tab = -log10(tab)
+		tab = tab[order(tab[,1], decreasing=T),,drop=F]
+
+		par(las=2, mar=c(2,27,1,0.5))#, mgp=c(3,1,0)) # perpendicular and margins
+		barplot(as.numeric(rev(tab[1:20,1])), names.arg=rev(rownames(tab)[1:20]), horiz=T, main=ont, cex.axis=0.7, 
+		space=0.4, cex=0.5)
+		}	
+	}
+	dev.off()
+}

@@ -1,0 +1,2 @@
+pdf(file='ACAGTG-10days.pdf',width=4.5,height=4.5);
+gstable=read.table('ACAGTG-10days.gene_summary.txt',header=T)
