@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -N rMATS
+#PBS -l nodes=1:ppn=8
+#PBS -l walltime=3:00:00
+#PBS -q ser
+#PBS -j oe
+#PBS -V
+
+
+cd $PBS_O_WORKDIR
+rmats=/home/bio-zhouxd/toolkits/rMATS.4.0.1/rMATS-turbo-Linux-UCS4
+GTF=/home/bio-jiafj/reference/gtf/mm10.gtf
+outDir=/home/bio-zhouxd/Project_PanTissue_AS_in_HybridMice/mockF1/splicing_res
+readLen=76 # 85 for caroli, 100 for pahari
+python ${rmats}/rmats.py --b1 b1.txt --b2 b2.txt --gtf ${GTF} --od ${outDir} -t paired --nthread 8 --readLength ${readLen} --tstat 8
