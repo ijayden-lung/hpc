@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -N rMATS
+#PBS -l nodes=1:ppn=24
+#PBS -l walltime=5:00:00
+#PBS -q debug
+#PBS -j oe
+#PBS -V
+
+
+cd $PBS_O_WORKDIR
+rmats=/home/bio-zhouxd/toolkits/rMATS.4.0.1/rMATS-turbo-Linux-UCS4
+GTF=/home/bio-jiafj/reference/gtf/spret.gtf
+outDir=/home/bio-longyk/Documents/rmats/spret2
+readLen=76 # 85 for caroli, 100 for pahari
+python ${rmats}/rmats.py --b1 b1_spret.txt --b2 b2_spret.txt --gtf ${GTF} --od ${outDir} -t paired --nthread 24 --readLength ${readLen} --tstat 12
