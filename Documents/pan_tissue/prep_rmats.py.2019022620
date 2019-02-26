@@ -1,0 +1,4 @@
+import os, shutil
+
+for tissue in ['cerebellum', 'cortex', 'esc',  'fibroblast',  'heart',  'kidney',  'liver',  'lung',  'muscle', 'spleen']:
+	shutil.copy("/home/bio-jiafj/Project_Pan_Tissue_AS/F1/rMATS4/"+tissue+"/SE.MATS.JC.txt", "./"+tissue+"_SE.MATS.JC.txt")
