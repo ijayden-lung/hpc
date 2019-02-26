@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+open FILE,"rna_binding_proteins.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my (undef,$name,$id) = split /;/;
+	$id =~ s/\"//g;
+	print "$id\n";
+}
+
+
+
+my %exp;
+open FILE,"/home/bio-longyk/workspace/splicing/colon/DESeq2/DESeq2_geneName_WHMvsWLE.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$basemean,$l2fc,$fpkm) = (split)[0..3,-1];
+	$exp{$gene_name} = sprintf("%.0f\t%.2f\t%.2f",$basemean,$fpkm,$l2fc) if exists $hash{$gene_name};
+}
+open FILE,"/home/bio-longyk/workspace/splicing/prostate/DESeq2/DESeq2_geneName.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$basemean,$l2fc,$fpkm) = (split)[0..3,-1];
+	$exp{$gene_name} .= sprintf("\t%.0f\t%.2f\t%.2f",$basemean,$fpkm,$l2fc) if exists $hash{$gene_name};
+	if(exists $hash{$gene_name}){
+		print "$basemean\n";
+		print "$exp{$gene_name}\n";
+	}
+}
+open FILE,"/home/bio-longyk/workspace/splicing/lung/DESeq2/DESeq2_geneName.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$basemean,$l2fc,$fpkm) = (split)[0..3,-1];
+	$exp{$gene_name} .= sprintf("\t%.0f\t%.2f\t%.2f",$basemean,$fpkm,$l2fc) if exists $hash{$gene_name};
+}
+
+open OUT,">RBPinOther.txt";
+print OUT "gene_name\tcolon_RC\tcolon_FPKM\tcolon_L2FC\tprostate_RC\tprostate_FPKM\tprostate_L2FC\tlung_RC\tlung_FPKM\tlung_L2FC\n";
+while(my($key,$val) = each %exp){
+	print OUT "$key\t$val\n";
+}
