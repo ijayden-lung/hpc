@@ -1,0 +1,113 @@
+#!/usr/bin/perl -w
+my %rbp;
+open FILE,"rna_binding_proteins.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my (undef,$name,$id) = split /;/;
+	$id =~ s/\"//g;
+	$rbp{$id} = '';
+}
+open FILE,"RBPs_in_the_review_paper_1542.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my (undef,undef,$id) = split /\t/;
+	$rbp{$id} = '';
+}
+
+
+my %colon;
+my %prost;
+my %lung;
+my %c;
+my %p;
+my %l;
+my %id;
+open FILE,"/home/bio-longyk/workspace/splicing/colon/DESeq2/DESeq2_geneName_WHMvsWLE.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$basemean,$l2fc,$qval,$fpkm) = (split)[0..3,7,-1];
+	$colon{$gene_name} = sprintf("%.0f\t%.2f\t%.2f",$basemean,$fpkm,$l2fc) if $qval ne "NA" && $qval <0.05;
+	$c{$gene_name} = sprintf("%.0f\t%.2f\t%.2f",$basemean,$fpkm,$l2fc);
+	$id{$gene_name} = $gene_id;
+}
+open FILE,"/home/bio-longyk/workspace/splicing/prostate/DESeq2/DESeq2_geneName.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$basemean,$l2fc,$qval,$fpkm) = (split)[0..3,7,-1];
+	$prost{$gene_name} = sprintf("%.0f\t%.2f\t%.2f",$basemean,$fpkm,$l2fc) if $qval ne "NA" && $qval <0.05;
+	$p{$gene_name} = sprintf("%.0f\t%.2f\t%.2f",$basemean,$fpkm,$l2fc);
+	$id{$gene_name} = $gene_id;
+}
+open FILE,"/home/bio-longyk/workspace/splicing/lung/DESeq2/DESeq2_geneName.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$basemean,$l2fc,$qval,$fpkm) = (split)[0..3,7,-1];
+	$lung{$gene_name} = sprintf("%.0f\t%.2f\t%.2f",$basemean,$fpkm,$l2fc) if $qval ne "NA" && $qval <0.05;
+	$l{$gene_name} = sprintf("%.0f\t%.2f\t%.2f",$basemean,$fpkm,$l2fc);
+	$id{$gene_name} = $gene_id;
+}
+
+my @Venn;
+open OUT,">Overlap_DE.RBP.txt";
+print OUT "gene_id\tgene_name\tcolon_RC\tcolon_FPKM\tcolon_L2FC\tprostate_RC\tprostate_FPKM\tprostate_L2FC\tlung_RC\tlung_FPKM\tlung_L2FC\tRBP\tOverlapSample\n";
+while(my($key,$val) = each %colon){
+	my $id = $id{$key};
+	my $rbp = exists $rbp{$id} ? "RBP": "NONE";
+	$p{$key} = "NA\tNA\tNA" if !exists $p{$key};
+	$l{$key} = "NA\tNA\tNA" if !exists $l{$key};
+	if(exists $prost{$key}){
+		if(exists $lung{$key}){
+			print OUT "$id\t$key\t$c{$key}\t$p{$key}\t$l{$key}\t$rbp\tCPL\n";
+			$Venn[6]++;
+		}
+		else{
+			print OUT "$id\t$key\t$c{$key}\t$p{$key}\t$l{$key}\t$rbp\tCP\n";
+			$Venn[3]++;
+		}
+	}
+	else{
+		if(exists $lung{$key}){
+			print OUT "$id\t$key\t$c{$key}\t$p{$key}\t$l{$key}\t$rbp\tCL\n";
+			$Venn[5]++;
+		}
+		else{
+			print OUT "$id\t$key\t$c{$key}\t$p{$key}\t$l{$key}\t$rbp\tC\n";
+			$Venn[0]++;
+		}
+		
+	}
+}
+
+while(my($key,$val) = each %prost){
+	next if exists $colon{$key};
+	my $id = $id{$key};
+	my $rbp = exists $rbp{$id} ? "RBP": "NONE";
+	$c{$key} = "NA\tNA\tNA" if !exists $c{$key};
+	$l{$key} = "NA\tNA\tNA" if !exists $l{$key};
+	if(exists $lung{$key}){
+		print OUT "$id\t$key\t$c{$key}\t$p{$key}\t$l{$key}\t$rbp\tPL\n";
+		$Venn[4]++;
+	}
+	else{
+		print OUT "$id\t$key\t$c{$key}\t$p{$key}\t$l{$key}\t$rbp\tP\n";
+		$Venn[1]++;
+	}
+}
+
+while(my($key,$val) = each %lung){
+	next if exists $colon{$key} && $prost{$key};
+	my $id = $id{$key};
+	my $rbp = exists $rbp{$id} ? "RBP": "NONE";
+	$c{$key} = "NA\tNA\tNA" if !exists $c{$key};
+	$p{$key} = "NA\tNA\tNA" if !exists $p{$key};
+	print OUT "$id\t$key\t$c{$key}\t$p{$key}\t$l{$key}\t$rbp\tL\n";
+	$Venn[2]++;
+}
+
+print "plot(Venn(SetNames = c('Colon', 'Prostate','Lung'), Weight=c('100'=$Venn[0],'010'=$Venn[1],'001'=$Venn[2],'110'=$Venn[3],'011'=$Venn[4],'101'=$Venn[5],'111'=$Venn[6])),doWeights = TRUE,doEuler=TRUE)\n";
+

@@ -1,0 +1,8 @@
+
+open FILE,"RBPs_in_the_review_paper_1542.txt";
+while(<FILE>){
+	chomp;
+	my (undef,undef,$gene_id) = split /\t/;
+	print "$gene_id\n";
+}
+	
