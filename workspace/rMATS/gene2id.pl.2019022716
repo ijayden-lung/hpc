@@ -1,0 +1,28 @@
+#!/usr/bin/perl -w
+my %hash;
+open REF,"/home/bio-longyk/cnda/ensembl/hg38_ID2Name.txt";
+while(<REF>){
+	chomp;
+	my ($id,$name) = split;
+	$hash{$name} = $id;
+}
+
+open FILE,"EMT_gene_list.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	if($_ =~ /\|/){
+		my ($gene1,$gene2) = split /\|/;
+		if(!exists $hash{$gene1}){
+			print "$_\n";
+		}
+		if(!exists $hash{$gene2}){
+			print "$_\n";
+		}
+	}
+	else{
+		if(!exists $hash{$_}){
+			print "$_\n";
+		}
+	}
+}

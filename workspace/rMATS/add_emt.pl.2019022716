@@ -1,0 +1,42 @@
+#!/usr/bin/perl -w
+open FILE,"colon/ASEvent.tsv";
+my $header = <FILE>;
+chomp $header;
+
+my %emt_gene;
+open FILE,"EMT_gene_list.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	if($_ =~ /\|/){
+		my ($gene1,$gene2) = split /\|/;
+		$emt_gene{$gene1} = '';
+		$emt_gene{$gene2} = '';
+	}
+	else{
+		$emt_gene{$_} = '';
+	}
+}
+
+&add_emt("Same_ASE1.txt","Same_ASE1.emt.txt");
+&add_emt("Same_ASE2.txt","Same_ASE2.emt.txt");
+&add_emt("Same_ASE3.txt","Same_ASE3.emt.txt");
+&add_emt("Same_ASE4.txt","Same_ASE4.emt.txt");
+
+sub add_emt{
+	my ($file1,$file2) = @_;
+	open FILE,$file1;
+	open OUT,">",$file2;
+	print OUT "$header\tEMT\n";
+	while(<FILE>){
+		chomp;
+		my ($gene) = (split)[4];
+		if(exists $emt_gene{$gene}){
+			print OUT "$_\tEMT\n";
+		}
+		else{
+			print OUT "$_\tNone\n";
+		}
+	}
+}
+		
