@@ -1,0 +1,28 @@
+#!/usr/bin/perl -w
+
+open FILE,"zcat fastq/CON_T0.1.fq.gz |";
+my %hash;
+my $total;
+while(<FILE>){
+	chomp;
+	if($.%4 == 2){
+		my @string = split //,$_;
+		$total++;
+		for(my $i=0;$i<@string;$i++){
+			$hash{$i}->{$string[$i]}++;
+		}
+	}
+}
+
+open OUT,'>Input_linechart_baseContent_norm.txt';
+print OUT "base\tposition\tpercent\n";
+while (my ($pos,$val) = each %hash){
+	while(my ($base,$readNum) = each %$val){
+		next if $base eq "N";
+		my $per = $readNum/$total;
+		print OUT "$base\t$pos\t$per\n";
+	}
+}
+
+system("./linechart.r Input_linechart_baseContent_norm.txt Linechart_baseContent_norm.pdf");
+#system("./linechart.r Input_linechart_baseContent_norm.txt Linechart_baseContent_norm.pdf");

@@ -1,0 +1,27 @@
+#!/usr/bin/perl -w
+
+open OUT,">script.sh";
+
+
+my %hash=(
+	'CGATGT'=>'T0_REP1',
+	'TTAGGC'=>'T0_REP2',
+	'TGACCA'=>'T0_REP3',
+	'GCCAAT'=>'T3_REP1',
+	'CAGATC'=>'T3_REP2',
+	'ACTTGA'=>'T3_REP3',
+	'GATCAG'=>'P4_REP1',
+	'TAGCTT'=>'P4_REP2',
+	'GGCTAC'=>'P4_REP3',
+	'CTTGTA'=>'FC_REP1',
+	'AGTCAA'=>'FC_REP2',
+	'AGTTCC'=>'FC_REP3'
+);
+
+
+
+while(my($index,$sample)=  each %hash){
+	my $fq1 = 'ln -s /home/bio-liys/data/data_P101SC18110904-01-F006-B14-21/1.rawdata/CYT-KO-'.$index.'_*/CYT-KO-*1.fq.gz ../CYT_KO/'.$sample.'.1.fq.gz';
+	my $fq2 = 'ln -s /home/bio-liys/data/data_P101SC18110904-01-F006-B14-21/1.rawdata/CYT-KO-'.$index.'_*/CYT-KO-*2.fq.gz ../CYT_KO/'.$sample.'.2.fq.gz';
+	print OUT "$fq1\n$fq2\n";
+}

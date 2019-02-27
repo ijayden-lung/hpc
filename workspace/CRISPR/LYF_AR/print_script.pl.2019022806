@@ -1,0 +1,42 @@
+#!/usr/bin/perl -w
+
+open OUT,">script.sh";
+
+my $index = "ATCACG";
+my $sample = "T2_DMSO_REP1";
+
+my %hash=(
+	"ATCACG"=>"T2_DMSO_REP1",
+	"CGATGT"=>"T2_DMSO_REP2",
+	"TTAGGC"=>"T2_DMSO_REP3",
+	"TGACCA"=>"T3_8um_REP1",
+	"ACAGTG"=>"T3_8um_REP2",
+	"GCCAAT"=>"T3_8um_REP3",
+	"CAGATC"=>"T3_4um_REP1",
+	"ACTTGA"=>"T3_4um_REP2",
+	"GATCAG"=>"T3_4um_REP3",
+	"AGTCAA"=>"T3_DMSO_REP1",
+	"AGTTCC"=>"T3_DMSO_REP2",
+	"ATGTCA"=>"T3_DMSO_REP3",
+	"CCGTCC"=>"T0_DMSO",
+	"TAGCTT"=>"T4_8um_REP1",
+	"GGCTAC"=>"T4_8um_REP2",
+	"CTTGTA"=>"T4_8um_REP3",
+	"TCTTAA"=>"CON_T0",
+	"GTCCGC"=>"CON_T3",
+	"GTGAAA"=>"U0126AD",
+	"GTGGCC"=>"U0126SUS",
+	"GTTTCG"=>"SSF30AD",
+	"CGTACG"=>"SSF30SUS",
+	"GAGTGG"=>"DELTAAD",
+	"CCGCAA"=>"DELTASUS"
+);
+print "$hash{$index}\n";
+
+
+
+while(my($index,$sample)=  each %hash){
+	my $fq1 = 'ln -s /home/bio-liys/data/data_P101SC18110904-01-F005-B13-21/1.rawdata/LYF-AR-'.$index.'_*/LYF-AR-*1.fq.gz ../LYF_AR/'.$sample.'.1.fq.gz';
+	my $fq2 = 'ln -s /home/bio-liys/data/data_P101SC18110904-01-F005-B13-21/1.rawdata/LYF-AR-'.$index.'_*/LYF-AR-*2.fq.gz ../LYF_AR/'.$sample.'.2.fq.gz';
+	print OUT "$fq1\n$fq2\n";
+}
