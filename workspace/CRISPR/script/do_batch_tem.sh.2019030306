@@ -37,8 +37,8 @@ cd $dir
 
 ################MAGECK TEST######################
 #With control sgrna
-exp=T2DMSOvsT38um
-mageck test -k Input_mageck_$lib\_$exp.tsv -c T2_DMSO_REP1,T2_DMSO_REP2,T2_DMSO_REP3 -t T3_8um_REP1,T3_8um_REP2,T3_8um_REP3 -n $exp --pdf-report --normcounts-to-file --sort-criteria pos --remove-zero control --control-sgrna control_sgrna
+exp=T2DMSOvsT34um
+mageck test -k Input_mageck_$lib\_$exp.tsv -c T2_DMSO_REP1,T2_DMSO_REP2,T2_DMSO_REP3 -t T3_4um_REP1,T3_4um_REP2,T3_4um_REP3 -n $exp --pdf-report --normcounts-to-file --sort-criteria pos --remove-zero control --control-sgrna control_sgrna
 #mageck test -k Input_mageck_$lib\_$exp.tsv  -c  gneg_seq_nc1,gneg_seq_nc2 -t gneg_seq_s1,gneg_seq_s2 -n $exp --pdf-report --normcounts-to-file --sort-criteria pos --remove-zero control --control-sgrna control_sgrna
 
 
