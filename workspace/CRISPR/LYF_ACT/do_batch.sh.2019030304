@@ -1,0 +1,28 @@
+#!/bin/bash
+
+ #### Default: ACACC GTTTT
+ #### some ACT,REP: TGTTG GTTTA
+ #### TTFKO: GTTGG GTTTA
+
+lib=hKO
+exp=CYT_KO
+
+dir='/home/bio-longyk/workspace/CRISPR/CYT_KO'
+cd $dir
+if [ ! -d OUT ];then
+	mkdir -p OUT
+fi
+for file in fastq/*1.fq.gz
+do
+	base=${file#*\/}
+	#arrIN=(${base//\_/ })
+	sam=${base%%.*}
+	#sam=${sam#*\-}
+	if [ ! -d OUT/$sam ];then
+		mkdir -p OUT/$sam
+	fi
+	echo "mapping $sam"
+	qsub -v sam=$sam,dir=$dir,file=$file,lib=$lib,pre="ACACC",suf="GTTTT",out="OUT/$sam",log="log_$sam" ~/workspace/CRISPR/script/batch.sh
+	#~/workspace/CRISPR/script/extract_gRNA2.pl $file $lib ACACC GTTTT OUT/$sam
+done
+

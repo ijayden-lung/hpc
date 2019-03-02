@@ -1,0 +1,9 @@
+#!/usr/bin/env Rscript
+
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+data = read.table(args[1],header=TRUE)
+pdf(args[2],width=13)
+
+ggplot(data=data,aes(x=position,y=percent,group=base,color=base))+geom_line()
