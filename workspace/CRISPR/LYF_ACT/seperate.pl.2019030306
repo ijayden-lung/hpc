@@ -1,0 +1,40 @@
+#!/usr/bin/perl -w
+
+open FILE,"Input_mageck_hACT-KPDT_LYF_ACT.tsv";
+my $header = <FILE>;
+chomp $header;
+my @head = split /\t/,$header;
+my $t0dmso = "$head[2]";
+my $t2dmso = "$head[3]\t$head[4]\t$head[5]";
+my $t3dmso = "$head[12]\t$head[13]\t$head[14]";
+my $t34um = "$head[6]\t$head[7]\t$head[8]";
+my $t38um = "$head[9]\t$head[10]\t$head[11]";
+my $t48um = "$head[15]\t$head[16]\t$head[17]";
+
+open OUT1,">Input_mageck_hACT-KPDT_T2DMSOvsT38um.tsv";
+print OUT1 "$head[0]\t$head[1]\t$t2dmso\t$t38um\n";
+open OUT2,">Input_mageck_hACT-KPDT_T2DMSOvsT34um.tsv";
+print OUT2 "$head[0]\t$head[1]\t$t2dmso\t$t34um\n";
+open OUT3,">Input_mageck_hACT-KPDT_T3DMSOvsT0DMSO.tsv";
+print OUT3 "$head[0]\t$head[1]\t$t3dmso\t$t0dmso\n";
+open OUT4,">Input_mageck_hACT-KPDT_T3DMSOvsT38um.tsv";
+print OUT4 "$head[0]\t$head[1]\t$t3dmso\t$t38um\n";
+open OUT5,">Input_mageck_hACT-KPDT_T3DMSOvsT34um.tsv";
+print OUT5 "$head[0]\t$head[1]\t$t3dmso\t$t34um\n";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	my $t0dmso = "$data[2]";
+	my $t2dmso = "$data[3]\t$data[4]\t$data[5]";
+	my $t3dmso = "$data[12]\t$data[13]\t$data[14]";
+	my $t34um = "$data[6]\t$data[7]\t$data[8]";
+	my $t38um = "$data[9]\t$data[10]\t$data[11]";
+	my $t48um = "$data[15]\t$data[16]\t$data[17]";
+	print OUT1 "$data[0]\t$data[1]\t$t2dmso\t$t38um\n";
+	print OUT2 "$data[0]\t$data[1]\t$t2dmso\t$t34um\n";
+	print OUT3 "$data[0]\t$data[1]\t$t3dmso\t$t0dmso\n";
+	print OUT4 "$data[0]\t$data[1]\t$t3dmso\t$t38um\n";
+	print OUT5 "$data[0]\t$data[1]\t$t3dmso\t$t34um\n";
+}
+
+
