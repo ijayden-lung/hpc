@@ -1,0 +1,27 @@
+#!/usr/bin/perl -w
+
+my %np;
+open FILE,"lib_hKO-NP.csv";
+while(<FILE>){
+	chomp;
+	my (undef,$gene) = split;
+	$np{$gene} = split;
+}
+
+open FILE,"RBPs_in_the_review_paper_1542.csv";
+my $header = <FILE>;
+chomp $header;
+chop $header;
+open OUT,">RBPs_in_the_review_paper_1542_hKO-NP.csv";
+print OUT "$header,hKO-NP\n";
+while(<FILE>){
+	chomp;
+	chop;
+	my ($gene) = split /,/;
+	if(exists $np{$gene}){
+		print OUT "$_,Yes\n";
+	}
+	else{
+		print OUT "$_,No\n";
+	}
+}

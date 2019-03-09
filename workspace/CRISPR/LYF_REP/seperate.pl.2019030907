@@ -1,0 +1,26 @@
+#!/usr/bin/perl -w
+
+open FILE,"Input_mageck_hREP-KPDT_LYF_REP.tsv";
+my $header = <FILE>;
+chomp $header;
+my @head = split /\t/,$header;
+
+open OUT1,">Input_mageck_hREP-KPDT_CONT0vsCONT3.tsv";
+print OUT1 "$head[0]\t$head[1]\t$head[2]\t$head[3]\n";
+open OUT2,">Input_mageck_hREP-KPDT_CONT3vsU0126AD.tsv";
+print OUT2 "$head[0]\t$head[1]\t$head[3]\t$head[8]\n";
+open OUT3,">Input_mageck_hREP-KPDT_CONT3vsSSF30AD.tsv";
+print OUT3 "$head[0]\t$head[1]\t$head[3]\t$head[6]\n";
+open OUT4,">Input_mageck_hREP-KPDT_CONT3vsDELTAAD.tsv";
+print OUT4 "$head[0]\t$head[1]\t$head[3]\t$head[4]\n";
+while(<FILE>){
+	chomp;
+	my @data = split;
+	print OUT1 "$data[0]\t$data[1]\t$data[2]\t$data[3]\n";
+	print OUT2 "$data[0]\t$data[1]\t$data[3]\t$data[8]\n";
+	print OUT3 "$data[0]\t$data[1]\t$data[3]\t$data[6]\n";
+	print OUT4 "$data[0]\t$data[1]\t$data[3]\t$data[4]\n";
+
+}
+
+

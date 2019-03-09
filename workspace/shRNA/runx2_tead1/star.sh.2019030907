@@ -1,0 +1,25 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N STAR
+#PBS -l nodes=1:ppn=18
+#PBS -o ${out}
+#PBS -j oe 
+#PBS -l walltime=06:00:00
+
+if [ ! -d ${inp} ];then
+	mkdir -p ${inp}
+fi
+cd $inp
+
+echo 'cut adapter'
+cutadapt -j 18 --minimum-length=50 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o $trfq1 -p $trfq2 $fq1 $fq2
+
+echo 'starting mapping with STAR'
+
+STAR --twopassMode Basic --runThreadN 18 --genomeDir /home/bio-longyk/cnda/STAR_INDEX/$genomeIndex  --readFilesIn $trfq1 $trfq2 --outSAMtype BAM SortedByCoordinate --outSAMattrIHstart 0  --outFilterMultimapScoreRange 0  --alignEndsType EndToEnd  --readFilesCommand zcat --outFilterIntronMotifs RemoveNoncanonicalUnannotated --outSAMstrandField intronMotif --outWigType wiggle --outWigNorm None
+
+####INDEX for sorted bam file
+echo 'generating index with samtools'
+samtools index -@ 18 Aligned.sortedByCoord.out.bam
+
+######Gene Abundance
