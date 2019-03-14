@@ -1,0 +1,227 @@
+#!/usr/bin/perl -w
+
+
+my ($colonSig,$colonBG) = &callASE('colon');
+my ($prostSig,$prostBG) = &callASE('prost');
+my ($lungSig,$lungBG)   = &callASE('lung');
+my %len;
+open ANNO,'annotation.txt';
+<ANNO>;
+while(<ANNO>){
+	chomp;
+	my ($gene_id,$len) = (split /\t/)[1,6];
+	$len{$gene_id} = $len;
+}
+
+open OUT,'>colon_ase_sig.tsv';
+print OUT "ensg\n";
+foreach my $key (keys %$colonSig){
+	my ($gene) = split /\t/,$key;
+	print OUT "$gene\n";
+}
+
+open OUT1, '>colon_ase_bg.txt';
+print OUT1 "ensg\n";
+open OUT2, '>colon_ase_len.txt';
+print OUT2 "ensg\n";
+foreach my $key (keys %$colonBG){
+	my ($gene) = split /\t/,$key;
+	if(exists $len{$gene}){
+		print OUT1 "$gene\n";
+		print OUT2 "$len{$gene}\n";
+	}
+	else{
+		print "$key\n";
+	}
+}
+
+
+
+
+
+my ($overlap) = &Venn($colonSig,$prostSig,$lungSig,'Significant');
+open OUT,'>Common_ASE.txt';
+my %sig_gene;
+foreach my $key (sort keys %$overlap){
+	print OUT "$key\n";
+	my ($ensg) = split /\t/,$key;
+	$sig_gene{$ensg} = '';
+}
+open OUT, '>ASE_sig.txt';
+print OUT "ensg\n";
+foreach my $key (keys %sig_gene){
+	print OUT "$key\n";
+}
+
+=pod
+my ($bg_overlap) = &Venn($colonBG,$prostBG,$lungBG,'BGnificant');
+my %bg_gene;
+foreach my $key (sort keys %$bg_overlap){
+	my ($ensg) = split /\t/,$key;
+	$bg_gene{$ensg} = '';
+}
+open OUT, '>ASE_bg.txt';
+print OUT "ensg\n";
+open OUT2, '>ASE_len.txt';
+print OUT2 "ensg\n";
+foreach my $key (keys %bg_gene){
+	if(exists $len{$key}){
+		print OUT "$key\n";
+		print OUT2 "$len{$key}\n";
+	}
+	else{
+		print "$key\n";
+	}
+}
+=cut
+sub callASE{
+	my ($tissue) = @_;
+	my %uprg;
+	my $all;
+	open ASE, "$tissue/ASEvent.tsv";
+	my $header = <ASE>;
+	while(<ASE>){
+		chomp;
+		my @data = split /\t/;
+		$all{"$data[2]\t$data[3]\t$data[6]"} = \@data;
+		if($data[9] ne "NA" && $data[9] < 0.01 && $data[7]>0.1){
+			$uprg{"$data[2]\t$data[3]\t$data[6]"} = \@data;
+		}
+	}
+	return (\%uprg,\%all);
+}
+
+sub coor{
+	my %hash;
+	my $i=0;
+	my $state = 0;
+	my $exon1 = 0;
+	my $noncor1= 0;
+	foreach my $tissue (@_){
+		my @data = split /;/,$tissue->[10];
+		foreach $ele (@data){
+			my ($exon,undef,$percent) = split /,/,$ele;
+			my ($per1,$per2) = split /\|/,$percent;
+			my $diff = $per1-$per2;
+			$hash{$i}->{$exon} = $diff;
+		}
+		$i++;
+	}
+	while (my($key,$val) = each %{$hash{0}}){
+		if(exists $hash{1}->{$key}){
+			$exon1++;
+			if($val*$hash{1}->{$key}<0){
+				$noncor1++;
+			}
+		}
+	}
+	if($exon1 == $noncor1){
+		$state = 1;
+	}
+	return $state;
+}
+
+
+sub Venn{
+	my (%cpl,%cp,%cl,%pl,%c,%p,%l);
+	my %interset;
+	my %coor;
+	my ($ref1,$ref2,$ref3,$info) = @_;
+	my %enrich1 = %$ref1;
+	my %enrich2 = %$ref2;
+	my %enrich3 = %$ref3;
+	open COM, '>Same_ASE1.txt';
+	open COM2,'>Same_ASE2.txt';
+	open COM3,'>Same_ASE3.txt';
+	open COM4,'>Same_ASE4.txt';
+	my @Venn = (0,0,0,0,0,0,0);
+	foreach my $key (sort keys %enrich1){
+		my $colon = $enrich1{$key};
+		my $prost = $enrich2{$key};
+		my $lung = $enrich3{$key};
+		if(exists $enrich2{$key}){
+			if(exists $enrich3{$key}){
+				my $stat1 = &coor($colon,$prost);
+				my $stat2 = &coor($colon,$lung);
+				my $stat3 = &coor($prost,$lung);
+				if($stat1 ==0 && $stat2 == 0 && $stat3 ==0) {
+					$interset{$key} = '';
+					$cpl{$colon->[0]} ='';
+					$coor{$colon->[0]} = '';		
+					$Venn[6]++;
+					print COM join "\t","Colon",@$colon,"\n";
+					print COM join "\t","Prost",@$prost,"\n";
+					print COM join "\t","Lung",@$lung,"\n";
+				}
+				else{
+					print "@$colon\n";
+				}
+			}
+			else{
+				my $stat1 = &coor($colon,$prost);
+				next if $stat1 != 0;
+				print COM2 join "\t","Colon",@$colon,"\n";
+				print COM2 join "\t","Prost",@$prost,"\n";
+				$cp{$colon->[0]} = '';
+				$Venn[3]++;
+			}
+		}
+		else{
+			if(exists $enrich3{$key}){
+				my $stat1 = &coor($colon,$lung);
+				next if $stat1 != 0;
+				print COM3 join "\t","Colon",@$colon,"\n";
+				print COM3 join "\t","Lung",@$lung,"\n";
+				$cl{$colon->[0]} = '';
+				$Venn[5]++;
+			}
+			else{
+				$c{$colon->[0]} = '';
+				$Venn[0]++;
+			}
+		}
+	}
+
+	foreach my $key (keys %enrich2){
+		my $prost = $enrich2{$key};
+		my $lung = $enrich3{$key};
+		if(!exists $enrich1{$key}){
+			if(exists $enrich3{$key}){
+				my $stat1 = &coor($prost,$lung);
+				next if $stat1 != 0;
+				print COM4 join "\t","Prost",@$prost,"\n";
+				print COM4 join "\t","Lung",@$lung,"\n";
+				$pl{$prost->[0]} = '';
+				$Venn[4]++;
+			}
+			else{
+				$p{$prost->[0]} = '';
+				$Venn[1]++;
+			}
+		}
+	}
+
+	foreach my $key (keys %enrich3){
+		my $lung = $enrich3{$key};
+		if(!exists $enrich1{$key} && !exists $enrich2{$key}){
+			$l{$lung->[0]} = '';
+			$Venn[2]++;
+		}
+	}
+
+	print "$info\n";
+	
+	print "plot(Venn(SetNames = c('Colon', 'Prostate','Lung'), Weight=c('100'=$Venn[0],'010'=$Venn[1],'001'=$Venn[2],'110'=$Venn[3],'011'=$Venn[4],'101'=$Venn[5],'111'=$Venn[6])),doWeights = TRUE,doEuler=TRUE)\n";
+	$Venn[0] = keys %c;
+	$Venn[1] = keys %p;
+	$Venn[2] = keys %l;
+	$Venn[3] = keys %cp;
+	$Venn[4] = keys %pl;
+	$Venn[5] = keys %cl;
+	$Venn[6] = keys %cpl;
+	print "plot(Venn(SetNames = c('Colon', 'Prostate','Lung'), Weight=c('100'=$Venn[0],'010'=$Venn[1],'001'=$Venn[2],'110'=$Venn[3],'011'=$Venn[4],'101'=$Venn[5],'111'=$Venn[6])),doWeights = TRUE)\n";
+	my $consis = keys %coor;
+	my $incon = $Venn[6]-$consis;
+	print "plot(Venn(SetNames = c('Consistent', 'Inconsistent'), Weight=c('10'=$incon,'11'=$consis,'01'=0)),doWeights=TRUE)\n";
+	return \%interset;
+}
