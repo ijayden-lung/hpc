@@ -4,7 +4,7 @@
  #### some ACT,REP: TGTTG GTTTA
  #### TTFKO: GTTGG GTTTA
 
-lib=hKO
+lib=hKO-KM2
 exp=CYT_KO
 
 dir="/home/bio-longyk/workspace/CRISPR/$exp"
