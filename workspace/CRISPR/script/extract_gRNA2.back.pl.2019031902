@@ -1,0 +1,102 @@
+#!/usr/bin/perl -w
+
+my ($sample,$lib,$prefix,$suffix,$out_dir) = @ARGV;
+if(!defined $out_dir){
+	$out_dir = '.';
+}
+if(!defined $lib){
+	$lib = 'hKO';
+}
+
+open FILE, "zcat $sample |";
+
+my $noSuf = 0;
+my $unmap = 0;
+my $gstart = 0;
+my $nogsart = 0;
+my $total = 0;
+my %hash;
+open UNDET, ">$out_dir/undermined.fa";
+open OUT,   ">$out_dir/gRNA_sorted.txt";
+
+
+
+while(<FILE>){
+	chomp;
+	if($.%4 == 2){
+		$total++;
+		my $ind2 = index($_,$suffix);
+		#if ($ind2 < 70 && $ind2 > 30){
+		if ($ind2 != -1){
+			my $sgrna = substr($_,$ind2-20,20);
+			$sgrna = uc($sgrna);
+			my $start = substr($_,$ind2-21,1);
+			$hash{$sgrna}++;
+			if($sgrna =~ /G/ || $start eq "G"){
+				$gstart++;
+			}
+			else{
+				$nogsart++;
+			}
+		}
+		else{
+			$noSuf++;
+		}
+	}
+
+}
+
+open LIB,"/home/bio-longyk/workspace/CRISPR/Library/lib_$lib.csv";
+<LIB>;
+my %lib;
+my %geneLib;
+my %mapGene;
+my %mapLib;
+while(<LIB>){
+	chomp;
+	my ($gene,$target) = (split /\t/)[1,6];
+	#my ($gene,$target) = (split /\t/)[1,5];
+	$target = uc($target);
+	$lib{$target} .= "$gene;";
+	$geneLib{$gene} = 0;
+	if(exists $hash{$target}){
+		$mapLib{$target} = $gene;
+		$mapGene{$gene}++;
+	}
+}
+
+my $mapLib = keys %mapLib;
+my $totalLib = keys %lib;
+my $mapGene = keys %mapGene;
+my $totalGene = keys %geneLib;
+my $mapNum= 0;
+
+foreach my $key (sort{$hash{$b}<=>$hash{$a}} keys (%hash)){
+	if( exists $lib{$key}){
+		$mapNum += $hash{$key};
+		print OUT "$lib{$key}\t$key\t$hash{$key}\n";
+	}
+	else{
+		print OUT "NotHits\t$key\t$hash{$key}\n";
+	}
+}
+
+
+open LOG, ">$out_dir/log";
+print LOG "Sequencing Quality\n";
+my $perTotal = sprintf("%.2f",$total);
+my $pergstart = sprintf("%.2f",$gstart/$total*100);
+my $pernogstart = sprintf("%.2f",$nogstart/$total*100);
+my $pernoSuf = sprintf("%.2f",$noSuf/$total*100);
+my $perMapNum = sprintf("%.2f",$mapNum/$total*100);
+print LOG "Total reads number\t$total\t$perTotal\n";
+print LOG "Mapped to library\t$mapNum\t$perMapNum\n";
+print LOG "With Suffix With G Start\t$gstart\t$pergstart\n";
+print LOG "With Suffix No G Start\t$nogstart\t$pernogstart\n";
+print LOG "No Suffix\t$noSuf\t$perNoSuf\n";
+
+print LOG "Library Coverage\n";
+my $perMapLib = sprintf("%.2f",$mapLib/$totalLib*100);
+my $perMapGene = sprintf("%.2f",$mapGene/$totalGene*100);
+print LOG "gRNA in library with Reads\t$mapLib\t$perMapLib\n";
+print LOG "gene in library with Reads\t$mapGene\t$perMapGene\n";
