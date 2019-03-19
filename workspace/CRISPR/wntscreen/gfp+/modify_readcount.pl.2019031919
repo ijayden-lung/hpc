@@ -9,6 +9,7 @@ while(<FILE>){
 	my ($sgrna,$gene,$base1,$base2,$pos1,$pos2) = split;
 	$base1 = sprintf("%.0f",$base1/5);
 	$base2 = sprintf("%.0f",$base2/5);
+	next if ($base1+$base2+$pos1+$pos2)<10;
 	print OUT "$sgrna\t$gene\t$base1\t$base2\t$pos1\t$pos2\n";
 }
 

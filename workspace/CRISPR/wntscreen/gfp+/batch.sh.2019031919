@@ -1,0 +1,13 @@
+#!/bin/bash
+#PBS -q fat
+#PBS -N extract_grna
+#PBS -l nodes=1:ppn=18
+#PBS -o log
+#PBS -j oe 
+#PBS -l walltime=00:30:00
+
+source activate rna_seq3
+cd  ~/workspace/CRISPR/wntscreen/gfp+
+#~/workspace/CRISPR/script/extract_gRNA2.pl $file $lib $pre $suf $out
+#~/workspace/CRISPR/script/base_content.pl $sam
+mageck test -k Input_mageck_hKO_gfppos.tsv  -c baseline1,baseline2 -t gfppos1,gfppos2 -n gfppos --pdf-report --normcounts-to-file --sort-criteria pos --control-sgrna control_sgrna --remove-zero any --remove-zero-threshold 10
