@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w
+
+open FILE,"Input_mageck_hKO_gfppos.tsv";
+open OUT,">Input_mageck_hKO_gfppos2.tsv";
+my $header = <FILE>;
+print OUT $header;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$base1,$base2,$pos1,$pos2) = split;
+	$base1 = sprintf("%.0f",$base1/5);
+	$base2 = sprintf("%.0f",$base2/5);
+	print OUT "$sgrna\t$gene\t$base1\t$base2\t$pos1\t$pos2\n";
+}
+
