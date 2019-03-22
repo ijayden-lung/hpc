@@ -1,0 +1,18 @@
+#!/usr/bin/env Rscript
+library(ggplot2)
+library(grid)
+args<-commandArgs(T)
+
+data = read.table(args[1],header=TRUE,row.names=1)
+pdf(args[2],width=12,height=12)
+
+fit = lm(as.formula(log2(T3DMSO+1)~log2(T34um+1)),data=data)
+fit
+rsqure=signif(summary(fit)$adj.r.squared, 4)
+ggplot(data,aes(x=log2(T3DMSO+1),y=log2(T34um+1),color=tag))+geom_point(size=1)+
+scale_colour_manual(values=c(Target="gray50",Non_Target="darkgreen"))+
+annotate("text", x = 13, y = 1, size=10, label =paste(expression(R^2),"=",rsqure,sep=""))+
+theme_bw()+
+labs(x="log2(T3DMSO)",y="log2(T3 4um)")+
+theme(axis.title=element_text(size =20),axis.text=element_text(size =20),legend.position=c(0.1,0.9),legend.title=element_blank(),legend.text=element_text(size=20))
+

@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+
+open FILE,"T3DMSOvsT38um.normalized.txt";
+<FILE>;
+open OUT,">Input_scatterplot_T3DMSOvsT38um.txt";
+print OUT "sgrna\tgene\tT3DMSO\tT38um\ttag\n";
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$dmso1,$dmso2,$t31,$t32,$t33) = split;
+	my $dmso = ($dmso1+$dmso2)/2;
+	my $t3 = ($t31+$t32+$t33)/3;
+	my $tag = "Target";
+	$tag = "Non_Target" if $gene eq "negative_control";
+	print OUT "$sgrna\t$gene\t$dmso\t$t3\t$tag\n";
+}
+
+
+system(" ./scatterplot.r Input_scatterplot_T3DMSOvsT38um.txt Scatterplot_T3DMSOvsT38um.pdf");
