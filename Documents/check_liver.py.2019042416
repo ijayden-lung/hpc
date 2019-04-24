@@ -1,0 +1,28 @@
+def check_pass(line):
+    mylist = line.strip("\n").split("\t")
+    psi1, psi2 = mylist[-3].split(",")
+    if "NA" == psi1 or "NA" == psi2:
+        return 0
+    if abs(float(psi1) - float(psi2)) > 0.75:
+        return 0
+    psi1, psi2 = mylist[-2].split(",")
+    if "NA" == psi1 or "NA" == psi2:
+        return 0
+    if abs(float(psi1) - float(psi2)) > 0.75:
+        return 0
+    if int(mylist[-11].split(",")[0]) + int(mylist[-10].split(",")[0]) < 20 or\
+        int(mylist[-11].split(",")[1]) + int(mylist[-10].split(",")[1]) < 20:
+        return 0
+    if int(mylist[-9].split(",")[0]) + int(mylist[-8].split(",")[0]) < 20 or\
+        int(mylist[-9].split(",")[1]) + int(mylist[-8].split(",")[1]) < 20:
+        return 0
+    return 1
+
+FILE =open("/home/bio-jiafj/Project_Pan_Tissue_AS/F1/rMATS4/liver/SE.MATS.JC.txt", "r")
+
+pass_count = 0
+FILE.readline()
+
+for line in FILE.readlines():
+    pass_count+=check_pass(line)
+print(pass_count)
