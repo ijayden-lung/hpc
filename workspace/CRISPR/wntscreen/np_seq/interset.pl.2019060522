@@ -1,0 +1,74 @@
+#!/usr/bin/perl -w
+
+my %hash1;
+open FILE,"sw480_seq.gene_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$num,$neg_score,$neg_pval,$neg_fdr,$neg_rank,$neg_num,$neg_lfc,$pos_score,$pos_pval,$pos_fdr,$pos_rank,$pos_num,$pos_lfc) = split;
+	if($pos_num>1 && $pos_pval<0.05){
+		$hash1{$gene} = '';
+	}
+}
+
+my %hash;
+open FILE,"../np2/sw480.gene_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$num,$neg_score,$neg_pval,$neg_fdr,$neg_rank,$neg_num,$neg_lfc,$pos_score,$pos_pval,$pos_fdr,$pos_rank,$pos_num,$pos_lfc) = split;
+	if($pos_num>1 && $pos_pval<0.05 && exists $hash1{$gene}){
+		$hash{$gene} = '';
+	}
+}
+
+my %hash2;
+open FILE,"/home/bio-longyk/workspace/splicing/colon/DESeq2/DESeq2_geneName_WHMvsWLE.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene_name,$l2fc,$qval,$tag) = (split)[1,3,7,9];
+	if($qval ne "NA" && $l2fc>0 && $qval<0.05){
+		$hash2{$gene_name} = '';
+	}
+}
+
+&Venn(\%hash,\%hash2);
+sub Venn{
+	my ($ref1,$ref2,$info) = @_;
+	my %enrich1 = %$ref1;
+	my %enrich2 = %$ref2;
+	my (%rmats,%fast,%both);
+
+	my @Venn = (0,0,0);
+	foreach my $key (keys %enrich1){
+		if(exists $enrich2{$key}){
+			$Venn[2]++;
+			$both{$key} = '';
+		}
+		else{
+			$Venn[0]++;
+			$fast{$key} = '';
+		}
+	}
+
+	foreach my $key (keys %enrich2){
+		if(!exists $enrich1{$key}){
+			$Venn[1]++;
+			$rmats{$key} = '';
+		}
+	}
+
+	print "plot(Venn(SetNames = c('hek293', 'gfp-_seq'), Weight=c('10'=$Venn[0],'01'=$Venn[1],'11'=$Venn[2])),doWeights = TRUE)\n";
+
+	open OUT, '>wnth_sw480np_com.overlap.txt';
+	foreach my $key (keys %fast){
+		print OUT "sw480np_seq\t$key\n";
+	}
+	foreach my $key (keys %rmats){
+		print OUT "sw480np_seq\t$key\n";
+	}
+	foreach my $key (keys %both){
+		print OUT "Common\t$key\n";
+	}
+}
