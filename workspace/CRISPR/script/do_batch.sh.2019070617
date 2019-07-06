@@ -36,7 +36,7 @@ cd $dir
 ################MAGECK TEST######################
 #With control sgrna
 #sub="AGGTAA"
-mageck test -k Input_mageck_$lib\_$exp.tsv  -c gneg_seq_nc1,gneg_seq_nc2 -t gneg_seq_s3,gneg_seq_s4 -n $exp --pdf-report --normcounts-to-file --sort-criteria pos --control-sgrna control_sgrna --remove-zero treatment --remove-zero-threshold 10
+#mageck test -k Input_mageck_$lib\_$exp.tsv  -c gneg_seq_nc1,gneg_seq_nc2 -t gneg_seq_s3,gneg_seq_s4 -n $exp --pdf-report --normcounts-to-file --sort-criteria pos --control-sgrna control_sgrna #--remove-zero treatment --remove-zero-threshold 10
 
 
 
@@ -65,8 +65,8 @@ mageck test -k Input_mageck_$lib\_$exp.tsv  -c gneg_seq_nc1,gneg_seq_nc2 -t gneg
 #bowtie -p 18 -f -n 2 -l 23 --best ~/cnda/bt1_index/hg38 --al aligned_$lib.fa --un unaligned_$lib.fa ~/workspace/CRISPR/Library/$lib.fa >~/workspace/CRISPR/Library/$lib.sam
 
 #####Pos
-#~/workspace/CRISPR/script/input_linechart.pl hg38 pos $lib $exp
-#~/workspace/CRISPR/script/linechart.r pos $exp 
+~/workspace/CRISPR/script/input_linechart.pl hg38 pos $lib $exp
+~/workspace/CRISPR/script/linechart.r pos $exp 
 #~/workspace/CRISPR/script/input_linechart.pl hg38 pos $lib CCM6_$exp
 #~/workspace/CRISPR/script/linechart.r pos CCM6_$exp 
 #####Neg
@@ -76,8 +76,8 @@ mageck test -k Input_mageck_$lib\_$exp.tsv  -c gneg_seq_nc1,gneg_seq_nc2 -t gneg
 
 
 #######GO pos
-#~/workspace/CRISPR/script/input_go.pl hg38 pos $lib $exp
-#~/workspace/CRISPR/script/goseq_hg38.R go.$lib.pos.$exp bg.$lib.$exp
+~/workspace/CRISPR/script/input_go.pl hg38 pos $lib $exp
+~/workspace/CRISPR/script/goseq_hg38.R go.$lib.pos.$exp bg.$lib.$exp
 #mageckGSEA -s -o GSEA_kegg_hKO-NP.pos.hek293-np.txt -r rank.hKO-NP.pos.hek293-np -g ~/GSEA/c2.cp.kegg.v6.2.symbols.gmt -p 100000
 #mageckGSEA -s -o GSEA_gobp_hKO-NP.pos.hek293-np.txt -r rank.hKO-NP.pos.hek293-np -g ~/GSEA/c5.bp.v6.2.symbols.gmt -p 1000
 
