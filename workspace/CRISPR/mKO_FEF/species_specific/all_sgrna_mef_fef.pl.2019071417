@@ -1,0 +1,92 @@
+#!/usr/bin/perl -w
+my $Threshold = 2;
+my $point = 0.6;
+my %strand;
+my %ensg;
+open FILE,"/home/bio-longyk/cnda/ensembl/mm10_ID2Name.txt";
+while(<FILE>){
+	chomp;
+	my ($gene_id,$gene_name,$strand) = split;
+	$strand{$gene_name} = $strand;
+	$ensg{$gene_name} = $gene_id;
+}
+
+my %mis_Num;
+open FILE,"RC_mKO_FEF_mis1.tsv";
+while(<FILE>){
+	chomp;
+	my ($sgrna,$mis_num) = split;
+	$mis_Num{$sgrna} = $mis_num;
+}
+
+
+open HETE,"mle_HETE0.gene_summary.txt";
+<HETE>;
+my %fef;
+while(<HETE>){
+	chomp;
+	my ($gene,$beta) = (split)[0,2];
+	$fef{$gene} = $beta;	
+}
+
+open MEF,"mle_MEF.gene_summary.txt";
+<MEF>;
+my %mef;
+while(<MEF>){
+	chomp;
+	my ($gene,$beta) = (split)[0,2];
+	$mef{$gene} = $beta;
+}
+
+
+
+my %position;
+open FILE,"mouse.sam";
+while(<FILE>){
+	chomp;
+	my ($sgrna,$strand,$chr,$pos) = split;
+	$position{$sgrna} = "$strand:$chr:$pos";
+}
+
+&linechart;
+
+sub linechart{
+	open OUT, ">mef_fef.sgrna_summary.txt";
+	print OUT "celltype\tposition\tsimilarity\tsgRNA\tgene\tctrl1\tctrl2\ttest1\ttest2\tl2fc\n";
+	open FILE,"HETE.sgrna_summary.txt";
+	<FILE>;
+	while(<FILE>){
+		chomp;
+		my ($sgrna,$gene,$control_count,$treat_count) = split;
+		my ($control1,$control2) = split /\//,$control_count;
+		my ($treat1,$treat2) = split /\//,$treat_count;
+		next if ($treat1+$treat2) == 0;
+		my $l2fc = ($control2+$control2)==0 ? "Inf" : log(($treat1+$treat2)/($control1+$control2))/log(2);
+		print OUT "fef\t$position{$sgrna}\tmis$mis_Num{$sgrna}\t$sgrna\t$gene($strand{$gene})\t$control1\t$control2\t$treat1\t$treat2\t$l2fc\n";
+	}
+
+	open FILE,"HOMO.sgrna_summary.txt";
+	<FILE>;
+	while(<FILE>){
+		chomp;
+		my ($sgrna,$gene,$control_count,$treat_count) = split;
+		my ($control1,$control2) = split /\//,$control_count;
+		my ($treat1,$treat2) = split /\//,$treat_count;
+		next if ($treat1+$treat2) == 0;
+		my $l2fc = ($control2+$control2)==0 ? "Inf" : log(($treat1+$treat2)/($control1+$control2))/log(2);
+		print OUT "fef\t$position{$sgrna}\thomo\t$sgrna\t$gene($strand{$gene})\t$control1\t$control2\t$treat1\t$treat2\t$l2fc\n";
+	}
+
+	open FILE,"MEF.sgrna_summary.txt";
+	<FILE>;
+	while(<FILE>){
+		chomp;
+		my ($sgrna,$gene,$control_count,$treat_count) = split;
+		my ($control1,$control2) = split /\//,$control_count;
+		my ($treat1,$treat2) = split /\//,$treat_count;
+		next if ($treat1+$treat2) == 0;
+		my $l2fc = ($control2+$control2)==0 ? "Inf" : log(($treat1+$treat2)/($control1+$control2))/log(2);
+		print OUT "mef\t$position{$sgrna}\thomo\t$sgrna\t$gene($strand{$gene})\t$control1\t$control2\t$treat1\t$treat2\t$l2fc\n";
+	}
+
+}
