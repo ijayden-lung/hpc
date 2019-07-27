@@ -1,0 +1,57 @@
+#!/usr/bin/perl -w
+
+my %origin;
+my $totalori;
+open FILE,"/home/bio-longyk/workspace/CRISPR/Library/RC_hKO_WNTScreen.tsv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$sgrna,$np,$hko) = (split /\t/)[0,1,7,8];
+	next if $gene eq "NotHits";
+	$origin{$sgrna} = $hko if $hko>0;
+	$totalori += $hko;
+}
+
+my %nc1;
+my %nc2;
+open FILE,"/home/bio-longyk/workspace/CRISPR/wntscreen/gfp-/Input_mageck_hKO_gfpneg.tsv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$nc1,$nc2) = split;
+	if(!exists $origin{$sgrna}){
+		$nc1{$sgrna} = 0;
+		$nc2{$sgrna} = 0;
+
+	}
+	else{
+		$nc1{$sgrna} = $nc1;
+		$nc2{$sgrna} = $nc2;
+		$totalnc1 += $nc1;
+		$totalnc2 += $nc2;
+	}
+}
+
+my $ave = ($totalori+$totalnc1+$totalnc2)/3;
+my $idxori = $totalori/$ave;
+my $idxnc1 = $totalnc1/$ave;
+my $idxnc2 = $totalnc2/$ave;
+
+print "$idxori\n";
+
+=pod
+while(my($key,$val) = each %origin){
+	$val =  $val/$idxori;
+}
+while(my($key,$val) = each %nc1){
+	$val =  $val/$idxnc1;
+}
+while(my($key,$val) = each %nc2){
+	$val =  $val/$idxnc2;
+}
+
+open OUT,">Essential_Gene_hKO_293.txt";
+
+while(my($key,$val) = each %origin){
+	print OUT "$key\t$val\t$nc1{$key}\t$nc2{$key}\n";
+}
