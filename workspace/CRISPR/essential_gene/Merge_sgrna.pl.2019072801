@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+#
+
+open FILE,"hKO_293Ess.sgrna_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	
+
+
+
+
+open FILE,"hKO_293Ess.gene_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($fdr) = (split)[4];
+

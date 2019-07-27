@@ -1,0 +1,76 @@
+#!/usr/bin/perl -w
+
+my %gene;
+my %origin;
+my $totalori;
+open FILE,"/home/bio-longyk/workspace/CRISPR/Library/OUT/hKO/gRNA_sorted.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($gene,$sgrna,$hko) = split;
+	next if $gene eq "NotHits";
+	$origin{$sgrna} = $hko if $hko>0;
+	$totalori += $hko;
+	$gene{$sgrna} = (split /;/,$gene)[0];
+}
+
+my %nc1;
+my %nc2;
+open FILE,"/home/bio-longyk/workspace/CRISPR/wntscreen/gfp-/Input_mageck_hKO_gfpneg.tsv";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$nc1,$nc2) = split;
+	$nc1{$sgrna} = $nc1;
+	$nc2{$sgrna} = $nc2;
+	$totalnc1 += $nc1;
+	$totalnc2 += $nc2;
+	$gene{$sgrna} = $gene;
+}
+
+
+open OUT,">Essential_Gene_hKO_293.txt";
+print OUT "sgrna\tgene\tlibrary\tnc1\tnc2\n";
+while(my($key,$val) = each %origin){
+	if(!exists $nc1{$key}){
+		$nc1{$key} = 0;
+	}
+	if(!exists $nc2{$key}){
+		$nc2{$key} = 0;
+	}
+	print OUT "$key\t$gene{$key}\t$val\t$nc1{$key}\t$nc2{$key}\n";
+}
+
+=pod
+
+my $ave = ($totalori+$totalnc1+$totalnc2)/3;
+my $idxori = $totalori/$ave;
+my $idxnc1 = $totalnc1/$ave;
+my $idxnc2 = $totalnc2/$ave;
+
+while(my($key,$val) = each %origin){
+	$origin{$key} =  $val/$idxori;
+}
+while(my($key,$val) = each %nc1){
+	$nc1{$key} =  $val/$idxnc1;
+}
+while(my($key,$val) = each %nc2){
+	$nc2{$key} =  $val/$idxnc2;
+}
+
+open OUT,">Essential_Gene_hKO_293.txt";
+
+while(my($key,$val) = each %origin){
+	if(!exists $nc1{$key}){
+		$nc1{$key} = 0;
+	}
+	if(!exists $nc2{$key}){
+		$nc2{$key} = 0;
+	}
+	$val1 = $nc1{$key}+1;
+	$val2 = $nc2{$key}+1;
+	$orig = $val+1;
+	my $l2fc = log($orig/($val1+$val2));
+	if($l2fc>0){
+
+}

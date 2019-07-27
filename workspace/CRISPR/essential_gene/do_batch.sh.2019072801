@@ -1,0 +1,3 @@
+#!/bin/bash
+
+mageck test -k Essential_Gene_hKO_293.txt  -c library -t nc1,nc2 -n hKO_293Ess --pdf-report --normcounts-to-file --sort-criteria neg --control-sgrna hKO_control_sgrna #--remove-zero treatment --remove-zero-threshold 10
