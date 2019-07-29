@@ -1,0 +1,28 @@
+#!/usr/bin/perl -w
+#
+my %sgrna;
+open FILE,"hKO-NP_293Ess.sgrna_summary.txt";
+<FILE>;
+while(<FILE>){
+	chomp;
+	my ($sgrna,$gene,$c_count,$t_count,$c_mean,$t_mean,$lfc) = split;
+	$sgrna{$gene}->{$sgrna} =  "$c_count\t$t_count\t$lfc";
+}
+
+open FILE,"hKO-NP_293Ess.gene_summary.txt";
+my $header = <FILE>;
+open OUT,">hKO-NP_293Ess.sigGene.sgrna.txt";
+open OUT2,">hKO-NP_293Ess.sigGene.txt";
+print OUT2 $header;
+while(<FILE>){
+	chomp;
+	my ($gene,$fdr) = (split)[0,4];
+	if($fdr<0.01){
+		print OUT2 "$_\n";
+		my $val = $sgrna{$gene};
+		while(my($key,$val2) = each %$val){
+			print OUT "$key\t$gene\t$val2\n";
+		}
+	}
+}
+
