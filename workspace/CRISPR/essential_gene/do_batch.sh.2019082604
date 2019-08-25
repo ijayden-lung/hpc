@@ -1,0 +1,3 @@
+#!/bin/bash
+
+mageck test -k Essential_Gene_mKO_MEF.txt -c MEF4thDay1,MEF5thDay1 -t MEF4thDay10,MEF4thDay10 -n mKO_MEFEss --pdf-report --normcounts-to-file --sort-criteria neg #--control-sgrna hKO_control_sgrna #--remove-zero treatment --remove-zero-threshold 10
