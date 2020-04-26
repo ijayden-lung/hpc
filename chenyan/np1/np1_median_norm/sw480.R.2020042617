@@ -1,0 +1,2 @@
+pdf(file='sw480.pdf',width=4.5,height=4.5);
+gstable=read.table('sw480.gene_summary.txt',header=T)
