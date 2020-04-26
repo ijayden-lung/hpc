@@ -1,0 +1,5 @@
+Sweave("sw480np_nc_countsummary.Rnw");
+library(tools);
+
+texi2dvi("sw480np_nc_countsummary.tex",pdf=TRUE);
+
