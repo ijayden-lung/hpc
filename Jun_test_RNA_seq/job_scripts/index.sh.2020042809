@@ -1,0 +1,17 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N test_index
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=8:00:00
+
+cd /home/bio-longyk/Jun_test_RNA_seq
+
+dir='/home/bio-longyk/Jun_test_RNA_seq/test_index'
+mkdir $dir
+/home/bio-longyk/Jun_test_RNA_seq/tools/STAR-2.7.3a/bin/Linux_x86_64_static/STAR \
+--runMode genomeGenerate --runThreadN 24 --genomeDir $dir \
+--genomeFastaFiles /home/bio-longyk/Jun_test_RNA_seq/reference/hg19_ensembl.fa \
+--sjdbGTFfile /home/bio-longyk/Jun_test_RNA_seq/reference/Homo_sapiens.GRCh38.99.chr.gtf \
+--sjdbOverhang 149
+
