@@ -1,0 +1,18 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N alignment_hep
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+
+cd /home/bio-longyk/Jun_test_RNA_seq
+
+dir='/home/bio-longyk/Jun_test_RNA_seq/Hep'
+
+mkdir $dir
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/STAR-2.7.3a/bin/Linux_x86_64_static/STAR \
+--runThreadN 24 --genomeDir /home/bio-longyk/Jun_test_RNA_seq/test_index \
+--readFilesIn /home/bio-longyk/Jun_test_RNA_seq/data/trimmed_data/HepG2INF-_FRRA192284765-1a_1_val_1.fq \
+/home/bio-longyk/Jun_test_RNA_seq/data/trimmed_data/HepG2INF-_FRRA192284765-1a_2_val_2.fq \
+--outFileNamePrefix $dir
