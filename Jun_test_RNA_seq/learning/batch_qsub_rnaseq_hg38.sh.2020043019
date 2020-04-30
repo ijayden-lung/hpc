@@ -1,0 +1,9 @@
+cat file_list_rnaseq3 | while read line
+do
+    fq1=`echo $line | awk '{print $1}'`
+    fq2=`echo $line | awk '{print $2}'`
+    sampleid=`echo $line | awk '{print $3}'`
+    echo $fq1,$fq2, $sampleid
+    qsub -v fq1=$fq1,fq2=$fq2,sampleid=$sampleid run_star_pipeline.hg38.pbs
+done
+
