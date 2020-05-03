@@ -1,0 +1,18 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N alignment
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+
+mkdir /home/bio-longyk/Jun_test_RNA_seq/gene_expression/TCMCalculator_v92
+cd /home/bio-longyk/Jun_test_RNA_seq/gene_expression/TCMCalculator_v92
+
+TPMCalculator -v -g /home/bio-longyk/Jun_test_RNA_seq/reference/Homo_sapiens.GRCh38.92.chr.ALL.gtf \
+-d /home/bio-longyk/Jun_test_RNA_seq/alignment/mapping/ -b HAP1_KO24_CTRL_RNA_Aligned.sortedByCoord.out.bam -k gene_name -p -q 255 -e
+
+TPMCalculator -v -g /home/bio-longyk/Jun_test_RNA_seq/reference/Homo_sapiens.GRCh38.92.chr.ALL.gtf \
+-d /home/bio-longyk/Jun_test_RNA_seq/alignment/mapping/ -b HAP1_KO24_IFNg_RNA_Aligned.sortedByCoord.out.bam -k gene_name -p -q 255 -e
+
+TPMCalculator -v -g /home/bio-longyk/Jun_test_RNA_seq/reference/Homo_sapiens.GRCh38.92.chr.ALL.gtf \
+-d /home/bio-longyk/Jun_test_RNA_seq/alignment/mapping/ -b HepG2_IFNg_RNA_Aligned.sortedByCoord.out.bam -k gene_name -p -q 255 -e
