@@ -7,7 +7,7 @@
 
 cd /home/bio-longyk/Jun_test_RNA_seq
 
-dir='/home/bio-longyk/Jun_test_RNA_seq/HAP1-24INF-JIA_v92'
+dir='/home/bio-longyk/Jun_test_RNA_seq/alignment/HAP1-24INF-JIA_v92'
 
 mkdir $dir
 
@@ -15,4 +15,5 @@ mkdir $dir
 --runThreadN 24 --genomeDir /home/bio-longyk/Jun_test_RNA_seq/test_index_v92 \
 --readFilesIn /home/bio-longyk/Jun_test_RNA_seq/data/trimmed_data/HAP1-24INF-JIA_FRRA192284767-1a_1_val_1.fq \
 /home/bio-longyk/Jun_test_RNA_seq/data/trimmed_data/HAP1-24INF-JIA_FRRA192284767-1a_2_val_2.fq \
+--outSAMtype BAM SortedByCoordinate \
 --outFileNamePrefix $dir
