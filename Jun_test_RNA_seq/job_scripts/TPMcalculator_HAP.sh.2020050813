@@ -1,6 +1,6 @@
 #!/bin/bash
 #PBS -q ser
-#PBS -N TPM_HAP_J
+#PBS -N TPM_HAP
 #PBS -l nodes=1:ppn=24
 #PBS -j oe 
 #PBS -l walltime=8:00:00
