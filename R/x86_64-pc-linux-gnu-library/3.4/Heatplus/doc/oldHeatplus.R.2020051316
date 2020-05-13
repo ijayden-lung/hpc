@@ -1,0 +1,63 @@
+### R code from vignette source 'oldHeatplus.Rnw'
+
+###################################################
+### code chunk number 1: oldHeatplus.Rnw:44-45
+###################################################
+options(width=65)
+
+
+###################################################
+### code chunk number 2: oldHeatplus.Rnw:54-62
+###################################################
+mm = matrix(rnorm(1000, m=1), 100,10)
+mm = cbind(mm, matrix(rnorm(2000), 100, 20))
+mm = cbind(mm, matrix(rnorm(1500, m=-1), 100, 15))
+mm2 = matrix(rnorm(450), 30, 15)
+mm2 = cbind(mm2, matrix(rnorm(900,m=1.5), 30,30))
+mm=rbind(mm, mm2)
+colnames(mm) = paste("Sample", 1:45)
+rownames(mm) = paste("Gene", 1:130)
+
+
+###################################################
+### code chunk number 3: oldHeatplus.Rnw:67-72
+###################################################
+addvar = data.frame(Var1=rep(c(0,1,0),c(10,20,15)),
+                    Var2=rep(c(1,0,0),c(10,20,15)), 
+					Var3=rep(c(1,0), c(15,30)), 
+					Var4=rep(seq(0,1,length=4), c(10,5,15,15))+rnorm(45,sd=0.5))
+addvar[3,3] = addvar[17,2] = addvar[34,1] =NA
+
+
+###################################################
+### code chunk number 4: oldHeatplus.Rnw:81-83
+###################################################
+library(Heatplus)
+heatmap_2(mm)
+
+
+###################################################
+### code chunk number 5: oldHeatplus.Rnw:91-92
+###################################################
+heatmap_2(mm, do.dendro=c(FALSE, TRUE), legend=1, legfrac=12)
+
+
+###################################################
+### code chunk number 6: oldHeatplus.Rnw:100-101
+###################################################
+heatmap_plus(mm)
+
+
+###################################################
+### code chunk number 7: oldHeatplus.Rnw:109-111
+###################################################
+colnames(mm) = NULL
+heatmap_plus(mm, addvar=addvar, cov=4)
+
+
+###################################################
+### code chunk number 8: oldHeatplus.Rnw:119-120
+###################################################
+heatmap_plus(mm, addvar=addvar, cov=4, h=20, col=RGBColVec(64))
+
+

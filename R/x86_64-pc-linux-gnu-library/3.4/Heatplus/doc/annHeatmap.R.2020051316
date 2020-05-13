@@ -1,0 +1,161 @@
+### R code from vignette source 'annHeatmap.Rnw'
+
+###################################################
+### code chunk number 1: annHeatmap.Rnw:44-45
+###################################################
+options(width=65)
+
+
+###################################################
+### code chunk number 2: setup01
+###################################################
+require(Biobase)
+data(sample.ExpressionSet)
+exdat = sample.ExpressionSet
+
+
+###################################################
+### code chunk number 3: setup02
+###################################################
+require(limma)
+design1 = model.matrix( ~ type, data=pData(exdat))
+lm1 = lmFit(exprs(exdat), design1)
+lm1 = eBayes(lm1)
+geneID = rownames(topTable(lm1, coef=2, num=100, adjust="none", 
+	p.value=0.05))
+length(geneID)
+
+
+###################################################
+### code chunk number 4: setup03
+###################################################
+exdat2 = exdat[geneID,]
+
+
+###################################################
+### code chunk number 5: regHeatmap1
+###################################################
+require(Heatplus)
+reg1 = regHeatmap(exprs(exdat))
+plot(reg1)
+
+
+###################################################
+### code chunk number 6: regHeatmap2
+###################################################
+reg2 = regHeatmap(exprs(exdat2), legend=2, col=heat.colors, breaks=-3:3)
+plot(reg2)
+
+
+###################################################
+### code chunk number 7: regHeatmap3
+###################################################
+corrdist = function(x) as.dist(1-cor(t(x)))
+hclust.avl = function(x) hclust(x, method="average")
+reg3 = regHeatmap(exprs(exdat2), legend=2, dendrogram =
+  list(clustfun=hclust.avl, distfun=corrdist))
+plot(reg3)
+
+
+###################################################
+### code chunk number 8: regHeatmap4
+###################################################
+reg4 = regHeatmap(exprs(exdat2), legend=3,
+  dendrogram=list(Col=list(status="hide")))
+plot(reg4)
+
+
+###################################################
+### code chunk number 9: annHeatmap1
+###################################################
+ann1 = annHeatmap(exprs(exdat), ann=pData(exdat))
+plot(ann1)
+
+
+###################################################
+### code chunk number 10: annHeatmap2
+###################################################
+ann2 = annHeatmap(exprs(exdat2), ann=pData(exdat2), 
+	cluster=list(cuth=5000))
+plot(ann2)
+
+
+###################################################
+### code chunk number 11: annHeatmap3
+###################################################
+ann3 = annHeatmap(exprs(exdat2), ann=pData(exdat2),
+  cluster=list(cuth=7500, label=c("Control-like", "Case-like")))
+plot(ann3)
+
+
+###################################################
+### code chunk number 12: setupX1
+###################################################
+SE = apply(get("se.exprs", assayData(exdat2)), 1, median)
+
+
+###################################################
+### code chunk number 13: setupX2
+###################################################
+CO = cor(t(exprs(exdat2)), pData(exdat2)$score)
+df = nrow(exdat2)-2
+TT = sqrt(df) * CO/sqrt(1-CO^2)
+PV = 2*pt(-abs(TT), df=df)
+
+
+###################################################
+### code chunk number 14: setupX3
+###################################################
+require(hgu95av2.db)
+allGO = as.list(mget(featureNames(exdat2), hgu95av2GO))
+isTransElong = sapply(allGO, function(x) "GO:0006414" %in% names(x))
+
+
+###################################################
+### code chunk number 15: setupX4
+###################################################
+annFeatures = data.frame(standard.errors=SE, sigCorScore=PV<0.05,
+isTransElong)
+
+
+###################################################
+### code chunk number 16: annHeatmap4
+###################################################
+ann4 = annHeatmap2(exprs(exdat2),
+  ann=list(Col=list(data=pData(exdat2)), Row=list(data=annFeatures)))
+plot(ann4)
+
+
+###################################################
+### code chunk number 17: annHeatmap5
+###################################################
+ann4a = annHeatmap2(exprs(exdat2),
+  ann=list(Col=list(data=pData(exdat2)), Row=list(data=annFeatures)),
+  labels=list(Row=list(nrow=7), Col=list(nrow=2)))
+plot(ann4a)
+
+
+###################################################
+### code chunk number 18: annHeatmap6
+###################################################
+ann4b = annHeatmap2(exprs(exdat2),
+  ann=list( inclRef=FALSE, 
+		Col=list(data=pData(exdat2)), 
+		Row=list(data=annFeatures)   ), 
+	labels=list(Row=list(nrow=7), Col=list(nrow=2)))
+plot(ann4b, widths=c(2,5,1), heights=c(2,5,1))
+
+
+###################################################
+### code chunk number 19: annHeatmap7
+###################################################
+ann1 = convAnnData(pData(exdat2), inclRef=FALSE)[, 3:1]
+colnames(ann1) = c("Score", "isControl", "isMale")
+ann2 = convAnnData(annFeatures, inclRef=FALSE)[, 3:1]
+colnames(ann2) = c("isTranslationalElongation", "isCorrelated", "SE")
+ann4c = annHeatmap2(exprs(exdat2),
+  ann=list(asIs=TRUE, Col=list(data=ann1), Row=list(data=ann2)),
+  labels=list(Row=list(nrow=7), Col=list(nrow=2)))
+plot(ann4c)
+
+
