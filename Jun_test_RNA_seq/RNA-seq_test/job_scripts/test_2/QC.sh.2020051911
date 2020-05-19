@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N QC
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+
+for sampleid in /home/bio-longyk/Jun_test_RNA_seq/data/shRNA_RUNX2/*/
+do
+	cd $sampleid
+	mkdir $sampleid_test
+done

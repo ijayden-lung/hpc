@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N TPM_HAP_J
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=8:00:00
+
+cd /home/bio-longyk/Jun_test_RNA_seq/gene_expression/
+mkdir TPMcalculator_GE
+
+TPMCalculator -g /home/bio-longyk/Jun_test_RNA_seq/reference/Homo_sapiens.GRCh38.92.chr.ALL.gtf \
+-d /home/bio-longyk/Jun_test_RNA_seq/alignment/HAP1-24INF-JIA_v92 \
+-b HAP1-24INF-JIA_v92Aligned.out.sorted.bam \
+-k gene_name -p -q 255
