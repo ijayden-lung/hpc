@@ -1,0 +1,392 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2019 10X Genomics, Inc. All rights reserved.
+#
+
+# Here, you could find everything shown in the summary tab
+
+import cellranger.webshim.common as cr_webshim
+from cellranger.analysis.singlegenome import SingleGenomeAnalysis
+import cellranger.webshim.constants.gex as ws_gex_constants
+import numpy as np
+
+from cellranger.websummary.summary_tab import PLOT_CONFIG
+
+DIFFEXP_TABLE_HELP = {
+    "helpText": "The differential expression analysis seeks to find, for each cluster, features that are more highly expressed in that cluster relative to the rest of the sample. "
+    "Here a differential expression test was performed between each cluster and the rest of the sample for each feature. "
+    "The Log2 fold-change (L2FC) is an estimate of the log2 ratio of expression in a cluster to that in all other cells. "
+    "A value of 1.0 indicates 2-fold greater expression in the cluster of interest. "
+    "The p-value is a measure of the statistical significance of the expression difference and is based on a negative binomial test. "
+    "The p-value reported here has been adjusted for multiple testing via the Benjamini-Hochberg procedure. "
+    "In this table you can click on a column to sort by that value. "
+    "Also, in this table features were filtered by (Mean UMI counts > 1.0) and the top N features by L2FC for each cluster were retained. "
+    "Features with L2FC < 0 or adjusted p-value >= 0.10 were grayed out. "
+    "The number of top features shown per cluster, N, is set to limit the number of table entries shown to 10,000; N=%10,000/K^2 where K is the number of clusters. "
+    "N can range from 1 to 50. "
+    "For the full table, please refer to the 'differential_expression.csv' files produced by the pipeline.",
+    "title": "Top Features By Cluster (Log2 fold-change, p-value)"
+}
+
+TSNE_CLUSTERING_PLOT_HELP = {
+    "data": [["",
+              ["(left) Shown here are the total UMI counts for each cell-barcode. Cells with greater UMI counts likely have higher RNA content than cells with fewer UMI counts. The axes correspond to the 2-dimensional embedding produced by the t-SNE algorithm. In this space, pairs of cells that are close to each other have more similar gene expression profiles than cells that are distant from each other. The display is limited to a random subset of cells.",
+               "(right) These are the assignments of each cell-barcode a clusters by an automated clustering algorithm. The clustering groups together cells that have similar expression profiles. The axes correspond to the 2-dimensional embedding produced by the t-SNE algorithm. In this space, pairs of cells that are close to each other have more similar gene expression profiles than cells that are distant from each other. The display is limited to a random subset of cells. Please use Loupe Cell Browser to view the entire dataset."]]],
+    "title": "t-SNE Projection"
+}
+
+SEQ_SATURATION_PLOT_HELP = {
+    "helpText" : "This plot shows the Sequencing Saturation metric as a function of downsampled sequencing depth (measured in mean reads per cell), up to the observed sequencing depth. "
+    "Sequencing Saturation is a measure of the observed library complexity, and approaches 1.0 (100%) when all converted mRNA transcripts have been sequenced. "
+    "The slope of the curve near the endpoint can be interpreted as an upper bound to the benefit to be gained from increasing the sequencing depth beyond this point. "
+    "The dotted line is drawn at a value reasonably approximating the saturation point.",
+    "title" : "Sequencing Saturation"
+
+}
+
+MEDIAN_GENE_PLOT_HELP = {
+    "helpText": "This plot shows the Median Genes per Cell as a function of downsampled sequencing depth in mean reads per cell, up to the observed sequencing depth. "
+    "The slope of the curve near the endpoint can be interpreted as an upper bound to the benefit to be gained from increasing the sequencing depth beyond this point.",
+    "title": "Median Genes per Cell"
+}
+
+BARNYARD_PLOT_HELP = [["Cell UMI Counts Plot",
+                       ["Each point represents a cell-barcode. "
+                        "The axes measure the total UMI counts in each cell-barcode that mapped to each transcriptome reference. "
+                        "The points are colored by the number of inferred cells in the GEM associated with each barcode. "
+                        "A multiplet represents either a GEM inferred to have encapsulated >1 cell or a barcode sequence that was shared by multiple single-cell GEMs."]]]
+
+
+def barnyard_table(metadata, sample_data, sample_properties, species_list):
+    """ Barnyard table and barnyard plot  """
+    def barnyard_plot(sample_data, sample_properties):
+        chart = {
+            'config': PLOT_CONFIG,
+            'layout': {
+                'title': 'Cell UMI Counts',
+                'showlegend': True,
+                'hovermode': 'closest',
+            },
+            'data': [
+                {
+                    'x': [],
+                    'y': [],
+                    'mode': 'markers',
+                    'type': 'scattergl',
+                },
+            ],
+        }
+
+        return cr_webshim.plot_barnyard_barcode_counts(chart, sample_properties, sample_data)
+
+    if len(species_list) <= 1 or sample_data is None or sample_data.summary is None:
+        return None
+
+    metric_keys = [
+        'filtered_bcs_observed_all',
+        'filtered_bcs_inferred_multiplets',
+        'filtered_bcs_inferred_multiplet_rate',
+        'filtered_bcs_inferred_multiplet_rate_lb',
+        'filtered_bcs_inferred_multiplet_rate_ub',
+        'multi_filtered_bcs_mean_count_purity'
+    ]
+
+    gems = {}
+    metrics = metadata.gen_metric_list(
+        sample_data.summary, metric_keys, species_list)
+    gems['table'] = {"rows": [[metric.name, metric.value_string]
+                              for metric in metrics]}
+
+    helptext = metadata.gen_metric_helptext(metric_keys) + BARNYARD_PLOT_HELP
+    gems['help'] = {'title': 'GEM Partitions', 'data': helptext}
+
+    barnyard = {
+        'plot': barnyard_plot(sample_data, sample_properties),
+        'gems': gems,
+    }
+    return {"barnyard": barnyard}
+
+
+def plot_tsne(data, title):
+    return {
+        "config": PLOT_CONFIG,
+        "layout": {
+            "xaxis": {
+                "type": "linear",
+                "title": "t-SNE1",
+                "showline": False,
+                "zeroline": True,
+                "fixedrange": False,
+            },
+            "yaxis": {
+                "type": "linear",
+                "title": "t-SNE2",
+                "showline": False,
+                "zeroline": True,
+                "fixedrange": False,
+            },
+            "title": title,
+            'hovermode': 'closest',
+        },
+        "data": data,
+    }
+
+
+def plot_cluster_on_tsne(clustering, tsne_coordinates):
+    """ Plot tSNE with the given clustering labels  """
+    clustering_labels = clustering.clusters
+    data = []
+    title = "t-SNE projection of Cells Colored by Automated Clustering"
+
+    for i in range(max(clustering_labels)):
+        index = i + 1
+        name = "Cluster {}".format(index)
+        mask = clustering_labels == index
+        prop = mask.sum()*1.0 / len(mask)
+        data.append({
+            "name": "{} ({:.1%})".format(name, prop),
+            "x": list(tsne_coordinates[mask, 0]),
+            "y": list(tsne_coordinates[mask, 1]),
+            "type": "scattergl",
+            "mode": "markers",
+            "marker": {"opacity": 0.9, "size": 4},
+            "text": "{}: {:.1%}".format(name, prop)
+        })
+
+    return plot_tsne(data, title)
+
+
+def diffexp_table(diffexp, clustering, analysis):
+    """ Show diffexp table for the given clustering """
+    n_clusters = clustering.clusters.max()
+
+    # Limit the number of entries in the DE table
+    n_genes = int(
+        np.floor(float(ws_gex_constants.MAX_DE_TABLE_ENTRIES) / (n_clusters**2)))
+    if n_genes < 1:
+        n_genes = 1
+    elif n_genes > ws_gex_constants.MAX_TOP_N_GENES:
+        n_genes = ws_gex_constants.MAX_TOP_N_GENES
+
+    columns = [{
+        "Header": "Feature",
+        "columns": [{"Header": "ID", "accessor": "feature.id"},
+                    {"Header": "Name", "accessor": "feature.fn"}]
+    }]
+
+    # Get the union of top DE genes
+    top_genes = set()
+    for i in xrange(n_clusters):
+        # Filter genes by mean count and sort by log2 fold-change, descending
+        means = diffexp.data[:, 0+3*i]
+        log2fcs = diffexp.data[:, 1+3*i]
+
+        keep_indices = np.flatnonzero(
+            means >= ws_gex_constants.TOP_DE_GENES_MIN_MEAN)
+        top_gene_indices = keep_indices[log2fcs[keep_indices].argsort()[
+            ::-1]][:n_genes]
+
+        for j in top_gene_indices:
+            top_genes.add(analysis.matrix.int_to_feature_id(j))
+
+        columns.append({"Header": "Cluster {}".format(i+1),
+                        "columns": [{
+                            "Header": "L2FC",
+                            "accessor": "c{}.l2fc".format(i+1),
+                            "greyedout": "c{}.greyed".format(i+1)},
+            {
+                            "Header": "p-value",
+                            "accessor": "c{}.pval".format(i+1),
+                            "greyedout": "c{}.greyed".format(i+1)}
+        ]})
+
+    table = []
+    for gene_id in top_genes:
+        i = analysis.matrix.feature_id_to_int(gene_id)
+        gene_name = analysis.matrix.feature_id_to_name(gene_id)
+
+        row = {"feature": {"fn": gene_name, "id": gene_id}}
+
+        for j in xrange(n_clusters):
+            log2fc = diffexp.data[i, 1+(3*j)]
+            adj_p_value = diffexp.data[i, 2+(3*j)]
+
+            if log2fc <= 0 or adj_p_value >= ws_gex_constants.PVALUE_DEEMPHASIS_CUTOFF:
+                greyed = True
+            else:
+                greyed = False
+
+            row["c{}".format(j+1)] = {
+                "greyed": greyed,
+                "pval": '{:.0e}'.format(adj_p_value),
+                "l2fc": '{:.2f}'.format(log2fc),
+            }
+
+        table.append(row)
+
+    # Sort by log2fc, descending, in first cluster
+    if n_clusters > 0:
+        table = sorted(table, key=lambda row: row['c1']['l2fc'], reverse=True)
+
+    return {
+        "columns": columns,
+        "data": table,
+    }
+
+
+def analysis_by_clustering(sample_data):
+    """
+    Get the tSNE (colored by clustering) and diffexp table for each clustering
+    """
+    if sample_data is None:
+        return None
+
+    analysis = sample_data.get_analysis(SingleGenomeAnalysis)
+    if analysis is None:
+        return None
+
+    tsne_coordinates = analysis.get_tsne().transformed_tsne_matrix
+
+    # order clustering by order: graph, kmeans=2, =3 etc
+    clusterings = sorted(analysis.clusterings.items(),
+                         key=lambda (k, v): v.global_sort_key)
+
+    clusterings_data = []
+    for (clustering_key, clustering) in clusterings:
+        diffexp = analysis.differential_expression[clustering_key]
+
+        clusterings_data.append({
+            "id": clustering_key,
+            "name": clustering.description,
+            "cluster_tsne_plot": plot_cluster_on_tsne(clustering, tsne_coordinates),
+            "sortabletable_diffexp": diffexp_table(diffexp, clustering, analysis)
+        })
+
+    clustering_selector = {
+        "table_helptext": DIFFEXP_TABLE_HELP,
+        "tsne_helptext": TSNE_CLUSTERING_PLOT_HELP,
+        "clusterings": clusterings_data,
+    }
+
+    return {"clustering_selector": clustering_selector}
+
+
+def umi_on_tsne_plot(sample_data):
+    """ UMI count on tSNE plot """
+    if sample_data is None:
+        return None
+
+    analysis = sample_data.get_analysis(SingleGenomeAnalysis)
+    if analysis is None:
+        return None
+
+    tsne_coordinates = analysis.get_tsne().transformed_tsne_matrix
+    reads_per_bc = analysis.matrix.get_counts_per_bc()
+
+    vmin, vmax = np.percentile(reads_per_bc, ws_gex_constants.TSNE_TOTALCOUNTS_PRCT_CLIP)
+    color = [min(vmax, max(vmin, int(v))) for v in reads_per_bc]
+
+    title = "t-SNE Projection of Cells Colored by UMI Counts"
+    data = [{
+        "name": "Cells",
+        "x": list(tsne_coordinates[:, 0]),
+        "y": list(tsne_coordinates[:, 1]),
+        "type": "scattergl",
+        "mode": "markers",
+        "marker": {
+            "opacity": 0.9,
+            "size": 4,
+            "color": color,
+            "colorscale": "Jet",
+            "colorbar": {"title": "UMI counts"}
+        },
+        "text": ['UMI counts: {:,d}'.format(reads) for reads in reads_per_bc],
+    }]
+
+    # Note: the help text has been included in tsne_cluster plot
+    umi_tsne_plot = {
+        'plot': plot_tsne(data, title),
+    }
+    return {"umi_tsne_plot": umi_tsne_plot}
+
+
+def seq_saturation_plot(sample_data, sample_properties):
+    chart = {
+        'config': PLOT_CONFIG,
+        'layout': {
+            'showlegend': False,
+            'hovermode': 'closest',
+            'xaxis': {
+                'title': 'Mean Reads per Cell',
+                "fixedrange": False,
+            },
+            'yaxis': {
+                'title': 'Sequencing Saturation',
+                'range': [0, 1],
+                "fixedrange": False,
+            },
+            'shapes': [
+                {
+                    'type': 'line',
+                    'x0': 0,
+                    'y0': 0.9,
+                    'x1': 0,
+                    'y1': 0.9,
+                    'line': {
+                        'color': 'rgb(128, 128, 128)',
+                        'width': 4,
+                        'dash': 'dot',
+                    },
+                },
+            ],
+        },
+        'data': [],  # data entries are built in the function
+    }
+
+    kwargs = {
+        'metric_suffix': 'subsampled_duplication_frac',
+        'show_multi_genome_only': True,
+    }
+
+    plot = cr_webshim.plot_subsampled_scatterplot_metric(chart, sample_properties, sample_data, **kwargs)
+
+    if plot:
+        return {"seq_saturation_plot" : {
+                'plot' : plot,
+                'help' : SEQ_SATURATION_PLOT_HELP
+                }
+            }
+    else:
+        return None
+
+
+def median_gene_plot(sample_data, sample_properties, species_list):
+    chart = {
+        'config': PLOT_CONFIG,
+        'layout': {
+            'showlegend': True,
+            'hovermode': 'closest',
+            'xaxis': {'title': 'Mean Reads per Cell',
+                      "fixedrange": False, },
+            'yaxis': {'title': 'Median Genes per Cell',
+                      "fixedrange": False, },
+        },
+        'data': [],  # data entries are built in the function
+    }
+
+    kwargs = {
+        'metric_suffix': 'subsampled_filtered_bcs_median_unique_genes_detected',
+        'references': species_list,
+    }
+
+    plot = cr_webshim.plot_subsampled_scatterplot_metric(chart, sample_properties, sample_data, **kwargs)
+
+    if plot:
+        return {"median_gene_plot" : {
+                'plot' : plot,
+                'help' : MEDIAN_GENE_PLOT_HELP
+                }
+            }
+    else:
+        return None
+

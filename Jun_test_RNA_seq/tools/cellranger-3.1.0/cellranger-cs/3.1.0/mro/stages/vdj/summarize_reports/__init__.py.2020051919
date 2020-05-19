@@ -1,0 +1,119 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2017 10X Genomics, Inc. All rights reserved.
+#
+import martian
+import cellranger.report as cr_report
+import cellranger.io as cr_io
+import cellranger.webshim.common as cr_webshim
+import cellranger.webshim.data as cr_webshim_data
+from cellranger.webshim.constants.shared import PIPELINE_VDJ
+from cellranger.webshim.constants.vdj import VdjSampleProperties
+import cellranger.websummary.vdj as vdj_web
+
+__MRO__ = """
+stage SUMMARIZE_REPORTS(
+    in  string sample_id,
+    in  string sample_desc,
+    in  path   vdj_reference_path,
+    in  string barcode_whitelist,
+    in  int[]  gem_groups,
+    in  json   reads_summary,
+    in  json   trim_reads_summary,
+    in  json   filter_reads_summary,
+    in  json   assemble_vdj_summary,
+    in  json   assemble_vdj_summary2,
+    in  json   report_contigs_summary,
+    in  json   report_contig_alignments_summary,
+    in  json   group_clonotypes_summary,
+    in  json   raw_consensus_summary,
+    in  h5     barcode_summary,
+    in  json   cell_barcodes,
+    in  h5     umi_info,
+    in  csv    clonotype_summary,
+    in  csv    barcode_support,
+    in  string chain_type_auto,
+    out json   metrics_summary_json,
+    out csv    metrics_summary_csv,
+    out html   web_summary,
+    out json   alerts,
+    out h5     barcode_summary,
+    out json   cell_barcodes,
+    out csv    barcode_support,
+    out h5     umi_info,
+    src py     "stages/vdj/summarize_reports",
+)
+"""
+
+def split(args):
+    return {
+        'chunks': [{}],
+        'join': {
+            '__mem_gb': 2,
+        },
+    }
+
+def main(args, outs):
+    pass
+
+def join(args, outs, chunk_defs, chunk_outs):
+
+    sample_info = {
+        "sample_id" : args.sample_id,
+        "sample_desc" : args.sample_desc
+    }
+
+    summary_files = [
+        args.reads_summary,
+        args.trim_reads_summary,
+        args.filter_reads_summary,
+        args.assemble_vdj_summary,
+        args.assemble_vdj_summary2,
+        args.report_contigs_summary,
+        args.report_contig_alignments_summary,
+        args.raw_consensus_summary,
+        args.group_clonotypes_summary,
+    ]
+
+    summary_files = [sum_file for sum_file in summary_files if not sum_file is None]
+
+    cr_report.merge_jsons(summary_files, outs.metrics_summary_json, dicts=[sample_info])
+
+    # Copy barcode summary h5
+    if args.barcode_summary:
+        cr_io.copy(args.barcode_summary, outs.barcode_summary)
+
+    # Copy cell barcodes
+    if args.cell_barcodes:
+        cr_io.copy(args.cell_barcodes, outs.cell_barcodes)
+
+    # Copy barcode support
+    if args.barcode_support:
+        cr_io.copy(args.barcode_support, outs.barcode_support)
+
+    # Copy umi info
+    if args.umi_info:
+        cr_io.copy(args.umi_info, outs.umi_info)
+
+    sample_data_paths = cr_webshim_data.SampleDataPaths(
+        summary_path=outs.metrics_summary_json,
+        barcode_summary_path=args.barcode_summary,
+        vdj_clonotype_summary_path=args.clonotype_summary,
+        vdj_barcode_support_path=args.barcode_support,
+        vdj_cell_barcodes_path=args.cell_barcodes,
+    )
+
+    # Determine chain type for the report
+    chain_type = args.chain_type_auto
+
+    sample_properties = VdjSampleProperties(sample_id=args.sample_id,
+                                            sample_desc=args.sample_desc,
+                                            chain_type=chain_type,
+                                            version=martian.get_pipelines_version())
+    sample_properties = dict(sample_properties._asdict())
+
+    sample_data = cr_webshim.load_sample_data(sample_properties, sample_data_paths)
+
+    if args.barcode_whitelist is not None:
+        vdj_web.build_vdj_web_summary_html(outs.web_summary, sample_properties, sample_data)
+        cr_webshim.build_metrics_summary_csv(outs.metrics_summary_csv, sample_properties, sample_data, PIPELINE_VDJ)

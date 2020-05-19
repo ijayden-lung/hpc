@@ -1,0 +1,25 @@
+# Script to make some html files for output versions of CR
+import sys
+import os
+import glob
+import json
+
+cd = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(cd, ".."))
+
+from summarize import *
+
+tdir = cd + "/../tests/cr_tests/"
+contents_file = tdir + "summary.html"
+with open(find_local_path(contents_file), 'r') as infile:
+    contents = infile.read()
+
+jsons = glob.glob(tdir + "data/*.json")
+for jsonf in jsons:
+    newF = jsonf.split("/")[-1].replace(".json", ".html")
+    newF = tdir + newF
+    print newF
+    with open(jsonf, 'r') as infile:
+        data = json.load(infile)
+    with open(newF, 'w') as outfile:
+        generate_html_summary(data, contents, None, outfile)

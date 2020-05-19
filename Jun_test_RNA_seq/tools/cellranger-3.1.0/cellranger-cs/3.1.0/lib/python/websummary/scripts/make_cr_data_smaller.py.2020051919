@@ -1,0 +1,55 @@
+# Takes an output json file from cell ranger and removes data from the plots and table to make
+# smaller testing data.
+
+import glob
+import json
+import sys
+import os
+
+def shrink_plot(plot):
+    data = plot["data"]
+    for clust in data:
+        x = clust["x"]
+        y = clust["y"]
+        length = min(10, len(x))
+        clust["x"] = x[:length]
+        clust["y"] = y[:length]
+        marker =  clust["marker"]
+        if marker.has_key("color"):
+            if isinstance(marker["color"], list):
+                marker["color"] = marker["color"][:length]
+        if clust.has_key("text"):
+            clust["text"]=clust["text"][:length]
+            
+def shrink_table(table):
+    data = table["data"]
+    table["data"] = data[:min(len(data), 30)]
+
+def shrink_json(d):
+    top = d['summary']
+    at  = top['analysis_tab']
+    if at.has_key('clustering_selector'):
+        cs = at['clustering_selector']
+        shrink_plot(at["umi_tsne_plot"]["plot"])
+        for clust in at['clustering_selector']['clusterings']:
+            shrink_plot(clust["cluster_tsne_plot"])
+            shrink_table(clust["sortabletable_diffexp"])
+
+cd = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(cd, ".."))
+
+tdir = cd + "/../tests/cr_tests/"
+contents_file = tdir + "summary.html"
+with open(contents_file, 'r') as infile:
+    contents = infile.read()
+
+jsons = glob.glob(tdir + "data/*.json")
+for jsonf in jsons:
+    if jsonf.count("small") ==0:
+        newF = jsonf.replace(".json", "_small.json")
+    with open(jsonf, 'r') as infile:
+        data = json.load(infile)
+    shrink_json(data)
+    print newF
+    with open(newF, 'w') as outfile:
+        json.dump(data, outfile)

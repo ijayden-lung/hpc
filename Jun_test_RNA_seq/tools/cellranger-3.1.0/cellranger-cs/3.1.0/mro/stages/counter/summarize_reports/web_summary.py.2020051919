@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2019 10X Genomics, Inc. All rights reserved.
+#
+
+from cellranger.websummary.metrics import MetricAnnotations
+from cellranger.websummary.summary_tab import (FEATURE_BARCODINGS, pipeline_info_table,
+    CELL_CALLING_METRIC_KEYS, ANTIBODY_CELL_CALLING_METRIC_KEYS,
+    CELL_CALLING_ALARM_KEYS, ANTIBODY_CELL_CALLING_ALARM_KEYS,
+    sequencing_table, feature_barcode_sequencing_table, add_data, hero_metrics,
+    feature_barcode_application_table, mapping_table, cell_calling_table)
+from cellranger.websummary.analysis_tab import (umi_on_tsne_plot, analysis_by_clustering,
+    median_gene_plot, seq_saturation_plot, barnyard_table)
+from websummary import summarize
+
+def build_web_summary_html(filename, sample_properties, sample_data, pipeline):
+    species_list = sample_properties['genomes']
+    metadata = MetricAnnotations()
+
+    alarm_list = []
+    # summary tab
+    summary_tab_json = {}
+    add_data(summary_tab_json, alarm_list, hero_metrics(metadata, sample_data, species_list))
+    add_data(summary_tab_json, alarm_list, pipeline_info_table(sample_data, sample_properties, pipeline))
+    add_data(summary_tab_json, alarm_list, sequencing_table(metadata, sample_data, species_list))
+    add_data(summary_tab_json, alarm_list, mapping_table(metadata, sample_data, species_list))
+    add_data(summary_tab_json, alarm_list, cell_calling_table(metadata, sample_data, sample_properties, species_list, CELL_CALLING_METRIC_KEYS, CELL_CALLING_ALARM_KEYS))
+
+    if 'cells' not in summary_tab_json: # This is the case when there was no GEX input library
+        add_data(summary_tab_json, alarm_list, cell_calling_table(metadata, sample_data, sample_properties, species_list, ANTIBODY_CELL_CALLING_METRIC_KEYS, ANTIBODY_CELL_CALLING_ALARM_KEYS))
+
+    for fb in FEATURE_BARCODINGS:
+        # feature barcoding sequencing info
+        add_data(summary_tab_json, alarm_list, feature_barcode_sequencing_table(metadata, sample_data, species_list, fb))
+        # feature barcoding application metric
+        add_data(summary_tab_json, alarm_list, feature_barcode_application_table(metadata, sample_data, species_list, fb))
+
+    # analysis tab
+    analysis_tab_json = {}
+    add_data(analysis_tab_json, alarm_list, barnyard_table(metadata, sample_data, sample_properties, species_list))
+    add_data(analysis_tab_json, alarm_list, analysis_by_clustering(sample_data))
+    add_data(analysis_tab_json, alarm_list, umi_on_tsne_plot(sample_data))
+    add_data(analysis_tab_json, alarm_list, seq_saturation_plot(sample_data, sample_properties))
+    add_data(analysis_tab_json, alarm_list, median_gene_plot(sample_data, sample_properties, species_list))
+
+    websummary_data = {
+        'alarms': {'alarms': alarm_list},
+        'sample': {
+                    'id': sample_properties['sample_id'],
+                    'description': sample_properties['sample_desc'],
+                    'command': 'Cell Ranger',
+                    'subcommand': pipeline,
+                },
+        'summary_tab': summary_tab_json,
+    }
+    if len(analysis_tab_json) > 0:
+        websummary_data['analysis_tab'] = analysis_tab_json
+
+    contents = """<div data-key="summary" data-component="CellRangerSummary">"""
+    with open(filename, 'w') as outfile:
+        summarize.generate_html_summary({'summary' : websummary_data}, contents, None, outfile)
+
+    return
