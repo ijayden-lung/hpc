@@ -1,0 +1,64 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N cellrange_gtf
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+
+dir='/home/bio-longyk/Jun_test_RNA_seq/Massage/cellRange_ref'
+
+mkdir $dir
+
+cd $dir 
+
+cellranger mkgtf /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.100.gtf Mus_musculus_cellRange.GRCm38.100.gtf \
+--attribute=gene_biotype:3prime_overlapping_ncRNA \
+--attribute=gene_biotype:antisense \
+--attribute=gene_biotype:bidirectional_promoter_lncRNA \
+--attribute=gene_biotype:IG_C_gene \
+--attribute=gene_biotype:IG_C_pseudogene \
+--attribute=gene_biotype:IG_D_gene \
+--attribute=gene_biotype:IG_D_pseudogene \
+--attribute=gene_biotype:IG_J_gene \
+--attribute=gene_biotype:IG_LV_gene \
+--attribute=gene_biotype:IG_pseudogene \
+--attribute=gene_biotype:IG_V_gene \
+--attribute=gene_biotype:IG_V_pseudogene \
+--attribute=gene_biotype:lincRNA \
+--attribute=gene_biotype:macro_lncRNA \
+--attribute=gene_biotype:miRNA \
+--attribute=gene_biotype:misc_RNA \
+--attribute=gene_biotype:Mt_rRNA \
+--attribute=gene_biotype:Mt_tRNA \
+--attribute=gene_biotype:polymorphic_pseudogene \
+--attribute=gene_biotype:processed_pseudogene \
+--attribute=gene_biotype:processed_transcript \
+--attribute=gene_biotype:protein_coding \
+--attribute=gene_biotype:pseudogene \
+--attribute=gene_biotype:ribozyme \
+--attribute=gene_biotype:rRNA \
+--attribute=gene_biotype:scaRNA \
+--attribute=gene_biotype:scRNA \
+--attribute=gene_biotype:sense_intronic \
+--attribute=gene_biotype:sense_overlapping \
+--attribute=gene_biotype:snoRNA \
+--attribute=gene_biotype:snRNA \
+--attribute=gene_biotype:sRNA \
+--attribute=gene_biotype:TEC \
+--attribute=gene_biotype:transcribed_processed_pseudogene \
+--attribute=gene_biotype:transcribed_unitary_pseudogene \
+--attribute=gene_biotype:transcribed_unprocessed_pseudogene \
+--attribute=gene_biotype:translated_unprocessed_pseudogene \
+--attribute=gene_biotype:TR_C_gene \
+--attribute=gene_biotype:TR_D_gene \
+--attribute=gene_biotype:TR_J_gene \
+--attribute=gene_biotype:TR_J_pseudogene \
+--attribute=gene_biotype:TR_V_gene \
+--attribute=gene_biotype:TR_V_pseudogene \
+--attribute=gene_biotype:unitary_pseudogene \
+--attribute=gene_biotype:unprocessed_pseudogene \
+
+cellranger mkref --genome=mm10 \
+--fasta=/home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa \
+--genes=Mus_musculus_cellRange.GRCm38.100.gtf \
+--ref-version=3.0.0
