@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N download
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=12:00:00
+
+cd /home/bio-longyk/Jun_test_RNA_seq/reference/mouse
+
+wget ftp://ftp.ensembl.org/pub/release-100/fasta/mus_musculus/dna/Mus_musculus.GRCm38.dna.primary_assembly.fa.gz
+
+cd /home/bio-longyk/Jun_test_RNA_seq/Massage/cellRange_ref
+
+wget http://cf.10xgenomics.com/supp/cell-exp/refdata-cellranger-mm10-3.0.0.tar.gz
