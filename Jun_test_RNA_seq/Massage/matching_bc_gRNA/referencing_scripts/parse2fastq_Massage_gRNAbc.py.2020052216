@@ -1,0 +1,75 @@
+import pysam
+import argparse
+import os
+import gzip
+import regex
+'''
+read name contains barcode and UMI, seperated by '_', could be extracted by umitools
+read 1 contain gRNA barcode, read2 contain reversed complementary gRNA barcode
+'''
+
+def rev_comp(seq):
+    complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'} 
+    bases = list(seq) 
+    bases = reversed([complement.get(base,base) for base in bases])
+    bases = ''.join(bases)
+    return (bases)
+    
+def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("-r1", "--read1",default="umitools_out/extract_S05_MGSG_R1.fq.gz.trim.fq.gz", help="reads 1")
+    parser.add_argument("-r2", "--read2",default="umitools_out/extract_S05_MGSG_R2.fq.gz.trim.fq.gz", help="reads 2")
+    parser.add_argument("-o", "--outfile",default="output.txt", help="output file")
+    args = parser.parse_args()
+    read1 = args.read1
+    read2 = args.read2
+    outfile = args.outfile
+    grnadict = {}
+    with open('22_gene_list.csv','r') as grnafile:
+        for line in grnafile:
+            tabs = line.strip().split(',')
+            if tabs[2] not in grnadict:
+                grnadict[tabs[2]] = tabs[0]
+                #print(tabs[2])
+            else:
+                print('error')
+                break
+    c,i,j,k = 0,0,0,0
+    with pysam.FastxFile(read1) as fin_a, pysam.FastxFile(read2) as fin_b, open(outfile, mode='w') as fout:
+        for reada in fin_a:
+            flag = 1
+            readb = fin_b.next() #python 2 pysam
+            c += 1
+            if c % 5000000 == 0:
+                print('processed %d' %c)
+            read1 = reada.sequence
+            cbc1 = reada.name.split('_')[1]
+            read2 = readb.sequence
+            cbc2 = readb.name.split('_')[1]
+            if reada.name != readb.name:
+                print("read names not equal.")
+                os.exit()
+            p1=regex.findall(r'(CGTACG[ATCG]{4}GCCACC){s<=1}',read1)
+            if p1:
+                i += 1
+                gRNAbc = p1[0][6:10]
+                if gRNAbc in grnadict:
+                    j += 1
+                    entry = cbc1 + '\t' + grnadict[gRNAbc]+'\n'
+                    fout.write(str(entry))
+                    flag = 0
+            elif not p1 or flag==1:
+                p2=regex.findall(r'(GGTGGC[ATCG]{4}CGTACG){s<=1}',read2)
+                if p2:
+                    k += 1
+                    gRNAbc = rev_comp(p2[0][6:10])
+                    if gRNAbc in grnadict:
+                        j += 1
+                        entry = cbc1 + '\t' + grnadict[gRNAbc]+'\n'
+                        fout.write(str(entry))
+
+    print('%d, %d, %d, %d' %(c,i,k,j))
+
+if __name__=="__main__":
+    main() 
+

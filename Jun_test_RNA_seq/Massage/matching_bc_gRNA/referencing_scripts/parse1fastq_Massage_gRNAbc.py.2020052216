@@ -1,0 +1,48 @@
+import pysam
+import argparse
+import os
+import gzip
+import regex
+'''
+read 1 contain gRNA barcode
+'''
+
+    
+def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("-r1", "--read1",default="umitools_out/extract_S05_MGSG_R1.fq.gz.trim.fq.gz", help="reads 1")
+    parser.add_argument("-o", "--outfile",default="output.txt", help="output file")
+    args = parser.parse_args()
+    read1 = args.read1
+    outfile = args.outfile
+    grnadict = {}
+    with open('22_gene_list.csv','r') as grnafile:
+        for line in grnafile:
+            tabs = line.strip().split(',')
+            if tabs[2] not in grnadict:
+                grnadict[tabs[2]] = tabs[0]
+                #print(tabs[2])
+            else:
+                print('error')
+                break
+    c,i,j,k = 0,0,0,0
+    with pysam.FastxFile(read1) as fin_a, open(outfile, mode='w') as fout:
+        for reada in fin_a:
+            c += 1
+            if c % 5000000 == 0:
+                print('processed %d' %c)
+            read1 = reada.sequence
+            cbc = reada.name.split('_')[1]
+            p2=regex.findall(r'(CGTACG[ATCG]{4}GCCACC){s<=1}',read1)
+            if p2:
+                i += 1
+                gRNAbc = p2[0][6:10]
+                #print(gRNAbc)
+                if gRNAbc in grnadict:
+                    j += 1
+                    entry = cbc + '\t' + grnadict[gRNAbc]+'\n'
+                    fout.write(str(entry))
+    print('%d, %d, %d' %(c,i,j))
+
+if __name__=="__main__":
+    main() 

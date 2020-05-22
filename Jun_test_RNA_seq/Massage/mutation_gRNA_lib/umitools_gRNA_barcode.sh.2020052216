@@ -1,0 +1,27 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N PCR2_umitools
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=20:00:00
+
+cd $PBS_O_WORKDIR 
+
+cat *R1_001.fastq.gz > combine_fq1.fastq.gz
+cat *R2_001.fastq.gz > combine_fq2.fastq.gz
+
+
+umi_tools whitelist --stdin combine_fq1.fastq.gz \
+--bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \
+--set-cell-number=11000 \
+--knee-method=density \
+--plot-prefix=PCR2_umitool_combined \
+--log2stderr > gRNA_mutation_combined_whitelist.txt
+
+umi_tools extract --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \
+--stdin combine_fq1.fastq.gz \
+--stdout combine_fq1.extract.fq.gz \
+--read2-in combine_fq2.fastq.gz \
+--read2-out combine_fq2.extract.fq.gz \
+--filter-cell-barcode --error-correct-cell \
+--whitelist=gRNA_mutation_combined_whitelist.txt
