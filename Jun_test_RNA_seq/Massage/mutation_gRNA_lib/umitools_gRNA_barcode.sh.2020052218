@@ -9,10 +9,10 @@ cd $PBS_O_WORKDIR
 
 umi_tools whitelist --stdin S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R1_001.fastq.gz \
 --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \
---set-cell-number=10500 \
+--expect-cells=10500 \
 --knee-method=density \
 --method=umis \
---plot-prefix=PCR2_umitool_combined \
+--plot-prefix=PCR2_umitool_combined_1 \
 --log2stderr > gRNA_mutation_combined_whitelist_1.txt
 
 umi_tools extract --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \
@@ -21,14 +21,14 @@ umi_tools extract --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \
 --read2-in S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R2_001.fastq.gz \
 --read2-out S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R2_001_extracted.fastq.gz \
 --filter-cell-barcode --error-correct-cell \
---whitelist=gRNA_mutation_combined_whitelist.txt
+--whitelist=gRNA_mutation_combined_whitelist_1.txt
 
 umi_tools whitelist --stdin S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R1_001.fastq.gz \
 --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \
---set-cell-number=10500 \
+--expect-cells=10500 \
 --knee-method=density \
 --method=umis \
---plot-prefix=PCR2_umitool_combined \
+--plot-prefix=PCR2_umitool_combined_2 \
 --log2stderr > gRNA_mutation_combined_whitelist_2.txt
 
 umi_tools extract --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \
@@ -37,4 +37,4 @@ umi_tools extract --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \
 --read2-in S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R2_001.fastq.gz \
 --read2-out S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R2_001_extracted.fastq.gz \
 --filter-cell-barcode --error-correct-cell \
---whitelist=gRNA_mutation_combined_whitelist.txt
+--whitelist=gRNA_mutation_combined_whitelist_2.txt
