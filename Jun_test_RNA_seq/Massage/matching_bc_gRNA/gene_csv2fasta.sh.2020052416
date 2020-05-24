@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# covert csv to fasta
+#sed 's/,/\t/g' 22_gene_list.csv | awk '{print $1"\t"$2$3$4}' | awk '{print ">"$1"\n"$2}' > 22genes.fasta
+
+# to obtain reverse trasncripts fasta
+
+cat 22genes.fasta | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGCatgc" "TACGtacg" ; done > temp.fasta
+
+sed -e "s/\r//g" temp.fasta > 22genes_reverse.fasta
+
+rm temp.fasta
