@@ -1,0 +1,11 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N gRNA_barcode_searching
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=36:00:00
+
+cd $PBS_O_WORKDIR
+
+#/home/bio-longyk/Jun_test_RNA_seq/tools/seqkit locate --degenerate --ignore-case --pattern-file 22gene_gRNA-tag.fasta /home/bio-longyk/Jun_test_RNA_seq/Massage/mutation_gRNA_lib/*_R1_001_extracted.fastq > gRNA_searching_fwd.txt
+/home/bio-longyk/Jun_test_RNA_seq/tools/seqkit locate --degenerate --ignore-case --pattern-file	22gene_gRNA-tag_reverse.fasta /home/bio-longyk/Jun_test_RNA_seq/Massage/mutation_gRNA_lib/*_R2_001_extracted.fastq > gRNA_searching_rev.txt
