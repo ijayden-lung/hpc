@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# covert csv to fasta
+#sed 's/,/\t/g' 22_gene_list.csv | awk '{print $1"\t"$2$3$4}' | awk '{print ">"$1"\n"$2}' > 22genes.fasta
+
+# to obtain reverse trasncripts fasta
+
+cat 22gene_gRNA-tag.fasta | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGCatgc" "TACGtacg" ; done > temp.fasta
+
+sed -e "s/\r//g" temp.fasta > 22genes_reverse.fasta
+
+rm temp.fasta
+
+
+# To extract gene information from a gtf file according to a gene name list
+
+awk 'NR == FNR {T[" gene_name \"" $0 "\""]; next} {for (t in T) if ($0 ~ t) print}' gene_list.txt file.gtf
+
+# GTF to bed
+
+cat 22gene.gtf |  awk 'OFS="\t" {if ($3=="gene") {print $1,$4-1,$5,$14,$16,$7}}' | tr -d '";' > 22gene.bed
