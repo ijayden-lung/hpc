@@ -1,0 +1,22 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N meRanTK_test
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=20:00:00
+
+cd $PBS_O_WORKDIR
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanGs align \
+-o ./testresult \
+-f /home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/testdata/fastq/clean_KHOD_400k_test.fastq \
+-t 24 \
+-S RNA-BSseq.sam \
+-un \
+-ud ./Unaligned \
+-MM \
+-star_outFilterMultimapNmax 20 \
+-id ./index
+-bg \
+-mbgc 10 \
+-mbp

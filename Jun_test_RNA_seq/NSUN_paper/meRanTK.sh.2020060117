@@ -1,0 +1,13 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N meRanTK_zhang_data
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=20:00:00
+
+cd $PBS_O_WORKDIR
+
+fastqc -t 24 -o ./data ./data/SRR8644973_1.fastq.gz ./data/SRR8644973_2.fastq.gz 
+fastqc -t 24 -o ./data ./data/SRR8644974_1.fastq.gz ./data/SRR8644974_2.fastq.gz
+fastqc -t 24 -o ./data ./data/SRR8644975_1.fastq.gz ./data/SRR8644975_2.fastq.gz
+fastqc -t 24 -o ./data ./data/SRR8644976_1.fastq.gz ./data/SRR8644976_2.fastq.gz
