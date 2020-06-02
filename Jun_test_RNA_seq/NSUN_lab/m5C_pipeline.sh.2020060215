@@ -1,0 +1,20 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N NSUN2-KD-QC
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=24:00:00
+
+cd $PBS_O_WORKDIR
+
+fastqc -t 24 -o ./NSUN2-KD ./NSUN2-KD/*.fq.gz
+
+# QC and trimming
+for fq1 in ./NSUN2-KD/*_1.fq.gz;do
+  fq2="./$(basename "$fq1" _1.fq.gz)_2.fq.gz"
+  if [ ! -f "$fq2" ]; then
+    printf 'Missing file "%s"\n' "$fq2"
+    continue
+  fi
+    /home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33 --fastqc -a AGATCGGAAGAGC --dont_gzip --paired --length 30 -o ./NSUN2-KD $fq1 $fq2
+done

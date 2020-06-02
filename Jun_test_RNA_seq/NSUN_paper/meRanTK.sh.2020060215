@@ -1,0 +1,27 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N meRanTK_zhang_data
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=20:00:00
+
+cd $PBS_O_WORKDIR
+
+#fastqc -t 24 -o ./data ./data/SRR8644973_1.fastq.gz ./data/SRR8644973_2.fastq.gz 
+#fastqc -t 24 -o ./data ./data/SRR8644974_1.fastq.gz ./data/SRR8644974_2.fastq.gz
+#fastqc -t 24 -o ./data ./data/SRR8644975_1.fastq.gz ./data/SRR8644975_2.fastq.gz
+#fastqc -t 24 -o ./data ./data/SRR8644976_1.fastq.gz ./data/SRR8644976_2.fastq.gz
+
+#/home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33 --fastqc -a AGATCGGAAGAGC --dont_gzip --paired --length 30 -o ./data ./data/SRR8644973_1.fastq.gz ./data/SRR8644973_2.fastq.gz
+#/home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33	--fastqc -a AGATCGGAAGAGC --dont_gzip --paired --length 30 -o ./data ./data/SRR8644974_1.fastq.gz ./data/SRR8644974_2.fastq.gz
+#/home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33	--fastqc -a AGATCGGAAGAGC --dont_gzip --paired --length 30 -o ./data ./data/SRR8644975_1.fastq.gz ./data/SRR8644975_2.fastq.gz
+#/home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33	--fastqc -a AGATCGGAAGAGC --dont_gzip --paired --length 30 -o ./data ./data/SRR8644976_1.fastq.gz ./data/SRR8644976_2.fastq.gz
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanGs mkbsidx -t 24 \
+-fa /home/bio-longyk/Jun_test_RNA_seq/reference/human/Homo_sapiens.GRCh38.dna.primary_assembly.fa \
+-id ./BSgenomeIDX_human_ensembl_v99 \
+-GTF /home/bio-longyk/Jun_test_RNA_seq/reference/human/Homo_sapiens.GRCh38.99.chr.gff3 \
+-GTFtagEPT Parent \
+-GTFtagEPG gene \
+-sjO 149
+
