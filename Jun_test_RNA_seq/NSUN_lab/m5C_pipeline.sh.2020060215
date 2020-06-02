@@ -7,11 +7,11 @@
 
 cd $PBS_O_WORKDIR
 
-fastqc -t 24 -o ./NSUN2-KD ./NSUN2-KD/*.fq.gz
+#fastqc -t 24 -o ./NSUN2-KD ./NSUN2-KD/*.fq.gz
 
 # QC and trimming
 for fq1 in ./NSUN2-KD/*_1.fq.gz;do
-  fq2="./$(basename "$fq1" _1.fq.gz)_2.fq.gz"
+  fq2="./NSUN2-KD/$(basename "$fq1" _1.fq.gz)_2.fq.gz"
   if [ ! -f "$fq2" ]; then
     printf 'Missing file "%s"\n' "$fq2"
     continue
