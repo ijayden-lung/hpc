@@ -1,0 +1,38 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N NSUN2-KD-QC
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=24:00:00
+
+cd $PBS_O_WORKDIR
+
+
+#fastqc -t 24 -o ./NSUN2-KD ./NSUN2-KD/*.fq.gz
+
+# QC and trimming
+
+#for fq1 in ./NSUN2-KD/*_1.fq.gz;do
+ #fq2="./NSUN2-KD/$(basename "$fq1" _1.fq.gz)_2.fq.gz"
+  #if [ ! -f "$fq2" ]; then
+    #printf 'Missing file "%s"\n' "$fq2"
+    #continue
+  #fi
+    #/home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33 --fastqc -a AGATCGGAAGAGC --dont_gzip --paired --length 30 -o ./NSUN2-KD $fq1 $fq2
+#done
+
+
+# Alignment 
+
+index=/home/bio-longyk/Jun_test_RNA_seq/NSUN_paper/BSgenomeIDX_human_ensembl_v99
+
+for fq1 in ./NSUN2-KD/*_1_val_1.fq;do
+  output="./NSUN2-KD/$(basename "$fq1" _1_val_1.fq)"
+  fq2="./NSUN2-KD/$(basename "$fq1" _1_val_1.fq)_2_val_2.fq"
+    if [ ! -f "$fq2" ]; then
+      printf 'Miss file "%s\n"' "$fq2"
+      continue
+    fi 
+      /home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanGs align -o ./$output -f $fq2 -r $fq1 -t 24 -S RNA-BSseq.sam -un -ud ./$output_Unaligned -MM -star_outFilterMultimapNmax 20 -id $index -bg -mbgc 20 -mbp
+done
+
