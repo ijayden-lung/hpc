@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -q ser
 #PBS -N PCR2_umitools
-#PBS -l nodes=1:ppn=24
+#PBS -l nodes=1:ppn=12
 #PBS -j oe 
 #PBS -l walltime=20:00:00
 #PBS -V
@@ -45,7 +45,7 @@ cd $PBS_O_WORKDIR
 
 
 # Mapping using STAR 
-#dir1='/home/bio-longyk/Jun_test_RNA_seq/Massage/mutation_gRNA_lib/STAR_index'
+dir1='/home/bio-longyk/Jun_test_RNA_seq/Massage/mutation_gRNA_lib/STAR_index'
 #mkdir $dir1
 
 #/home/bio-longyk/Jun_test_RNA_seq/tools/STAR-2.7.3a/bin/Linux_x86_64_static/STAR \
@@ -54,16 +54,17 @@ cd $PBS_O_WORKDIR
 #--sjdbGTFfile /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.100.gtf \
 #--sjdbOverhang 149
 
-#/home/bio-longyk/Jun_test_RNA_seq/tools/STAR-2.7.3a/bin/Linux_x86_64_static/STAR \
-#--runThreadN 12 --genomeDir $dir1 \
-#--readFilesIn S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R1_001_extracted_val_1.fq.gz,S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R1_001_extracted_val_1.fq.gz \
-#S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R2_001_extracted_val_2.fq.gz,S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R2_001_extracted_val_2.fq.gz \
-#--readFilesCommand zcat \
-#--outFilterMultimapNmax 1 \
-#--outSAMtype BAM SortedByCoordinate \
-#--quantMode GeneCounts \
-#--twopassMode Basic \
-#--outFileNamePrefix mutation_mapping
+/home/bio-longyk/Jun_test_RNA_seq/tools/STAR-2.7.3a/bin/Linux_x86_64_static/STAR \
+--runThreadN 12 --genomeDir $dir1 \
+--readFilesIn S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R1_001_extracted_val_1.fq.gz,S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R1_001_extracted_val_1.fq.gz \
+S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R2_001_extracted_val_2.fq.gz,S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R2_001_extracted_val_2.fq.gz \
+--readFilesCommand zcat \
+--outFilterMultimapNmax 1 \
+--outSAMtype BAM SortedByCoordinate \
+--quantMode GeneCounts \
+--twopassMode Basic \
+--outFileNamePrefix mutation_mapping \
+--outSAMattrRGline ID:S034_sustc-A_MSGMP2_AHYHHHDSXX_S3,ID:S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1 LB:library PL:illumina PU:machine SM:PCR2
 
 ########################### Wrong ID for gatk ###########################################
 #samtools view -@24 -S -b mutation_mappingAligned.out.sam > mutation_mappingAligned.out.bam
@@ -75,7 +76,7 @@ cd $PBS_O_WORKDIR
 #sambamba markdup --overflow-list-size 600000  --tmpdir='./'  -r mutation_mappingAligned.sortedByCoord.out.bam mutation_mappingAligned_rmd.bam
 
 ## SplitNCigar reads 
-gatk SplitNCigarReads -R /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa -I mutation_mappingAligned_rmd.bam -O mutation_mappingAligned_rmd_split.bam
+#gatk SplitNCigarReads -R /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa -I mutation_mappingAligned_rmd.bam -O mutation_mappingAligned_rmd_split.bam
 
-#gatk HaplotypeCaller -R /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa -I mutation_mappingAligned.out.sorted.markdup.bam -O mutation_mapping.HC.vcf
+#gatk HaplotypeCaller -R /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa -I  mutation_mappingAligned_rmd_split.bam -O mutation_mapping.HC.vcf
 
