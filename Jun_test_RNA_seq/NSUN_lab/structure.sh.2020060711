@@ -1,0 +1,9 @@
+#!/bin/bash
+
+awk '{print $1"_"$3"_"$2}' ../methy_for_ds/methylation_Col_1A_FDR_0.01.txt > Col_1A_combined_ID.txt
+cut -f 19 ../methy_for_ds/methylation_Col_1A_FDR_0.01.txt > sequences_Col_1A.txt
+paste Col_1A_combined_ID.txt sequences_Col_1A.txt > Col_1A_for_RNAfold.txt
+rm Col_1A_combined_ID.txt sequences_Col_1A.txt
+sed -i '1d' Col_1A_for_RNAfold.txt
+awk -F'\t' -v OFS='\n' '{$1 = ">" $1} 1' Col_1A_for_RNAfold.txt > for_RNAfold_Col1_1A.fasta
+rm Col_1A_for_RNAfold.txt

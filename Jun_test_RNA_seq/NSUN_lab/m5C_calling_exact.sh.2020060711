@@ -1,0 +1,28 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N NSUN2-KD-QC
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=36:00:00
+
+cd $PBS_O_WORKDIR
+
+refer=/home/bio-longyk/Jun_test_RNA_seq/reference/human/Homo_sapiens.GRCh38.dna.primary_assembly.fa
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanCall -p 24 -o ./methylation_calling_1/HAP1-Crpph1-overamp-1_FKDL202565064-1a-A35.txt -bam ./HAP1-Crpph1-overamp-1_FKDL202565064-1a-A35/RNA-BSseq_sorted.bam \
+-f $refer -fs3 67 -rs5 5 -rl 150 -mr 0.1 -sc 100 -md 5 -ei 0.1 -fdr 0.01 -bed63 -np -gref
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanCall -p 24 -o ./methylation_calling_1/HAP1-Crpph1-recon-1_FKDL202565063-1a-A35.txt -bam ./HAP1-Crpph1-recon-1_FKDL202565063-1a-A35/RNA-BSseq_sorted.bam \
+-f $refer -fs3 49 -rs5 5 -rl 150 -mr 0.1 -sc 100 -md 5 -ei 0.1 -fdr 0.01 -bed63 -np -gref
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanCall -p 24 -o ./methylation_calling_1/HAP1-Crpph1-recon-2_FKDL202565063-1a-A36.txt -bam ./HAP1-Crpph1-recon-2_FKDL202565063-1a-A36/RNA-BSseq_sorted.bam \
+-f $refer -fs3 64 -rs5 5 -rl 150 -mr 0.1 -sc 100 -md 5 -ei 0.1 -fdr 0.01 -bed63 -np -gref
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanCall -p 24 -o ./methylation_calling_1/HAP1-g2rpph1-overamp-1_FKDL202565064-1a-A38.txt -bam ./HAP1-g2rpph1-overamp-1_FKDL202565064-1a-A38/RNA-BSseq_sorted.bam \
+-f $refer -fs3 9 -rs5 5 -rs3 33 -rl 150 -mr 0.1 -sc 100 -md 5 -ei 0.1 -fdr 0.01 -bed63 -np -gref
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanCall -p 24 -o ./methylation_calling_1/HAP1-g2rpph1-recon-1_FKDL202565063-1a-A38.txt -bam ./HAP1-g2rpph1-recon-1_FKDL202565063-1a-A38/RNA-BSseq_sorted.bam \
+-f $refer -fs3 66 -rs5 5 -rl 150 -mr 0.1 -sc 100 -md 5 -ei 0.1 -fdr 0.01 -bed63 -np -gref
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanCall -p 24 -o ./methylation_calling_1/HAP1-g2rpph1-recon-2_FKDL202565063-1a-A39.txt -bam ./HAP1-g2rpph1-recon-2_FKDL202565063-1a-A39/RNA-BSseq_sorted.bam \
+-f $refer -fs3 59 -rs5 5 -rl 150 -mr 0.1 -sc 100 -md 5 -ei 0.1 -fdr 0.01 -bed63 -np -gref
