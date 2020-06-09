@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#cat file_name.txt | while read id;
+#do
+#awk '{print $1"_"$3"_"$2}' ../methylation_calling_1/${id}_FDR_0.01.txt > temp_ID.txt
+#cut -f 19 ../methylation_calling_1/${id}_FDR_0.01.txt > sequences.txt
+#paste temp_ID.txt sequences.txt > RNAfold.txt
+#rm temp_ID.txt sequences.txt
+#sed -i '1d' RNAfold.txt
+#awk -F'\t' -v OFS='\n' '{$1 = ">" $1} 1' RNAfold.txt > ${id}_for_ds.fasta
+#rm RNAfold.txt
+#done
+
+#cat file_name.txt | while read id;
+#do
+#bedtools intersect -a /home/bio-longyk/Jun_test_RNA_seq/reference/human/Homo_sapiens.GRCh38.99.chr.gtf -b ../methylation_calling_1/${id}_FDR_0.01.bed -wo -s > ${id}_annotated.txt
+#awk '$3=="transcript"' ${id}_annotated.txt > ${id}_annotated_transcript.txt
+#done
+
