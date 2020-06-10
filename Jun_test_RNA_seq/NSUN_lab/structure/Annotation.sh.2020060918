@@ -1,0 +1,11 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N NSUN2-KD-QC
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=36:00:00
+
+cd $PBS_O_WORKDIR
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanAnnotate -p 8 -b ../methylation_calling_1/HAP1-Crpph1-overamp-1_FKDL202565064-1a-A35_FDR_0.01.bed -g ../../reference/human/Homo_sapiens.GRCh38.99.chr.gtf -ensGTF -rd -reld -o test.txt
+
