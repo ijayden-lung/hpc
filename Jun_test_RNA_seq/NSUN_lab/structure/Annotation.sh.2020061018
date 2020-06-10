@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N NSUN2-KD-QC
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=36:00:00
+
+cd $PBS_O_WORKDIR
+
+#cat file_name.txt | while read id;
+#do
+#/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanAnnotate -p 8 -b ../methylation_calling_1_filter/${id}_FDR_0.01.bed -g ../../reference/human/Homo_sapiens.GRCh38.99.chr.gtf -ensGTF -rd -o ${id}_Anno.txt
+#done
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/VRP/bin/RNAfold --MEA=0.1 --maxBPspan 150 -T 70 ../../reference/human/Homo_sapiens.GRCh38.cdna.all.fa > All_transcripts_structure.txt
