@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N NSUN2-KD-QC
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=40:00:00
+
+cd $PBS_O_WORKDIR
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/VRP/bin/RNAfold --MEA=0.1 --maxBPspan 150 -T 60 ../../reference/human/Homo_sapiens.GRCh38.cdna.all.fa > All_transcripts_structure_60.txt
