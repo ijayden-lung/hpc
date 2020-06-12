@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cat file_ID.txt | while read id
+do
+	echo $id
+	qsub -v id=$id ./Structure_prediction.sh
+done
