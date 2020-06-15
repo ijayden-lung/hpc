@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N structure_predict
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=30:00:00
+
+cd $PBS_O_WORKDIR
+
+# To divide a fasta into multiple files
+#awk 'BEGIN {n_seq=0;} /^>/ {if(n_seq%1000==0){file=sprintf("myseq_%d.fa",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < m5C_containing_trancripts_newcalling.fasta 
+/home/bio-longyk/Jun_test_RNA_seq/tools/VRP/bin/RNAfold -p --MEA -T 60 ./myseq_${id}.fa > SP_${id}.txt
