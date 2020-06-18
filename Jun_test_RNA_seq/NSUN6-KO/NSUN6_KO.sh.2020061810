@@ -8,3 +8,5 @@
 cd $PBS_O_WORKDIR
 
 fastqc -t 24 -o ./fastqc *.fastq.gz
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33 --fastqc -a AGATCGGAAGAGC --gzip --paired --length 30 -o ./ S087_sustc-A_clone9-1_BH2JF3DSXY_S19_L002_R1_001.fastq.gz S087_sustc-A_clone9-1_BH2JF3DSXY_S19_L002_R2_001.fastq.gz
