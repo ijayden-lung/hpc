@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N NSUN2-KD-QC
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=24:00:00
+
+cd $PBS_O_WORKDIR
+
+htseq-count -s yes ./meRanTKResult_NSUN6/RNA-BSseq.sam ../reference/human/Homo_sapiens.GRCh38.99.chr.gtf > ./NSUN6_count.txt
