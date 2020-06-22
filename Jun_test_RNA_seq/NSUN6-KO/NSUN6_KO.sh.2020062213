@@ -1,0 +1,22 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N NSUN6-KD
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=24:00:00
+
+cd $PBS_O_WORKDIR
+
+fastqc -t 24 -o ./fastqc S140_sustc-A_clone9-2_BH2JK7DSXY_S21_L003_R*
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33 --fastqc -a AGATCGGAAGAGC --gzip --paired --length 30 -o ./ S140_sustc-A_clone9-2_BH2JK7DSXY_S21_L003_R1_001.fastq.gz S140_sustc-A_clone9-2_BH2JK7DSXY_S21_L003_R2_001.fastq.gz
+
+index=/home/bio-longyk/Jun_test_RNA_seq/NSUN_paper/BSgenomeIDX_human_ensembl_v99
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanGs align -o ./meRanTKResult_NSUN6 -f S140_sustc-A_clone9-2_BH2JK7DSXY_S21_L003_R2_001_val_2.fq -r S140_sustc-A_clone9-2_BH2JK7DSXY_S21_L003_R1_001_val_1.fq \
+-t 24 -S RNA-BSseq.sam -un -ud ./Unaligned -MM -star_outFilterMultimapNmax 20 -id $index -bg -mbgc 20 -mbp
+
+#refer=/home/bio-longyk/Jun_test_RNA_seq/reference/human/Homo_sapiens.GRCh38.dna.primary_assembly.fa
+
+#/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanCall -p 24 -o ./NSUN6_m5C_calling_result.txt -bam ./meRanTKResult_NSUN6/RNA-BSseq_sorted.bam \
+#-f $refer -fs3 4 -rs5 6 -rl 150 -mr 0.01 -sc 100 -md 5 -ei 0.1 -fdr 0.01 -bed63 -np -gref
