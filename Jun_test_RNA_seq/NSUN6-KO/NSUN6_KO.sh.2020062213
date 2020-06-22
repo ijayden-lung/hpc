@@ -13,8 +13,8 @@ fastqc -t 24 -o ./fastqc S140_sustc-A_clone9-2_BH2JK7DSXY_S21_L003_R*
 
 index=/home/bio-longyk/Jun_test_RNA_seq/NSUN_paper/BSgenomeIDX_human_ensembl_v99
 
-/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanGs align -o ./meRanTKResult_NSUN6 -f S140_sustc-A_clone9-2_BH2JK7DSXY_S21_L003_R2_001_val_2.fq -r S140_sustc-A_clone9-2_BH2JK7DSXY_S21_L003_R1_001_val_1.fq \
--t 24 -S RNA-BSseq.sam -un -ud ./Unaligned -MM -star_outFilterMultimapNmax 20 -id $index -bg -mbgc 20 -mbp
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanGs align -o ./meRanTKResult_NSUN6_1 -f S140_sustc-A_clone9-2_BH2JK7DSXY_S21_L003_R2_001_val_2.fq -r S140_sustc-A_clone9-2_BH2JK7DSXY_S21_L003_R1_001_val_1.fq \
+-t 24 -S RNA-BSseq_1.sam -un -ud ./Unaligned -MM -star_outFilterMultimapNmax 20 -id $index -bg -mbgc 20 -mbp
 
 #refer=/home/bio-longyk/Jun_test_RNA_seq/reference/human/Homo_sapiens.GRCh38.dna.primary_assembly.fa
 
