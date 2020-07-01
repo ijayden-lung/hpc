@@ -1,0 +1,27 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N old_data
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=24:00:00
+
+cd $PBS_O_WORKDIR
+
+#fastqc -t 24 -o ./fastqc *.fq.gz
+
+#/home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33 --fastqc -a AGATCGGAAGAGC --dont_gzip --paired --length 30 -o ./ HAP1-C-RPPH1_FRIP190320473-1a_1.fq.gz  HAP1-C-RPPH1_FRIP190320473-1a_2.fq.gz
+#/home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33 --fastqc -a AGATCGGAAGAGC --dont_gzip --paired --length 30 -o ./ HAP1-G1_2-RPPH1_FRIP190320474-1a_1.fq.gz  HAP1-G1_2-RPPH1_FRIP190320474-1a_2.fq.gz
+
+#index=/home/bio-longyk/Jun_test_RNA_seq/NSUN_paper/BSgenomeIDX_human_ensembl_v99
+
+#/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanGs align -o ./meRanTKResult_oldCtl -f HAP1-C-RPPH1_FRIP190320473-1a_2_val_2.fq -r HAP1-C-RPPH1_FRIP190320473-1a_1_val_1.fq \
+#-t 24 -S RNA-BSseq_1.sam -un -ud ./Unaligned -MM -star_outFilterMultimapNmax 20 -id $index -bg -mbgc 20 -mbp
+
+#/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanGs align -o ./meRanTKResult_oldgRNA -f HAP1-G1_2-RPPH1_FRIP190320474-1a_2_val_2.fq -r HAP1-G1_2-RPPH1_FRIP190320474-1a_1_val_1.fq \
+#-t 24 -S RNA-BSseq_1.sam -un -ud ./Unaligned -MM -star_outFilterMultimapNmax 20 -id $index -bg -mbgc 20 -mbp
+
+refer=/home/bio-longyk/Jun_test_RNA_seq/reference/human/Homo_sapiens.GRCh38.dna.primary_assembly.fa
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanCall -p 24 -o ./old_Ctl.txt -bam ./meRanTKResult_oldCtl/RNA-BSseq_1_sorted.bam \
+-f $refer -rs5 6 -rl 150 -mr 0.01 -sc 100 -md 5 -ei 0.1 -fdr 0.01 -bed63 -np -gref
+/home/bio-longyk/Jun_test_RNA_seq/tools/meRanTK-1.2.1b/meRanCall -p 24 -o ./old_gRNA.txt -bam ./meRanTKResult_oldgRNA/RNA-BSseq_1_sorted.bam \
+-f $refer -rs5 2 -rl 150 -mr 0.01 -sc 100 -md 5 -ei 0.1 -fdr 0.01 -bed63 -np -gref
