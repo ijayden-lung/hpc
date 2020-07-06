@@ -1,0 +1,11 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N gRNA_target_searching
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=05:00:00
+
+cd $PBS_O_WORKDIR
+
+#/home/bio-longyk/Jun_test_RNA_seq/tools/seqkit locate --degenerate --ignore-case --pattern-file gRNA_detail.fasta /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa > gRNA_target.txt
+/home/bio-longyk/Jun_test_RNA_seq/tools/seqkit locate --degenerate --ignore-case --pattern-file gRNA_detail.fasta /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.cdna.all.fa > gRNA_target_cdna.txt
