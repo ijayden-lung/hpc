@@ -1,0 +1,20 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N cellrange_GeneExpression
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=48:00:00
+
+cd $PBS_O_WORKDIR
+
+#cellranger count --localcores=24 --localmem=60 --id=cellRange_GeneExpression \
+#--transcriptome=/home/bio-longyk/Jun_test_RNA_seq/Massage/cellRange_ref/mm10 \
+#--fastqs=/home/bio-longyk/Jun_test_RNA_seq/Massage/data/ \
+#--expect-cells=10000 \
+#--sample S056_sustc-A_MSG-1_AH33KNDSXY,S057_sustc-A_MSG-2_AH33KNDSXY,S058_sustc-A_MSG-3_AH33KNDSXY,S059_sustc-A_MSG-4_AH33KNDSXY
+
+cellranger count --localcores=24 --localmem=60 --id=cellRange_gRNA_mutation \
+--transcriptome=/home/bio-longyk/Jun_test_RNA_seq/Massage/cellRange_ref/mm10 \
+--fastqs=/home/bio-longyk/Jun_test_RNA_seq/Massage/data/ \
+--expect-cells=10000 \
+--sample S034_sustc-A_MSGMP2_AHYHHHDSXX,S161_sustc-A_MSGMP2N_AHYHJGDSXX
