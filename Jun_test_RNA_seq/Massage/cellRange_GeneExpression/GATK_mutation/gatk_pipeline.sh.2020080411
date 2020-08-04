@@ -1,0 +1,27 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N gatk_10test
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=20:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+#picard BedToIntervalList I=gRNA_target_whole_genome_gatk.bed O=gRNA_target.interval_list \
+#SD=/home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.dict
+
+
+samtools sort -@24 -o ${id}_sorted.bam ../bamsplit/Splited_bamfile/${id}.bam
+samtools index ../bamsplit/Splited_bamfile/${id}_sorted.bam 
+
+picard AddOrReplaceReadGroups I=${id}_sorted.bam O=${id}_sorted.Addflag.bam SO=coordinate RGID=id RGLB=library RGPL=Illumina RGPU=machine RGSM=mouse        
+
+#picard -Xmx100g MarkDuplicates I=${id}_sorted.Addflag.bam O=${id}_sorted.Addflag.dedupped.bam CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT M=${id}.metrics
+
+## SplitNCigar reads
+gatk SplitNCigarReads -R /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa \
+-I ${id}_sorted.Addflag.bam -O ${id}_sorted.Addflag.split.bam
+
+gatk HaplotypeCaller -R /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa \
+-I ${id}_sorted.Addflag.split.bam -O ${id}.HC.vcf -L gRNA_target.interval_list

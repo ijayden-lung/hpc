@@ -1,0 +1,11 @@
+#!/bin/bash
+#PBS -q cal-s
+#PBS -N QC
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=10:00:00
+
+cd $PBS_O_WORKDIR
+
+fastqc -t 24 -o fastqc *_001.fastq.gz
+

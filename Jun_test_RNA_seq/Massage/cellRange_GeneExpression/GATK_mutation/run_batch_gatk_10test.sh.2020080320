@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cat 10test_list.txt | while read id
+do
+        echo $id
+        qsub -v id=$id ./gatk_pipeline.sh
+done
