@@ -1,0 +1,89 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N PCR2_umitools
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=24:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR 
+
+#umi_tools whitelist --stdin S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R1_001.fastq.gz \
+#--bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \
+#--method=umis \
+#--plot-prefix=PCR2_umitool_combined_1 \
+#--log2stderr > gRNA_mutation_combined_whitelist_1.txt
+
+#umi_tools extract --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \
+#--stdin S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R1_001.fastq.gz \
+#--stdout S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R1_001_extracted.fastq.gz \
+#--read2-in S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R2_001.fastq.gz \
+#--read2-out S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R2_001_extracted.fastq.gz \
+#--filter-cell-barcode --error-correct-cell \
+#--whitelist=gRNA_mutation_combined_whitelist_1.txt
+
+#umi_tools whitelist --stdin S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R1_001.fastq.gz \
+#--bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \
+#--method=umis \
+#--plot-prefix=PCR2_umitool_combined_2 \
+#--log2stderr > gRNA_mutation_combined_whitelist_2.txt
+
+#umi_tools extract --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNN \
+#--stdin S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R1_001.fastq.gz \
+#--stdout S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R1_001_extracted.fastq.gz \
+#--read2-in S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R2_001.fastq.gz \
+#--read2-out S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R2_001_extracted.fastq.gz \
+#--filter-cell-barcode --error-correct-cell \
+#--whitelist=gRNA_mutation_combined_whitelist_2.txt
+
+# Adaptor trimming and TSO trimming
+#/home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33 -a AGATCGGAAGAGC --paired --clip_R1 13 --fastqc -gzip \
+#S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R1_001_extracted.fastq S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R2_001_extracted.fastq 
+
+#/home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33 -a AGATCGGAAGAGC --paired --clip_R1 13 --fastqc -gzip \
+#S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R1_001_extracted.fastq S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R2_001_extracted.fastq
+
+
+# Mapping using STAR 
+#dir1='/home/bio-longyk/Jun_test_RNA_seq/Massage/mutation_gRNA_lib/STAR_index'
+#mkdir $dir1
+
+#/home/bio-longyk/Jun_test_RNA_seq/tools/STAR-2.7.3a/bin/Linux_x86_64_static/STAR \
+#--runMode genomeGenerate --runThreadN 24 --genomeDir $dir1 \
+#--genomeFastaFiles /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa \
+#--sjdbGTFfile /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.100.gtf \
+#--sjdbOverhang 149
+
+#/home/bio-longyk/Jun_test_RNA_seq/tools/STAR-2.7.3a/bin/Linux_x86_64_static/STAR \
+#--runThreadN 12 --genomeDir $dir1 \
+#--readFilesIn S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R1_001_extracted_val_1.fq.gz,S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R1_001_extracted_val_1.fq.gz \
+#S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R2_001_extracted_val_2.fq.gz,S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R2_001_extracted_val_2.fq.gz \
+#--readFilesCommand zcat \
+#--outFilterMultimapNmax 1 \
+#--outSAMtype BAM SortedByCoordinate \
+#--quantMode GeneCounts \
+#--twopassMode Basic \
+#--outFileNamePrefix mutation_mapping 
+#(--outSAMattrRGline) ## need to add more variance for different analysis 
+
+########################### Wrong ID for gatk ###########################################
+#samtools view -@24 -S -b mutation_mappingAligned.out.sam > mutation_mappingAligned.out.bam
+#samtools sort -@24 -o mutation_mappingAligned.out.sorted.bam mutation_mappingAligned.out.bam
+#picard MarkDuplicates -Xmx64g I=mutation_mappingAligned.out.sorted.bam O=mutation_mappingAligned.out.sorted.markdup.bam M=mappingAligned.out.sorted.markdup.txt REMOVE_DUPLICATES=true
+#picard BuildBamIndex -Xmx64g I=mutation_mappingAligned.out.sorted.markdup.bam
+#samtools flagstat -@ 24 mutation_mappingAligned.out.sorted.markdup.bam > mutation_mappingAligned.out.sorted.markdup.stat
+
+#sambamba markdup --overflow-list-size 600000  --tmpdir='./'  -r mutation_mappingAligned.sortedByCoord.out.bam mutation_mappingAligned_rmd.bam
+
+#picard AddOrReplaceReadGroups I=mutation_mappingAligned.sortedByCoord.out.bam O=mutation_mappingAligned.sorted.Addflag.bam SO=coordinate RGID=id RGLB=library RGPL=Illumina RGPU=machine RGSM=mouse
+
+#picard -Xmx100g MarkDuplicates I=mutation_mappingAligned.sorted.Addflag.bam O=mutation_mappingAligned.sorted.Addflag.dedupped.bam CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT M=mutation_mappingAligned.metrics
+
+## SplitNCigar reads 
+#gatk SplitNCigarReads -R /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa -I mutation_mappingAligned.sorted.Addflag.dedupped.bam  -O mutation_mappingAligned.sorted.Addflag.dedupped.split.bam
+
+#gatk HaplotypeCaller -R /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa -I mutation_mappingAligned.sorted.Addflag.dedupped.split.bam -O mutation_mapping.HC.vcf
+
+############################# 22 Transcripts as reference ###########################
+STAR --runMode genomeGenerate --runThreadN 24 --genomeDir ./22gene_genomeIndex --genomeFastaFiles 22genes_transcripts_ref.fasta --genomeSAindexNbases 10
+
