@@ -85,5 +85,13 @@ cd $PBS_O_WORKDIR
 #gatk HaplotypeCaller -R /home/bio-longyk/Jun_test_RNA_seq/reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa -I mutation_mappingAligned.sorted.Addflag.dedupped.split.bam -O mutation_mapping.HC.vcf
 
 ############################# 22 Transcripts as reference ###########################
-STAR --runMode genomeGenerate --runThreadN 24 --genomeDir ./22gene_genomeIndex --genomeFastaFiles 22genes_transcripts_ref.fasta --genomeSAindexNbases 10
+#STAR --runMode genomeGenerate --runThreadN 24 --genomeDir ./22gene_genomeIndex --genomeFastaFiles 22genes_transcripts_ref.fasta --genomeSAindexNbases 10
 
+
+STAR --runThreadN 12 --genomeDir ./22gene_genomeIndex \
+--readFilesIn S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R1_001_extracted_val_1.fq.gz,S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R1_001_extracted_val_1.fq.gz \
+S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R2_001_extracted_val_2.fq.gz,S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R2_001_extracted_val_2.fq.gz \
+--readFilesCommand zcat \
+--outFilterMultimapNmax 1 \
+--outSAMtype BAM SortedByCoordinate \
+--outFileNamePrefix 22genes_mapping
