@@ -1,0 +1,32 @@
+import pysam
+import csv
+
+cluster_dict = {}
+with open('barcode_test.csv') as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    #skip header
+    header = next(csv_reader)
+    for row in csv_reader:
+        cluster_dict[row[0]] = row[1]
+
+clusters = set(x for x in cluster_dict.values())
+
+
+fin = pysam.AlignmentFile("merged.bam", "rb")
+
+# open the number of bam files as the same number of clusters, and map the out file handler to the cluster id, write to a bam with wb
+fouts_dict = {}
+for cluster in clusters:
+    fout = pysam.AlignmentFile(cluster + "_bwa.bam", "wb", template = fin)
+    fouts_dict[cluster] = fout
+
+for read in fin:
+    tags = read.qname
+    cb = tags.split("_")[1]
+    if cb in clusters:
+        fouts_dict[cb].write(read)
+
+## do not forget to close the files
+fin.close()
+for fout in fouts_dict.values():
+    fout.close()
