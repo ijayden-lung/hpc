@@ -1,0 +1,34 @@
+#PBS -q ser
+#PBS -N gatk_10test
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=20:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+############## BWA alignment ############
+bwa mem -t 24 -M -Y -R '@RG\tID:id\tSM:mouse\tLB:Library\tPL:Illumina' ./bwa_index/22genes_transcripts_ref.fasta \
+../S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R1_001_extracted_val_1.fq.gz \
+../S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R2_001_extracted_val_2.fq.gz
+
+bwa mem -t 24 -M -Y -R '@RG\tID:id\tSM:mouse\tLB:Library\tPL:Illumina' ./bwa_index/22genes_transcripts_ref.fasta \
+../S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R1_001_extracted_val_1.fq.gz \                                      
+../S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R2_001_extracted_val_2.fq.gz
+
+#picard BedToIntervalList I=../gRNA_22transcripts_location.bed O=gRNA_22transcripts_location.interval_list \
+#SD=../22genes_transcripts_ref.dict
+
+
+#samtools sort -@24 -o AAACCTGAGCTGAAAT_sorted.bam AAACCTGAGCTGAAAT.bam
+#samtools index AAACCTGAGCTGAAAT_sorted.bam
+
+#picard AddOrReplaceReadGroups I=AAACCTGAGCTGAAAT_sorted.bam O=AAACCTGAGCTGAAAT_sorted.Addflag.bam SO=coordinate RGID=id RGLB=library RGPL=Illumina RGPU=machine RGSM=mouse
+
+#picard -Xmx100g MarkDuplicates I=${id}_sorted.Addflag.bam O=${id}_sorted.Addflag.dedupped.bam CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT M=AAACCTGAGCTGAAAT.metrics
+
+## SplitNCigar reads
+#gatk SplitNCigarReads -R ../22genes_transcripts_ref.fasta \
+#-I AAACCTGAGCTGAAAT_sorted.Addflag.bam -O AAACCTGAGCTGAAAT_sorted.Addflag.split.bam
+
+#gatk HaplotypeCaller -R ../22genes_transcripts_ref.fasta \
+#-I AAACCTGAGCTGAAAT_sorted.Addflag.split.bam -O AAACCTGAGCTGAAAT.HC.vcf -L gRNA_22transcripts_location.interval_list
