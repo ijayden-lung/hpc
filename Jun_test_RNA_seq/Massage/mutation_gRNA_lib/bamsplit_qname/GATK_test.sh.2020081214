@@ -23,7 +23,7 @@ cd $PBS_O_WORKDIR
 
 cat barcode_test.csv | while read line
 do
-    bc=`echo $line | awk -F, '{print $2}'`
+    bc=$`echo $line | awk -F, '{print $2}'`
     samtools sort -@24 -o $bc_bwa_sorted.bam $bc_bwa.bam
     samtools index $bc_bwa_sorted.bam
 

@@ -21,16 +21,14 @@ cd $PBS_O_WORKDIR
 #SD=../22genes_transcripts_ref.dict
 
 
-cat barcode_test.csv | while read line
-do
-    bc=`echo $line | awk -F, '{print $2}'`
-    samtools sort -@24 -o $bc_bwa_sorted.bam $bc_bwa.bam
-    samtools index $bc_bwa_sorted.bam
+for bc in `less /home/bio-longyk/Jun_test_RNA_seq/Massage/mutation_gRNA_lib/bamsplit_qname/barcode.list`;do
+    samtools sort -@ 24 -o ${bc}_bwa_sorted.bam ${bc}_bwa.bam
+    samtools index ${bc}_bwa_sorted.bam
 
-    #picard AddOrReplaceReadGroups I=AAACCTGAGCTGAAAT_bwa_sorted.bam O=AAACCTGAGCTGAAAT_bwa_sorted.Addflag.bam SO=coordinate RGID=id RGLB=library RGPL=Illumina RGPU=machine RGSM=mouse
-    #picard -Xmx100g MarkDuplicates I=${id}_sorted.Addflag.bam O=${id}_sorted.Addflag.dedupped.bam CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT M=AAACCTGAGCTGAAAT.metrics
+#    picard AddOrReplaceReadGroups I=AAACCTGAGCTGAAAT_bwa_sorted.bam O=AAACCTGAGCTGAAAT_bwa_sorted.Addflag.bam SO=coordinate RGID=id RGLB=library RGPL=Illumina RGPU=machine RGSM=mouse
+#    picard -Xmx100g MarkDuplicates I=${id}_sorted.Addflag.bam O=${id}_sorted.Addflag.dedupped.bam CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT M=AAACCTGAGCTGAAAT.metrics
 
-    ## SplitNCigar reads
-    #gatk SplitNCigarReads -R ../22genes_transcripts_ref.fasta -I $bc_sorted.Addflag.bam -O $bc_sorted.Addflag.split.bam
-    gatk HaplotypeCaller -R ../22genes_transcripts_ref.fasta -I $bc_bwa_sorted.bam -O $bc_bwa.HC.vcf -L gRNA_22transcripts_location.interval_list
+## SplitNCigar reads
+#gatk SplitNCigarReads -R ../22genes_transcripts_ref.fasta -I $bc_sorted.Addflag.bam -O $bc_sorted.Addflag.split.bam
+    gatk HaplotypeCaller -R ../22genes_transcripts_ref.fasta -I ${bc}_bwa_sorted.bam -O ${bc}_bwa.HC.vcf -L gRNA_22transcripts_location.interval_list
 done 
