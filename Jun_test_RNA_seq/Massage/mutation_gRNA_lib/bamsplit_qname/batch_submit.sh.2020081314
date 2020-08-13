@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cat ID_list.txt | while read id
+do
+        echo $id
+        qsub -v id=$id ./run_bamsplit_python.sh
+done
