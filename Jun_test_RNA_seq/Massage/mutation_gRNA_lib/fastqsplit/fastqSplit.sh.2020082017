@@ -6,14 +6,15 @@
 #PBS -l walltime=24:00:00
 #PBS -V
 
-#cd $PBS_O_WORKDIR
+cd $PBS_O_WORKDIR
 
-cat primer_sequence.txt | while read line
-do
-    name=`echo $line | awk '{print $1}'`
-    seq=`echo $line | awk '{print $2}'`
-    echo $name,$seq
-    grep -B 1 -h --no-group-separator '$seq' ../*_R2_001_extracted_val_2.fq > ${name}_2.fasta
-    #cat ../*_R2_001_extracted_val_2.fq | grep $seq -B 1 -A 2 -h --no-group-separator > ${name}_2.fastq
-done
+#cat primer_sequence.txt | while read line
+#do
+#    name=`echo $line | awk '{print $1}'`
+#    seq=`echo $line | awk '{print $2}'`
+#    echo $name,$seq
+#    grep -B 1 -h --no-group-separator '$seq' ../*_R2_001_extracted_val_2.fq > ${name}_2.fasta
+#    #cat ../*_R2_001_extracted_val_2.fq | grep $seq -B 1 -A 2 -h --no-group-separator > ${name}_2.fastq
+#done
 
+sed -i '1,2d' *_2.fasta
