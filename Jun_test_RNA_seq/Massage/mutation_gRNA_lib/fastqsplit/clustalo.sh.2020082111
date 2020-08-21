@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N clustalo
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=24:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/clustal-omega-1.2.4/bin/clustalo -i klf2_test.fasta -t DNA --threads 24 --outfmt=clustal --residuenumber --wrap=300 \
+-o klf2_test_clustlo.aln
