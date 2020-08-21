@@ -1,0 +1,6 @@
+cat primer_sequence.txt | while read line
+do
+    name=`echo $line | awk '{print $1}'`
+    echo $name
+    qsub -v name=$name fastqSplit.sh
+done
