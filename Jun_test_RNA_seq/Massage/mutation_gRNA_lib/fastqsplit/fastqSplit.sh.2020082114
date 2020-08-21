@@ -21,8 +21,5 @@ cd $PBS_O_WORKDIR
 #/home/bio-longyk/Jun_test_RNA_seq/tools/muscle3.8.31_i86linux64 -in klf2_test.fasta -out kl2_test.afa
 #/home/bio-longyk/Jun_test_RNA_seq/tools/muscle3.8.31_i86linux64 -in klf2_test.fasta -clwout kl2_test.aln ## The MUSCLE is too slow and not suitable for the trail ##
 
-cat primer_sequence.txt | while read line
-do
-    name=`echo $line | awk '{print $1}'`
-    /home/bio-longyk/Jun_test_RNA_seq/tools/clustal-omega-1.2.4/bin/clustalo -i ${name}_2.fasta -t DNA --threads 24 --outfmt=clustal --residuenumber --wrap=300 -o ${name}_clustlo.aln
-done
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/clustal-omega-1.2.4/bin/clustalo -i ${name}_2.fasta -t DNA --threads 24 --outfmt=clustal --residuenumber --wrap=300 -o ${name}_clustlo.aln
