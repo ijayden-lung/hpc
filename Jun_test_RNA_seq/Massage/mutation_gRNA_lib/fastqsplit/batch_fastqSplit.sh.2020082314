@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cat primer_sequence.txt | while read id
+do
+    GeneID=`echo $id | awk '{print $1}'`
+    echo $GeneID
+    qsub -v GeneID=$GeneID ./fastqSplit.sh
+done
