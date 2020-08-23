@@ -1,0 +1,33 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N fastqSplit
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=48:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+#cat primer_sequence.txt | while read line
+#do
+#    name=`echo $line | awk '{print $1}'`
+#    seq=`echo $line | awk '{print $2}'`
+#    echo $name,$seq
+#    grep -B 1 -h --no-group-separator '$seq' ../*_R2_001_extracted_val_2.fq > ${name}_2.fasta
+#    #cat ../*_R2_001_extracted_val_2.fq | grep $seq -B 1 -A 2 -h --no-group-separator > ${name}_2.fastq
+#done
+
+########################## To use MUSCLE align mutiple reads ############################
+#/home/bio-longyk/Jun_test_RNA_seq/tools/muscle3.8.31_i86linux64 -in klf2_test.fasta -out kl2_test.afa
+#time /home/bio-longyk/Jun_test_RNA_seq/tools/muscle3.8.31_i86linux64 -in AAACCTGCAAGGCTCC_klf2.fasta -out test_mus.afa -maxiters 1 -diags
+
+time /home/bio-longyk/Jun_test_RNA_seq/tools/clustal-omega-1.2.4/bin/clustalo -i AAACCTGAGCTACCTA_Mtf2.fasta \
+-t DNA --threads 24 --outfmt=clustal --residuenumber --wrap=300 -o test_Mtf2_clo.aln
+
+time /home/bio-longyk/Jun_test_RNA_seq/tools/clustal-omega-1.2.4/bin/clustalo -i AAACCTGCAAGGCTCC_Nanog.fasta \
+-t DNA --threads 24 --outfmt=clustal --residuenumber --wrap=300 -o test_Nanog_clo.aln
+
+
+
+#sed -i '1,2d' *_2.fasta
+
