@@ -1,0 +1,13 @@
+from Bio import AlignIO
+
+alignment = AlignIO.read("test_Mtf2_clo.aln", "clustal")
+for record in alignment:
+    print(record[1])
+
+#for r in range(0,len(alignment[1].seq)):
+#    if alignment[0,r] != alignment[1,r]:
+#        if alignment[0,r] != "-" and alignment[1,r] != "-":
+#            y=y+1
+#            print(r, alignment[0,r], alignment[1,r], y)
+#        else:
+#            y=0
