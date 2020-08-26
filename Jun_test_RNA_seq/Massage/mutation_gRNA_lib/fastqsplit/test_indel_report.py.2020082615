@@ -1,0 +1,32 @@
+from Bio import AlignIO
+import argparse
+
+def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("-i","--input", help="aln filn")
+    parser.add_argument("-o", "--outfile",default="output.txt", help="output file")
+    args = parser.parse_args()
+    input = args.input
+    outfile = args.outfile
+
+    clusdict = {}
+    with open(input) as alnfile:
+        for read in alnfile:
+            print "%s - %s" % (read.seq, read.id)
+
+if __name__=="__main__":
+    main()
+
+
+'''
+alignment = AlignIO.read("test_Mtf2_clo.aln", "clustal")
+print(alignment)
+
+#for r in range(0,len(alignment[1].seq)):
+#    if alignment[0,r] != alignment[1,r]:
+#        if alignment[0,r] != "-" and alignment[1,r] != "-":
+#            y=y+1
+#            print(r, alignment[0,r], alignment[1,r], y)
+#        else:
+#            y=0
+'''
