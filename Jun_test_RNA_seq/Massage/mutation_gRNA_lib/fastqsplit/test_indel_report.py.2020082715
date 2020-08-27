@@ -1,0 +1,41 @@
+from Bio import AlignIO
+import argparse
+
+def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("-i","--input", help="aln filn")
+    parser.add_argument("-o", "--outfile",default="output.txt", help="output file")
+    args = parser.parse_args()
+    input = args.input
+    outfile = args.outfile
+
+    alignment = AlignIO.read(input, "clustal")
+    reflength = 0
+    for i in alignment[0]:
+        if i == "A" or i == "T" or i == "C" or i == "G":
+            reflength = reflength+1
+    #print(reflength)
+    
+    if alignment[0].seq.find("-") == -1:
+        for read in alignment[1:]:
+            s = str(read.seq)
+            length = len(s.replace("-",""))
+            print(length)
+        #print("no -")
+    else:
+        print("yes -")
+
+if __name__=="__main__":
+    main()
+
+
+'''
+To find SNP and indel between two reads alignment
+#for r in range(0,len(alignment[1].seq)):
+#    if alignment[0,r] != alignment[1,r]:
+#        if alignment[0,r] != "-" and alignment[1,r] != "-":
+#            y=y+1
+#            print(r, alignment[0,r], alignment[1,r], y)
+#        else:
+#            y=0
+'''
