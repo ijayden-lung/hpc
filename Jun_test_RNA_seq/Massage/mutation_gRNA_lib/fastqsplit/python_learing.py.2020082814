@@ -1,0 +1,17 @@
+from Bio import AlignIO
+
+alignment = AlignIO.read("test_Mtf2_clo.aln","clustal")
+
+occ = 0
+for read in alignment[1:]:
+    s = str(read.seq)
+    #count = s.count('-')
+    #print(count)
+    rev = s[::-1]
+    length = 0
+    for i in range(len(rev)):
+        if rev[i] == "-":
+            length = length +1
+        else:
+            break
+    print(length)        
