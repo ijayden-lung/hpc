@@ -1,0 +1,79 @@
+from Bio import AlignIO
+import argparse
+
+'''
+reflength is length of reference reads;
+length is real length of each read;
+symlen is length of symbol "-" at end of each reads
+
+The aim of the script is to calculate how long of indel in each read, so the formula is:
+    indelLen = reflength - length - symlen
+    insertionLen = length + symlen -reflength
+
+'''
+
+def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("-i","--input", help="aln filn")
+    parser.add_argument("-o", "--outfile",default="output.txt", help="output file")
+    args = parser.parse_args()
+    input = args.input
+    outfile = args.outfile
+
+    alignment = AlignIO.read(input, "clustal")
+    reflength = 0
+    for i in alignment[0]:
+        if i == "A" or i == "T" or i == "C" or i == "G":
+            reflength = reflength+1
+    #print(reflength)
+    
+    fout = open(outfile, "w")
+
+    if alignment[0].seq.find("-") == -1:
+        for read in alignment[1:]:
+            ### To calculate the real length of each read
+            s = str(read.seq)
+            length = len(s.replace("-",""))
+            ### To calculate length of "-" symbol at end of each read ###
+            rev = s[::-1]
+            symlen=0
+            for i in range(len(rev)):
+                if rev[i] == "-":
+                    symlen = symlen + 1
+                else:
+                    break
+            indelLen = reflength - length - symlen
+            #print(read.id, indelLen)
+            output = read.id + '\t' + '%d' %indelLen + '\t' + '%d' %length +'\n'
+            fout.write(output)
+    else:
+        for read in alignment[1:]:
+            s = str(read.seq)
+            length = len(s.replace("-",""))
+            rev = s[::-1]
+            symlen=0
+            for i in range(len(rev)):
+                if rev[i] == "-":
+                    symlen = symlen + 1
+                else:
+                    break
+            indelLen = length + symlen - reflength
+            output = read.id + '\t' + '%d' %indelLen+'\n'
+            fout.write(output)
+    
+    fout.close()
+
+if __name__=="__main__":
+    main()
+
+
+'''
+To find SNP and indel between two reads alignment
+#for r in range(0,len(alignment[1].seq)):
+#    if alignment[0,r] != alignment[1,r]:
+#        if alignment[0,r] != "-" and alignment[1,r] != "-":
+#            y=y+1
+#            print(r, alignment[0,r], alignment[1,r], y)
+#        else:
+#            y=0
+'''
