@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N mageck_prac
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=12:00:00
+
+cd $PBS_O_WORKDIR
+
+mageck count -l gRNA_KOLibrary.csv -n prac --sample-label T0_1,T0_2,T1_1,T1_2,T1_3,T1_4 --pdf-report \
+--fastq integrated_rawdata/T0-1_1.fq.gz \
+integrated_rawdata/T0-2_1.fq.gz \
+integrated_rawdata/T1-1_FKDL202578173-1a-23-AK4544_1.fq.gz \
+integrated_rawdata/T1-2_FKDL202578173-1a-13-AK4544_1.fq.gz \
+integrated_rawdata/T1-3_FKDL202578173-1a-5-AK4544_1.fq.gz \
+integrated_rawdata/T1-4_FKDL202578173-1a-4-AK4544_1.fq.gz 
