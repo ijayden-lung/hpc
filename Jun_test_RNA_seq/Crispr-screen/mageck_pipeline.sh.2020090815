@@ -1,0 +1,28 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N mageck_prac
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=12:00:00
+
+cd $PBS_O_WORKDIR
+
+#mageck count -l gRNA_KOLibrary.csv -n prac --sample-label T0_1,T0_2,T1_1,T1_2,T1_3,T1_4 --pdf-report \
+#--fastq integrated_rawdata/T0-1_1.fq.gz \
+#integrated_rawdata/T0-2_1.fq.gz \
+#integrated_rawdata/T1-1_FKDL202578173-1a-23-AK4544_1.fq.gz \
+#integrated_rawdata/T1-2_FKDL202578173-1a-13-AK4544_1.fq.gz \
+#integrated_rawdata/T1-3_FKDL202578173-1a-5-AK4544_1.fq.gz \
+#integrated_rawdata/T1-4_FKDL202578173-1a-4-AK4544_1.fq.gz 
+
+
+#mageck test -k Result_origin/prac.count_normalized.txt -t T1_1,T1_2,T1_3,T1_4 -c T0_1,T0_2 -n prac_rra --remove-zero both --remove-zero-threshold 0
+
+#mageck mle --threads 24 --count-table ./result_counts/prac.count_normalized.txt --design-matrix designmatrix_mageck.txt \
+#--norm-method control --control-sgrna gRNA_NClist.txt --output-prefix prac_mle
+
+mageck count -l gRNA_KOLibrary.csv -n HCT116 --sample-label T2_1,T2_2,T2_3,T1_1,T1_2,T1_3,T1_4 --pdf-report \
+--fastq HCT116_rawdata/T2-1_R1.fq.gz HCT116_rawdata/T2-2_R1.fq.gz HCT116_rawdata/T2-3_R1.fq.gz \
+integrated_rawdata/T1-1_FKDL202578173-1a-23-AK4544_1.fq.gz integrated_rawdata/T1-2_FKDL202578173-1a-13-AK4544_1.fq.gz \
+integrated_rawdata/T1-3_FKDL202578173-1a-5-AK4544_1.fq.gz integrated_rawdata/T1-4_FKDL202578173-1a-4-AK4544_1.fq.gz
+

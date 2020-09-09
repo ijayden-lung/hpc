@@ -1,0 +1,5 @@
+Sweave("HCT116_countsummary.Rnw");
+library(tools);
+
+texi2dvi("HCT116_countsummary.tex",pdf=TRUE);
+
