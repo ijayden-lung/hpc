@@ -51,7 +51,7 @@ cd $PBS_O_WORKDIR
 
 cat 1stgRNA_cells_list.txt | while read line
 do
-    bc=`echo $line | awk `'{print $1}'`
-    name=`echo $line | awk `'{print $2}'`
+    bc=`echo $line | awk '{print $1}'`
+    name=`echo $line | awk '{print $2}'`
     python mutation_searching.py -i ./${name}_clustalResult/${name}_${bc}.aln -o ./mutation_GATK_filtered_cells/${name}_${bc}.txt
 done
