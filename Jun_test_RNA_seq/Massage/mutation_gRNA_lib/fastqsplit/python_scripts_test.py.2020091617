@@ -1,0 +1,10 @@
+from Bio import AlignIO
+
+alignment = AlignIO.read("test_Mtf2_clo.aln","clustal")
+temps = str(alignment[0].seq)
+revref = temps[::-1]
+temp_len = 0
+for i in range(len(revref)):
+    if revref[i] == "-":
+        temp_len = temp + 1
+print(temp_len)
