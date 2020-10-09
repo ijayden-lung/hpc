@@ -1,0 +1,15 @@
+import numpy as np
+
+fout = open('GATK_SCcomb_result_counted.txt','w')
+with open('GATK_SCcomb_result.txt') as fin:
+    for line in fin:
+        perrowori = line.split("\t")[4]
+        perrowalt = line.split("\t")[5]
+        alterlen = 0
+        if '*' in perrowalt:
+            alterlen = len(perrowori) - 1
+        else:
+            alterlen = len(perrowori) - len(perrowalt)
+        outperrow = '%d' %alterlen + '\t' +line
+        fout.write(outperrow)
+    fout.close
