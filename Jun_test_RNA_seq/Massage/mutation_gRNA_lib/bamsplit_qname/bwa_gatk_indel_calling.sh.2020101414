@@ -1,0 +1,38 @@
+#PBS -q ser
+#PBS -N gatk_10test
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=20:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+############## BWA alignment ############
+#bwa mem -t 24 -M -Y -R '@RG\tID:id\tSM:mouse\tLB:Library\tPL:Illumina' ./bwa_index/22genes_transcripts_ref.fasta \
+#../S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R1_001_extracted_val_1.fq.gz \
+#../S034_sustc-A_MSGMP2_AHYHHHDSXX_S3_L001_R2_001_extracted_val_2.fq.gz
+
+#bwa mem -t 24 -M -Y -R '@RG\tID:id\tSM:mouse\tLB:Library\tPL:Illumina' ./bwa_index/22genes_transcripts_ref.fasta \
+#../S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R1_001_extracted_val_1.fq.gz \                                      
+#../S161_sustc-A_MSGMP2N_AHYHJGDSXX_S1_L002_R2_001_extracted_val_2.fq.gz
+
+#samtools merge -@ 24 merged.bam S034.bam S161.bam 
+
+#picard BedToIntervalList I=../gRNA_22transcripts_location.bed O=gRNA_22transcripts_location.interval_list \
+#SD=../22genes_transcripts_ref.dict
+
+for bc in `less /home/bio-longyk/Jun_test_RNA_seq/Massage/mutation_gRNA_lib/bamsplit_qname/barcode.list${id}`;do
+     samtools sort -@ 24 -o ${bc}_bwa_sorted.bam ${bc}_bwa.bam
+     samtools index ${bc}_bwa_sorted.bam
+
+     #picard AddOrReplaceReadGroups I=AAACCTGAGCTGAAAT_bwa_sorted.bam O=AAACCTGAGCTGAAAT_bwa_sorted.Addflag.bam SO=coordinate RGID=id RGLB=library RGPL=Illumina RGPU=machine RGSM=mouse
+     #picard -Xmx100g MarkDuplicates I=${id}_sorted.Addflag.bam O=${id}_sorted.Addflag.dedupped.bam CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT M=AAACCTGAGCTGAAAT.metrics
+
+     #SplitNCigar reads
+     #gatk SplitNCigarReads -R ../22genes_transcripts_ref.fasta -I $bc_sorted.Addflag.bam -O $bc_sorted.Addflag.split.bam
+     gatk HaplotypeCaller -R ../../22genes_transcripts_ref.fasta -I ${bc}_bwa_sorted.bam -O ${bc}_bwa.HC.vcf -L ../gRNA_22transcripts_location.interval_list
+     gatk SelectVariants -select-type INDEL -V ${bc}_bwa.HC.vcf -O ${bc}_bwa.indel.HC.vcf
+done 
+
+
+fgrep -f ../../../matching_bc_gRNA/22_gene.list.txt *_bwa.indel.HC.vcf > GATK_SCcomb_result_temp.txt
+
