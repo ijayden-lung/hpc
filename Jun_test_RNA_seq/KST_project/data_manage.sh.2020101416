@@ -1,0 +1,18 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N read_manage
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=05:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+cat readSplit_bc_updata.txt | while read line 
+do
+    name=`echo $line | awk '{print $1}'`
+    cutadapt -u 8 -o ${name}_timmed_1_R2.fastq  ${name}_1_R2.fastq
+    cutadapt -u 8 -o ${name}_timmed_2_R2.fastq  ${name}_2_R2.fastq
+    cat ${name}_1_R1.fastq ${name}_timmed_2_R2.fastq > ${name}.R1.fastq
+    cat ${name}_timmed_1_R2.fastq ${name}_2_R1.fastq > ${name}.R2.fastq
+done
