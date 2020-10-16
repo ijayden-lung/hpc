@@ -1,0 +1,52 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N read_manage
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=05:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+mkdir intergated_data
+cd ./intergated_data
+
+fastq-multx -B readSplit_bc_updata.txt -m 1 -b ../PE1_val_1.fq ../PE2_val_2.fq -o %_1_R1.fastq -o %_1_R2.fastq
+fastq-multx -B readSplit_bc_updata.txt -m 1 -b ../PE2_val_2.fq ../PE1_val_1.fq -o %_2_R1.fastq -o %_2_R2.fastq
+
+cat ../readSplit_bc_updata.txt | while read line 
+do
+    name=`echo $line | awk '{print $1}'`
+    cutadapt -u 8 -o ${name}_timmed_1_R2.fastq  ${name}_1_R2.fastq
+    cutadapt -u 8 -o ${name}_timmed_2_R2.fastq  ${name}_2_R2.fastq
+    cat ${name}_1_R1.fastq ${name}_timmed_2_R2.fastq > ${name}.R1.fastq
+    cat ${name}_timmed_1_R2.fastq ${name}_2_R1.fastq > ${name}.R2.fastq
+done
+
+# seqkit locate --degenerate --ignore-case --pattern-file gRNA.fasta ../reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa > gRNA_location.txt
+
+#for fq1 in ./integrated_data/*.R1.fastq;do
+#    fq2="./integrated_data/$(basename "$fq1" .R1.fastq)_2.fq.gz"
+#    if [! -f "$fq2"]; then
+#        printf 'Missing file "%s"\n' "$fq2"
+#        continue
+#    fi
+#        /home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33 --fastqc -a AGATCGGAAGAGC --dont_gzip --paired --length 30 -o ./NSUN2-KD $fq1 $fq2
+#done
+
+#cat readSplit_bc_updata.txt | while read line
+#do
+#    name=`echo $line | awk '{print $1}'`
+#    echo $name
+#    bwa mem -t 24 -M -Y -R '@RG\tID:id\tSM:mouse\tLB:Library\tPL:Illumina' ./bwa_index/reference.fasta ./integrated_data/${name}.R1.fastq ./integrated_data/${name}.R2.fastq > ./results/${name}.sam
+#    cd ./results/
+#    samtools view -b -S ${name}.sam > ${name}.bam
+#    samtools sort -@24 -o ${name}_sorted.bam ${name}.bam
+#    samtools index ${name}_sorted.bam
+#    gatk HaplotypeCaller -R ../reference.fasta -I ${name}_sorted.bam -O ${name}.HC.vcf
+#    gatk SelectVariants -select-type INDEL -V ${name}.HC.vcf -O ${name}.indel.HC.vcf
+#    cd ..
+#done
+
+
+#gatk HaplotypeCaller -R genome_reference.fasta -I ./test.bam -O test.HC.vcf
