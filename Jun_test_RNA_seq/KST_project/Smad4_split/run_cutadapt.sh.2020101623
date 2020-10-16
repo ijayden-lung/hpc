@@ -1,0 +1,18 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N read_manage
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=24:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+cat list.txt | while read line
+do
+    #cutadapt -u 8 -o temp.fastq S_${line}.fastq
+    #cutadapt -u -8 -o S_${line}_trimmed.fastq temp.fastq
+    #rm temp.fastq
+    /home/bio-longyk/Jun_test_RNA_seq/tools/clustal-omega-1.2.4/bin/clustalo -i ./fastafile/S_${line}_trimmed.fasta \
+    -t DNA --threads 24 --outfmt=clustal --residuenumber --wrap=300 --cluster-size=2000 -o ./fastafile/S_${line}.aln
+done
