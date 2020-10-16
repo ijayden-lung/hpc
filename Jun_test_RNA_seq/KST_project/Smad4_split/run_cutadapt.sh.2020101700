@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N read_manage
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=24:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+cat list.txt | while read line
+do
+    #cutadapt -u 8 -o temp.fastq S_${line}.fastq
+    #cutadapt -u -8 -o S_${line}_trimmed.fastq temp.fastq
+    #rm temp.fastq
+done
