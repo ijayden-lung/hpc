@@ -1,0 +1,80 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N read_manage
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=05:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+#../tools/pear-0.9.11-linux-x86_64/bin/pear -j 24 -f PE1_val_1.fq.gz -r PE2_val_2.fq.gz -o Merged_reads
+
+#fastq-multx -B ../readSplit_bc_updata.txt -m 1 -b ../PE1_val_1.fq ../PE2_val_2.fq -o %_1_R1.fastq -o %_1_R2.fastq
+#fastq-multx -B ../readSplit_bc_updata.txt -m 1 -b ../PE2_val_2.fq ../PE1_val_1.fq -o %_2_R1.fastq -o %_2_R2.fastq
+
+#cat ../readSplit_bc_updata.txt | while read line 
+#do
+#    name=`echo $line | awk '{print $1}'`
+#    echo $name
+#    #cutadapt -u 8 -o ${name}_trimmed_1.R2.fastq ${name}_1_R2.fastq
+#    #cutadapt -u 8 -o ${name}_trimmed_2.R2.fastq ${name}_2_R2.fastq
+#    #cat ${name}_1_R1.fastq ${name}_trimmed_2.R2.fastq > ${name}.R1.fastq
+#    #cat ${name}_trimmed_1.R2.fastq ${name}_2_R1.fastq > ${name}.R2.fastq
+#    grep '^AAGTCA' ${name}.R1.fastq > T_1.R1.fq
+#    grep '^CTGTGG' ${name}.R1.fastq > T_2.R1.fq
+#    cat T_1.R1.fq T_2.R1.fq > T_${name}.R1.fastq
+#    grep '^AAGTCA' ${name}.R2.fastq > T_1.R2.fq
+#    grep '^CTGTGG' ${name}.R2.fastq > T_2.R2.fq
+#    cat T_1.R2.fq T_2.R2.fq > T_${name}.R2.fastq
+#    rm T_1.R1.fq T_2.R1.fq T_1.R2.fq T_2.R2.fq
+#
+#    grep '^GTTTCT' ${name}.R1.fastq > S_1.R1.fq
+#    grep '^TTACAC' ${name}.R1.fastq > S_2.R1.fq
+#    cat S_1.R1.fq S_2.R1.fq > S_${name}.R1.fastq
+#    grep '^GTTTCT' ${name}.R2.fastq > S_1.R2.fq
+#    grep '^TTACAC' ${name}.R2.fastq > S_2.R2.fq
+#    cat S_1.R2.fq S_2.R2.fq > S_${name}.R2.fastq
+#    rm S_1.R1.fq S_2.R1.fq S_1.R2.fq S_2.R2.fq
+#done
+
+seqkit locate --degenerate --ignore-case --pattern-file gRNA.fasta ../reference/mouse/Mus_musculus.GRCm38.dna.primary_assembly.fa > gRNA_location.txt
+
+#for fq1 in ./integrated_data/*.R1.fastq;do
+#    fq2="./integrated_data/$(basename "$fq1" .R1.fastq)_2.fq.gz"
+#    if [! -f "$fq2"]; then
+#        printf 'Missing file "%s"\n' "$fq2"
+#        continue
+#    fi
+#        /home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33 --fastqc -a AGATCGGAAGAGC --dont_gzip --paired --length 30 -o ./NSUN2-KD $fq1 $fq2
+#done
+
+#cat readSplit_bc_updata.txt | while read line
+#do
+#    name=`echo $line | awk '{print $1}'`
+#    echo $name
+#    bwa mem -t 24 -M -Y -R '@RG\tID:id\tSM:mouse\tLB:Library\tPL:Illumina' ./bwa_index/reference.fasta ./integrated_data/${name}.R1.fastq ./integrated_data/${name}.R2.fastq > ./results/${name}.sam
+#    cd ./results/
+#    samtools view -b -S ${name}.sam > ${name}.bam
+#    samtools sort -@24 -o ${name}_sorted.bam ${name}.bam
+#    samtools index ${name}_sorted.bam
+#    gatk HaplotypeCaller -R ../reference.fasta -I ${name}_sorted.bam -O ${name}.HC.vcf
+#    gatk SelectVariants -select-type INDEL -V ${name}.HC.vcf -O ${name}.indel.HC.vcf
+#    cd ..
+#done
+
+#gatk HaplotypeCaller -R genome_reference.fasta -I ./test.bam -O test.HC.vcf
+
+#grep -A 2 -B 1 '^CTAAACGGAAGTCA' out.extendedFrags.fastq | grep -A 2 -B 1 'CCACAGACTGTGGG$' > temp_1.fastq
+#grep -A 2 -B 1 '^CCCACAGTCTGTGG' out.extendedFrags.fastq | grep -A 2 -B 1 'TGACTTCCGTTTAG$' > temp_2.fastq
+
+
+
+
+
+
+
+
+
+
+
+

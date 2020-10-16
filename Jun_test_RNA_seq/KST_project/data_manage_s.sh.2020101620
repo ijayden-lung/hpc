@@ -1,0 +1,111 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N read_manage
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=05:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+grep -A 2 -B 1 --no-group-separator '^CTAAACGGGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAAACTGTGGG$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^CCCACAGTTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACCCGTTTAG$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^CTAAACGGGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAACTGAACGA$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^TCGTTCAGTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACCCGTTTAG$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_KS.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^CTAAACGGGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAATGGACAGC$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^GCTGTCCATTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACCCGTTTAG$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_KST.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^CTAAACGGGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAACAACTATA$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^TATAGTTGTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACCCGTTTAG$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_KT.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^CTAAACGGGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAAACCTTACA$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^TGTAAGGTTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACCCGTTTAG$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_KTS.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^CTAAACGGGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAAGAGCCTCG$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^CGAGGCTCTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACCCGTTTAG$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K_KS_KST_D0.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^ACGTCCCTGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAAACTGTGGG$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^CCCACAGTTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACAGGGACGT$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K_KS_KST_D5.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^ACGTCCCTGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAACTGAACGA$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^TCGTTCAGTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACAGGGACGT$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K_KS_KST_D11.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^ACGTCCCTGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAATGGACAGC$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^GCTGTCCATTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACAGGGACGT$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K_KT_KTS_D0.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^ACGTCCCTGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAACAACTATA$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^TATAGTTGTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACAGGGACGT$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K_KT_KTS_D5.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^ACGTCCCTGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAAACCTTACA$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^TGTAAGGTTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACAGGGACGT$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K_KT_KTS_D11.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^ACGTCCCTGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAAGAGCCTCG$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^CGAGGCTCTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACAGGGACGT$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K_KS_KT_D0.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^AGTAGTCTGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAAACTGTGGG$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^CCCACAGTTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACAGACTACT$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K_KS_KT_D5.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^AGTAGTCTGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAACTGAACGA$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^TCGTTCAGTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACAGACTACT$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K_KS_KT_D11.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^AGTAGTCTGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAATGGACAGC$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^GCTGTCCATTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACAGACTACT$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K_KST_KTS_D0.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^AGTAGTCTGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAACAACTATA$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^TATAGTTGTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACAGACTACT$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K_KST_KTS_D5.fastq
+rm Stemp_*
+
+grep -A 2 -B 1 --no-group-separator '^AGTAGTCTGTTTCT' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'GTGTAAACCTTACA$' > Stemp_1.fastq
+grep -A 2 -B 1 --no-group-separator '^TGTAAGGTTTACAC' out.extendedFrags.fastq | grep -A 2 -B 1 --no-group-separator 'AGAAACAGACTACT$' > Stemp_2.fastq
+cat Stemp_2.fastq | while read L; do  echo $L; read L; echo "$L" | rev | tr "ATGC" "TACG" ; done | sed -e "s/\r//g" > Stemp_reverse_2.fastq
+cat Stemp_1.fastq Stemp_reverse_2.fastq > S_K_KST_KTS_D11.fastq
+rm Stemp_*
