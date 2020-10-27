@@ -1,0 +1,82 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N fastqSplit
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=05:00:00
+#PBS -V
+
+#cd $PBS_O_WORKDIR
+
+#cat primer_sequence.txt | while read line
+#do
+#    name=`echo $line | awk '{print $1}'`
+#    echo $name
+#    mkdir ${name}_clustalResult
+#    cp ./clustal_omega/${name}_* ${name}_clustalResult
+#    #grep -B 1 -h --no-group-separator '$seq' ../*_R2_001_extracted_val_2.fq > ${name}_2.fasta
+#    #cat ../*_R2_001_extracted_val_2.fq | grep $seq -B 1 -A 2 -h --no-group-separator > ${name}_2.fastq
+#done
+
+########################## To use Clustal Omega align mutiple reads ############################
+#/home/bio-longyk/Jun_test_RNA_seq/tools/muscle3.8.31_i86linux64 -in klf2_test.fasta -out kl2_test.afa
+#time /home/bio-longyk/Jun_test_RNA_seq/tools/muscle3.8.31_i86linux64 -in AAACCTGCAAGGCTCC_klf2.fasta -out test_mus.afa -maxiters 1 -diags
+
+#time /home/bio-longyk/Jun_test_RNA_seq/tools/clustal-omega-1.2.4/bin/clustalo -i AAACCTGAGCTACCTA_Mtf2.fasta \
+#-t DNA --threads 24 --outfmt=clustal --residuenumber --wrap=300 -o test_Mtf2_clo.aln
+
+
+#cat barcode_list.txt | while read bc
+#do
+#time /home/bio-longyk/Jun_test_RNA_seq/tools/clustal-omega-1.2.4/bin/clustalo -i ./${GeneID}_2.fasta.split/${GeneID}_2.id_${bc}.fasta \
+#-t DNA --threads 24 --outfmt=clustal --residuenumber --wrap=300 --cluster-size=2000 -o ./clustal_omega/${GeneID}_${bc}.aln
+#done
+
+#sed -i "1s/^/#/g" file.aln  ####### To add # symbol at begining of the first line in aln file
+#sed '$s/^/#/' file.aln      ####### To add # symbol at begining of the last line in aln file 
+
+########################## To split reads according to barcode ##########################
+#seqkit split --by-id --id-regexp "\_(.+)\_" ${GeneID}_2.fasta
+
+#cat primer_sequence.txt | while read line
+#do
+#    name=`echo $line | awk '{print $1}'`
+#    echo $name
+#    wc -l ${name}_clustalResult/* | sed '$d' > ./coverage/coverage_${name}.txt
+#    fgrep -f ./coverage/bc_${name}.txt ./coverage/coverage_${name}.txt > ./coverage/target_${name}.txt
+#    fgrep -vf ./coverage/bc_${name}.txt ./coverage/coverage_${name}.txt > ./coverage/notarget_${name}.txt
+#done
+
+#cut -f 2 test.output | sort | uniq -c | sed '1d' | sort -k1,1nr | sed 's/^/filename/' | head -n 2 > output
+
+#cat 1stgRNA_cells_list.txt | while read line
+#do
+#    bc=`echo $line | awk '{print $1}'`
+#    name=`echo $line | awk '{print $2}'`
+#    python mutation_searching.py -i ./${name}_clustalResult/${name}_${bc}.aln -o ./mutation_GATK_1stgRNA_filtered_cells/${name}_${bc}.txt
+#    cut -f 2 ./mutation_GATK_1stgRNA_filtered_cells/${name}_${bc}.txt | sort | uniq -c > temp_multialign/${name}_${bc}.list
+#done
+#cd temp_multialign
+#grep '' * > ../multiAlign_1stgRNA_filtered_mutation.txt
+#rm * 
+#cd ..
+
+#cat 1stgRNA_barcode.list | while read line
+#do
+#    bc=`echo $line | awk '{print $1}'`
+#    name=`echo $line | awk '{print $2}'`
+#    python mutation_searching.py -i ./${name}_clustalResult/${name}_${bc}.aln -o ./1stgRNA_MA_mutation/${name}_${bc}.txt
+#    cut -f 2 ./1stgRNA_MA_mutation/${name}_${bc}.txt | sort | uniq -c > temp_multialign/${name}_${bc}.list
+#done
+#cd temp_multialign
+#grep '' * > ../No_mutation_cell_detection.txt
+#rm *
+
+cat filtered_1st_gRNA_cells.txt | while read line
+do
+    bc=`echo $line | awk '{print $1}'`
+    name=`echo $line | awk '{print $2}'`
+    awk -F"_" '{print $2,$3}' 1stgRNA_MA_mutation/${name}_${bc}.txt | cut -f 1-2 | sort | uniq -c | awk '{print $4}' | sort | uniq -c > temp_multialign/${name}_${bc}.list
+done
+cd temp_multialign
+grep '' * > ../UMIcount.txt
