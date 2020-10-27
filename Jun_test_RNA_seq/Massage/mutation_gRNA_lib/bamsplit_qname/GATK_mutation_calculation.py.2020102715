@@ -1,0 +1,47 @@
+import numpy as np
+import sys
+
+#fout = open('GATK_SCcomb_result_counted.txt','w')
+
+#with open('GATK_SCcomb_result.txt') as fin:
+#    for line in fin:
+#        perrowori = line.split("\t")[4]
+#        perrowalt = line.split("\t")[5]
+#        alterlen = 0
+#        if '*' in perrowalt:
+#            alterlen = len(perrowori) - 1
+#        else:
+#            alterlen = len(perrowori) - len(perrowalt)
+#        outperrow = '%d' %alterlen + '\t' +line
+#        fout.write(outperrow)
+#    fout.close
+
+'''
+fout1 = open ('GATK_SCcomb_result_merged_counted.txt','w')
+result=[]
+with open('GATK_SCcomb_result_counted.txt','r') as fin:
+    for line in fin:
+        line = line.strip()
+        result.append(line)
+    #print(result[0].split("\t")[0])
+    for i in range(0,17369,1):
+        cell=result[i].split("\t")[1]
+        gRNA=result[i].split("\t")[2]
+        score=result[i].split("\t")[7]
+        indel=result[i].split("\t")[0]
+        for j in range(i+1,17369,1):
+            cell_last=result[j].split("\t")[1]
+            gRNA_last=result[j].split("\t")[2]
+            score_last=result[j].split("\t")[7]
+            indel_last=result[j].split("\t")[0]
+            if cell == cell_last and gRNA==gRNA_last:
+                #merged = int(indel) + int(indel_last)
+                print(cell,gRNA,score)
+            else:
+                break 
+        #        indel = result[i].split("\t")[0]
+        #outfile = indel + '\t' + cell + '\t' + gRNA
+        #print(indel)
+        #fout1.write(outfile)
+#fout1.close
+'''
