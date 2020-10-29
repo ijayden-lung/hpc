@@ -76,7 +76,7 @@ cat 1stgRNA_barcode.list | while read line
 do
     bc=`echo $line | awk '{print $1}'`
     name=`echo $line | awk '{print $2}'`
-    awk -F"_" '{print $2,$3}' 1stgRNA_MA_mutation/${name}_${bc}.txt | cut -f 1-2 | sort | uniq -c | awk '{print $4}' | sort | uniq -c > temp_multialign/${name}_${bc}.list
+    awk -F"_" '{print $2,$3}' 1stgRNA_MA_mutation/${name}_${bc}.txt | cut -f 1-2 | sort | uniq | wc -l > temp_multialign/${name}_${bc}.list
 done
 cd temp_multialign
 grep '' * > ../UMIcount.txt
