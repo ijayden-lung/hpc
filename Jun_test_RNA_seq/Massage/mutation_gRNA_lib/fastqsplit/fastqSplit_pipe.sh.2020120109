@@ -94,7 +94,7 @@ do
     bc=`echo $line | awk '{print $1}'`
     name=`echo $line | awk '{print $2}'`
 #    python mutation_searching.py -i ./${name}_clustalResult/${name}_${bc}.aln -o ./6990_all/${name}_${bc}.txt
-    awk -F"_" '{print $2,$3}' ./6990_all/${name}_${bc}.txt | cut -f 1-2 | sort | uniq | wc -l > temp_multialign/${name}_${bc}.list
+    awk -F"_" '{print $2,$3}' ./6990_all/${name}_${bc}.txt | cut -f 1-2 | sort | uniq -c > temp_multialign/${name}_${bc}.list
 done
 cd temp_multialign
 grep '' * > ../6990_UMIcount.txt
