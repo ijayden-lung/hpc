@@ -1,0 +1,18 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N GeneKO
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=10:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+mkdir Renamed_rawdata
+cat SampleRename.txt | while read line
+do
+    Newname=`echo $line | awk '{print $1}'`
+    Oldname=`echo $line | awk '{print $2}'`
+    mv ${Oldname}_R1_001.fastq.gz Renamed_rawdata/${Newname}_R1_001.fastq.gz
+    mv ${Oldname}_R2_001.fastq.gz Renamed_rawdata/${Newname}_R2_001.fastq.gz
+done
