@@ -1,0 +1,930 @@
+pdf(file='rra_T0vsT1D-4.pdf',width=4.5,height=4.5);
+gstable=read.table('rra_T0vsT1D-4.gene_summary.txt',header=T)
+# 
+#
+# parameters
+# Do not modify the variables beginning with "__"
+
+# gstablename='__GENE_SUMMARY_FILE__'
+startindex=3
+# outputfile='__OUTPUT_FILE__'
+targetgenelist=c("MRPL10","LARS2","EIF3L","DCPS","MRPS21","EIF2AK3","CMSS1","ZC3H14","HENMT1","PTCD3")
+# samplelabel=sub('.\\w+.\\w+$','',colnames(gstable)[startindex]);
+samplelabel='T1D_4_vs_T0_1,T0_2,T0_3 neg.'
+
+
+# You need to write some codes in front of this code:
+# gstable=read.table(gstablename,header=T)
+# pdf(file=outputfile,width=6,height=6)
+
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+######
+# function definition
+
+plotrankedvalues<-function(val, tglist, ...){
+  
+  plot(val,log='y',ylim=c(max(val),min(val)),type='l',lwd=2, ...)
+  if(length(tglist)>0){
+    for(i in 1:length(tglist)){
+      targetgene=tglist[i];
+      tx=which(names(val)==targetgene);ty=val[targetgene];
+      points(tx,ty,col=colors[(i %% length(colors)) ],cex=2,pch=20)
+      # text(tx+50,ty,targetgene,col=colors[i])
+    }
+    legend('topright',tglist,pch=20,pt.cex = 2,cex=1,col=colors)
+  }
+}
+
+
+
+plotrandvalues<-function(val,targetgenelist, ...){
+  # choose the one with the best distance distribution
+  
+  mindiffvalue=0;
+  randval=val;
+  for(i in 1:20){
+    randval0=sample(val)
+    vindex=sort(which(names(randval0) %in% targetgenelist))
+    if(max(vindex)>0.9*length(val)){
+      # print('pass...')
+      next;
+    }
+    mindiffind=min(diff(vindex));
+    if (mindiffind > mindiffvalue){
+      mindiffvalue=mindiffind;
+      randval=randval0;
+      # print(paste('Diff: ',mindiffvalue))
+    }
+  }
+  plot(randval,log='y',ylim=c(max(randval),min(randval)),pch=20,col='grey', ...)
+  
+  if(length(targetgenelist)>0){
+    for(i in 1:length(targetgenelist)){
+      targetgene=targetgenelist[i];
+      tx=which(names(randval)==targetgene);ty=randval[targetgene];
+      points(tx,ty,col=colors[(i %% length(colors)) ],cex=2,pch=20)
+      text(tx+50,ty,targetgene,col=colors[i])
+    }
+  }
+  
+}
+
+
+
+
+# set.seed(1235)
+
+
+
+pvec=gstable[,startindex]
+names(pvec)=gstable[,'id']
+pvec=sort(pvec);
+
+plotrankedvalues(pvec,targetgenelist,xlab='Genes',ylab='RRA score',main=paste('Distribution of RRA scores in \\n',samplelabel))
+
+# plotrandvalues(pvec,targetgenelist,xlab='Genes',ylab='RRA score',main=paste('Distribution of RRA scores in \\n',samplelabel))
+
+
+pvec=gstable[,startindex+1]
+names(pvec)=gstable[,'id']
+pvec=sort(pvec);
+
+plotrankedvalues(pvec,targetgenelist,xlab='Genes',ylab='p value',main=paste('Distribution of p values in \\n',samplelabel))
+
+# plotrandvalues(pvec,targetgenelist,xlab='Genes',ylab='p value',main=paste('Distribution of p values in \\n',samplelabel))
+
+
+
+# you need to write after this code:
+# dev.off()
+
+
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(136.97075647430984,123.97059497122517,112.96563680029583,0.0),c(99.54270092609727,128.4622831948203,147.08277543125766,0.0),c(226.95735811150178,185.95589245683777,166.79489997359116,0.0),c(712.7257386308564,743.8235698273511,686.8917244366982,0.0),c(166.43539594843463,182.36254187796166,136.4685545238473,0.0),c(86.80123520755681,149.12404902335783,145.56645815877044,0.0))
+targetgene="MRPL10"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(256.42199758562657,316.2148509410961,281.2768540463742,0.0),c(265.1817552671231,284.7730333759303,322.21742040352837,0.0),c(147.32319737062394,212.90602179840846,143.29198225003967,0.0),c(277.9232209856636,270.3996310604259,291.1329163175409,0.0),c(714.318421845674,790.5371273527402,679.3101380742621,182.6307699834647),c(272.3488297338021,244.34783936357425,323.73373767601555,448.56680346815887))
+targetgene="LARS2"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(523.1964360675672,492.2890293060246,476.1236235609784,554.3004071427963),c(230.1427245411369,184.1592171673997,208.49362496698893,41.65263175061475),c(529.5671689268374,509.357444555686,573.9260876364023,0.0),c(563.0135164380061,623.446325435002,638.369571717108,41.65263175061475),c(105.91343378536749,114.98721852403494,76.57402226060321,0.0),c(360.7427481561765,364.7250837559233,353.3019244895158,784.991906069278))
+targetgene="EIF3L"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(214.2158923929613,208.41433357481333,179.6835967897323,44.85668034681589),c(228.55004132631933,249.7378652318884,225.93127360059165,44.85668034681589),c(128.21099879281329,114.98721852403494,102.35141589288548,0.0),c(152.8975886224854,133.8523090631344,158.45515497491158,0.0),c(195.10369381515065,176.0741783649285,191.81413496962983,0.0),c(156.08295505212052,151.8190619575149,160.7296308836424,12.81619438480454))
+targetgene="DCPS"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(168.82442077066096,199.43095712762312,225.17311496434806,0.0),c(137.76709808171861,94.32545269549742,110.69116089156503,0.0),c(148.9158805854415,191.3459183251519,168.31121724607834,0.0),c(194.30735220774187,245.24617700829327,244.12708087043796,25.63238876960908),c(139.35978129653617,150.92072431279587,153.90620315745002,0.0),c(199.8817434596033,196.73594419346603,159.9714722473988,0.0))
+targetgene="MRPS21"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(112.28416664463772,74.56202451167891,91.73719498547513,64.08097192402269),c(35.03903072598624,16.170077604942414,30.326345449743847,54.46882613541929),c(398.9671453117978,420.42201772850274,435.9412158400678,397.30202592894074),c(93.17196806682703,120.37724439234908,77.33218089684681,262.73198488849306),c(8.75975768149656,17.068415249661438,15.921331361115518,0.0),c(979.5001771127971,863.3024765749811,1026.5467934738292,0.0))
+targetgene="EIF2AK3"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(227.75369971891055,270.3996310604259,224.41495632810447,28.836437365810212),c(301.8134692079269,319.8082015199722,424.56883629641385,0.0),c(363.9281145858116,333.28326619075756,308.57056495114364,0.0),c(353.5756736894975,286.56970866536835,292.64923359002813,438.9546576795555),c(635.4806027122049,705.1950511044331,686.1335658004546,22.428340173407946),c(947.6465128164459,914.5077223239654,818.8113271430839,490.21943521877364))
+targetgene="CMSS1"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(228.55004132631933,208.41433357481333,248.67603268789952,0.0),c(496.91716302307753,517.4424833581572,473.8491476522476,0.0),c(566.99522447505,641.4130783293824,514.0315553731582,829.8485864160939),c(336.8524999339131,448.2704847147925,451.1043885649397,51.26477753921816),c(751.7464773938866,645.0064289082585,717.218069886442,189.03886717586695),c(148.11953897803272,156.31075018111,155.4225204299372,0.0))
+targetgene="ZC3H14"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(86.80123520755681,69.17199864336477,78.0903395330904,102.52955507843632),c(417.28300228219973,391.675213097494,385.90274584799045,22.428340173407946),c(113.0805082520465,71.86701157752184,91.73719498547513,128.16194384804538),c(687.2428071937755,619.8529748561259,649.7419512607619,57.672874731620425),c(486.56472212676346,406.9469530577174,438.2156917487986,310.79271383151007),c(337.64884154132193,352.148356729857,411.6801394802727,0.0))
+targetgene="HENMT1"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(154.49027183730297,93.4271150507784,120.54722316273178,0.0),c(137.76709808171861,144.6323607997627,106.14220907410346,185.83481857966584),c(217.40125882259642,244.34783936357425,276.72790222891257,0.0),c(545.494001075013,562.3593655941085,645.1929994433003,96.12145788603405),c(453.11837461559475,326.09656503300533,437.457533112555,92.91740928983292),c(243.6805318670861,252.43287816604547,257.7739363228227,0.0))
+targetgene="PTCD3"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# 
+#
+# parameters
+# Do not modify the variables beginning with "__"
+
+# gstablename='__GENE_SUMMARY_FILE__'
+startindex=9
+# outputfile='__OUTPUT_FILE__'
+targetgenelist=c("RAE1","NYNRIN","LUZP4","AARSD1","FRG1B","SMAD7","Dummy","SAMHD1","AKAP17A","OASL")
+# samplelabel=sub('.\\w+.\\w+$','',colnames(gstable)[startindex]);
+samplelabel='T1D_4_vs_T0_1,T0_2,T0_3 pos.'
+
+
+# You need to write some codes in front of this code:
+# gstable=read.table(gstablename,header=T)
+# pdf(file=outputfile,width=6,height=6)
+
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+######
+# function definition
+
+plotrankedvalues<-function(val, tglist, ...){
+  
+  plot(val,log='y',ylim=c(max(val),min(val)),type='l',lwd=2, ...)
+  if(length(tglist)>0){
+    for(i in 1:length(tglist)){
+      targetgene=tglist[i];
+      tx=which(names(val)==targetgene);ty=val[targetgene];
+      points(tx,ty,col=colors[(i %% length(colors)) ],cex=2,pch=20)
+      # text(tx+50,ty,targetgene,col=colors[i])
+    }
+    legend('topright',tglist,pch=20,pt.cex = 2,cex=1,col=colors)
+  }
+}
+
+
+
+plotrandvalues<-function(val,targetgenelist, ...){
+  # choose the one with the best distance distribution
+  
+  mindiffvalue=0;
+  randval=val;
+  for(i in 1:20){
+    randval0=sample(val)
+    vindex=sort(which(names(randval0) %in% targetgenelist))
+    if(max(vindex)>0.9*length(val)){
+      # print('pass...')
+      next;
+    }
+    mindiffind=min(diff(vindex));
+    if (mindiffind > mindiffvalue){
+      mindiffvalue=mindiffind;
+      randval=randval0;
+      # print(paste('Diff: ',mindiffvalue))
+    }
+  }
+  plot(randval,log='y',ylim=c(max(randval),min(randval)),pch=20,col='grey', ...)
+  
+  if(length(targetgenelist)>0){
+    for(i in 1:length(targetgenelist)){
+      targetgene=targetgenelist[i];
+      tx=which(names(randval)==targetgene);ty=randval[targetgene];
+      points(tx,ty,col=colors[(i %% length(colors)) ],cex=2,pch=20)
+      text(tx+50,ty,targetgene,col=colors[i])
+    }
+  }
+  
+}
+
+
+
+
+# set.seed(1235)
+
+
+
+pvec=gstable[,startindex]
+names(pvec)=gstable[,'id']
+pvec=sort(pvec);
+
+plotrankedvalues(pvec,targetgenelist,xlab='Genes',ylab='RRA score',main=paste('Distribution of RRA scores in \\n',samplelabel))
+
+# plotrandvalues(pvec,targetgenelist,xlab='Genes',ylab='RRA score',main=paste('Distribution of RRA scores in \\n',samplelabel))
+
+
+pvec=gstable[,startindex+1]
+names(pvec)=gstable[,'id']
+pvec=sort(pvec);
+
+plotrankedvalues(pvec,targetgenelist,xlab='Genes',ylab='p value',main=paste('Distribution of p values in \\n',samplelabel))
+
+# plotrandvalues(pvec,targetgenelist,xlab='Genes',ylab='p value',main=paste('Distribution of p values in \\n',samplelabel))
+
+
+
+# you need to write after this code:
+# dev.off()
+
+
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(70.07806145197247,73.66368686695989,53.07110453705173,121.75384665564313),c(158.47197987434686,195.837606548747,173.61832769978352,358.85344277452714),c(117.85855789649916,84.44373860358816,112.20747816405223,759.3595172996689),c(72.4670862741988,40.42519401235604,38.666090448423404,230.6914989264817),c(428.4317847859226,378.20014842670867,335.1061172196695,714.502836952853),c(97.95001771127971,164.3957889835812,126.61249225268055,285.160325061901))
+targetgene="RAE1"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(102.72806735573238,117.682231458192,137.9848717963345,0.0),c(466.656181941544,395.2685636763701,494.3194308308247,214.67125594547605),c(320.1293261783288,249.7378652318884,308.57056495114364,358.85344277452714),c(253.23663115599143,238.95781349526013,210.76810087571974,1749.4105335258196),c(114.67319146686405,112.29220558987788,119.0309058902446,1512.3109374069356),c(540.7159514305604,550.6809762127612,561.0373908202612,756.1554687034678))
+targetgene="NYNRIN"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(211.82686757073498,265.0096051921118,269.90447450272023,669.6461566060372),c(229.3463829337281,228.17776175863185,236.545494508002,519.0558725845839),c(569.3842492972764,569.5460667518606,573.9260876364023,1118.2129600741962),c(899.8660163719193,976.493019809578,908.2740462198282,1368.1287505778846),c(539.1232682157428,459.0505364514207,510.2407621919402,259.52793629229194),c(156.08295505212052,207.5159959300943,159.2133136111552,666.442108009836))
+targetgene="LUZP4"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(229.3463829337281,265.0096051921118,272.178950411451,592.74899029721),c(108.30245860759382,171.58249014133338,131.91960270638572,720.9109341452554),c(951.6282208534899,899.235982363742,926.4698534896745,2284.486649091409),c(315.35127653387616,450.0671600042305,440.49016765752935,1457.8421112715164),c(539.9196098231515,461.7455493855778,507.2081276469658,647.2178164326292),c(6.370732859270225,10.780051736628277,14.405014088628327,0.0))
+targetgene="AARSD1"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(566.99522447505,484.20399050355337,519.3386658268633,2335.7514266306275),c(57.33659573343203,53.90025868314138,37.14977317593621,595.9530388934111),c(39.81708037043891,49.40857045954626,62.92716680821848,9.612145788603405),c(415.6903190673822,372.81012255839454,288.1002817725665,64.08097192402269),c(321.7220093931464,264.11126754739274,291.89107495378454,0.0),c(126.61831557799572,162.59911369414317,143.29198225003967,650.4218650288304))
+targetgene="FRG1B"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(258.8110224078529,236.26280056110303,248.67603268789952,817.0323920312894),c(194.30735220774187,184.1592171673997,211.52625951196333,349.2412969859237),c(299.42444438570055,331.48659090131946,282.0350126826178,640.809719240227),c(209.43784274850864,175.1758407202095,216.0752113294249,374.8736857555328),c(383.8366547710311,415.0319918601886,358.609034943221,583.1368445086066),c(128.21099879281329,133.8523090631344,169.06937588232194,0.0))
+targetgene="SMAD7"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(7.167074466679003,21.560103473256554,7.581586362435962,0.0),c(26.279273044489678,32.34015520988483,30.326345449743847,115.34574946324085),c(27.075614651898455,33.23849285460385,21.986600451064287,0.0),c(31.057322688942346,29.64514227572776,31.842662722231037,0.0),c(64.50367020011103,85.34207624830718,93.25351225796233,0.0),c(27.871956259307236,33.23849285460385,8.339744998679558,0.0),c(19.112198577810673,40.42519401235604,7.581586362435962,339.6291511973203),c(23.093906614854564,47.61189517010822,41.69872499339779,0.0),c(107.50611700018504,94.32545269549742,104.62589180161626,0.0),c(29.46463947412479,33.23849285460385,20.470283178577095,0.0),c(5.574391251861447,5.390025868314138,2.274475908730788,0.0),c(33.44634751116868,25.153454052132645,21.22844181482069,0.0),c(49.373179659344245,38.62851872291799,33.35897999471823,140.97813823284994),c(53.35488769638813,63.78197277505063,52.31294590080813,0.0),c(26.279273044489678,26.95012934157069,11.372379543653942,0.0),c(84.41221038533048,100.61381620853058,81.12297407806479,307.58866523530895),c(50.16952126675302,21.560103473256554,25.019234996038673,0.0),c(62.91098698529347,57.49360926201747,91.73719498547513,0.0),c(26.279273044489678,50.30690810426529,36.39161453969261,0.0),c(15.926832148175563,19.763428183818505,18.195807269846306,0.0),c(17.51951536299312,33.23849285460385,35.63345590344902,0.0),c(10.352440896314116,44.91688223595115,15.921331361115518,0.0),c(76.4487943112427,37.73018107819897,48.52215271959015,9.612145788603405),c(41.409763585256464,28.746804631008736,34.117138630961826,0.0),c(16.72317375558434,17.96675289438046,6.065269089948769,0.0),c(6.370732859270225,11.6783893813473,32.60082135847463,44.85668034681589),c(22.297565007445787,17.96675289438046,31.842662722231037,22.428340173407946),c(93.17196806682703,67.37532335392673,62.92716680821848,35.244534558212486),c(63.707328592702254,30.54347992044678,32.60082135847463,0.0),c(26.279273044489678,13.475064670785345,23.50291772355148,0.0),c(19.112198577810673,8.98337644719023,31.08450408598744,0.0),c(35.835372333395014,60.18862219617454,46.24767681085937,0.0),c(56.54025412602325,52.10358339370333,46.24767681085937,352.44534558212484),c(43.798788407482796,62.88363513033161,37.14977317593621,124.95789525184426),c(25.4829314370809,13.475064670785345,35.63345590344902,0.0),c(31.057322688942346,37.73018107819897,18.953965906089902,0.0),c(11.945124111131673,21.560103473256554,34.117138630961826,0.0),c(45.39147162230035,33.23849285460385,34.875297267205426,237.099596118884),c(9.556099288905337,13.475064670785345,9.097903634923153,0.0),c(36.63171394080379,38.62851872291799,31.842662722231037,0.0),c(22.297565007445787,24.25511640741362,40.94056635715419,0.0),c(33.44634751116868,35.0351681440419,27.293710904769462,0.0),c(76.4487943112427,65.57864806448868,84.15560862303917,0.0),c(1.5926832148175563,5.390025868314138,7.581586362435962,0.0),c(105.91343378536749,98.81714091909252,103.10957452912908,28.836437365810212),c(23.093906614854564,25.153454052132645,33.35897999471823,60.876923327821565),c(15.130490540766784,25.153454052132645,25.019234996038673,0.0),c(96.35733449646216,98.81714091909252,104.62589180161626,0.0),c(144.13783094098883,97.9188032743735,127.37065088892415,214.67125594547605),c(23.890248222263345,22.458441117975575,28.810028177256655,0.0),c(29.46463947412479,67.37532335392673,34.875297267205426,0.0),c(53.35488769638813,62.88363513033161,72.78322907938522,0.0),c(87.59757681496559,87.13875153774524,81.88113271430838,64.08097192402269),c(39.81708037043891,43.12020694651311,44.731359538372175,0.0),c(69.2817198445637,81.7487256694311,88.70456044050074,131.36599244424653),c(144.13783094098883,108.69885501100178,93.25351225796233,0.0),c(39.81708037043891,35.0351681440419,30.326345449743847,221.07935313787831),c(113.0805082520465,114.98721852403494,101.59325725664188,0.0),c(47.78049644452669,34.136830499322876,27.293710904769462,38.44858315441362),c(84.41221038533048,90.73210211662132,125.85433361643696,0.0),c(8.75975768149656,17.068415249661438,14.405014088628327,0.0),c(19.112198577810673,14.373402315504368,7.581586362435962,0.0),c(96.35733449646216,51.20524574898431,91.73719498547513,0.0),c(27.075614651898455,44.91688223595115,35.63345590344902,0.0),c(1.5926832148175563,0.898337644719023,3.790793181217981,0.0),c(3.981708037043891,5.390025868314138,15.921331361115518,0.0),c(70.87440305938125,76.35869980111696,42.45688362964138,0.0),c(15.130490540766784,34.136830499322876,9.097903634923153,0.0),c(109.0988002150026,83.54540095886914,84.91376725928276,0.0),c(29.46463947412479,33.23849285460385,40.1824077209106,0.0),c(3.1853664296351125,10.780051736628277,5.307110453705173,0.0),c(38.22439715562135,54.7985963278604,28.810028177256655,0.0),c(39.81708037043891,22.458441117975575,27.293710904769462,0.0),c(42.20610519266524,61.08695984089356,40.94056635715419,0.0),c(122.63660754095183,151.8190619575149,157.696996338668,147.3862354252522),c(9.556099288905337,4.491688223595115,11.372379543653942,0.0),c(24.686589829672123,38.62851872291799,25.77739363228227,0.0),c(19.112198577810673,33.23849285460385,28.05186954101306,0.0),c(60.52196216306714,43.12020694651311,47.76399408334656,0.0),c(40.613421977847686,40.42519401235604,44.731359538372175,0.0),c(17.51951536299312,16.170077604942414,12.888696816141135,0.0),c(18.315856970401896,7.186701157752184,5.307110453705173,0.0),c(35.835372333395014,66.4769857092077,41.69872499339779,0.0),c(19.112198577810673,51.20524574898431,18.195807269846306,0.0),c(54.15122930379691,46.7135575253892,56.86189771826971,0.0),c(89.19026002978315,95.22379034021644,89.46271907674435,0.0),c(2.389024822226334,2.695012934157069,3.0326345449743846,0.0),c(20.704881792628232,23.3567787626946,30.326345449743847,0.0),c(31.057322688942346,22.458441117975575,21.22844181482069,0.0),c(25.4829314370809,20.66176582853753,31.842662722231037,0.0),c(18.315856970401896,25.153454052132645,13.646855452384731,0.0),c(35.03903072598624,20.66176582853753,42.45688362964138,0.0),c(29.46463947412479,32.34015520988483,13.646855452384731,0.0),c(26.279273044489678,22.458441117975575,12.130538179897538,0.0),c(24.686589829672123,32.34015520988483,30.326345449743847,28.836437365810212),c(24.686589829672123,36.831843433479946,41.69872499339779,0.0),c(57.33659573343203,58.39194690673649,59.1363736270005,0.0),c(15.130490540766784,8.98337644719023,7.581586362435962,0.0),c(7.167074466679003,9.881714091909252,9.097903634923153,0.0),c(1.5926832148175563,4.491688223595115,0.7581586362435961,0.0),c(14.334148933358007,40.42519401235604,57.62005635451331,0.0),c(24.686589829672123,15.27173996022339,21.986600451064287,483.81133802637135),c(64.50367020011103,48.51023281482724,79.6066568055776,0.0),c(6.370732859270225,16.170077604942414,14.405014088628327,0.0),c(72.4670862741988,48.51023281482724,54.587421809538924,217.87530454167717),c(24.686589829672123,11.6783893813473,14.405014088628327,301.18056804290666),c(31.057322688942346,5.390025868314138,24.261076359795076,0.0),c(105.91343378536749,124.8689326159442,110.69116089156503,0.0),c(25.4829314370809,13.475064670785345,12.888696816141135,0.0),c(110.69148342982017,88.93542682718328,137.2267131600909,0.0),c(55.74391251861447,45.81521988067017,57.62005635451331,0.0),c(23.890248222263345,8.98337644719023,29.56818681350025,0.0),c(10.352440896314116,8.98337644719023,22.744759087307884,0.0),c(25.4829314370809,10.780051736628277,6.8234277261923655,0.0),c(39.81708037043891,40.42519401235604,43.973200902128575,0.0),c(21.50122340003701,34.136830499322876,22.744759087307884,0.0),c(61.318303770475914,131.15729612897735,78.848498169334,233.89554752268285),c(72.4670862741988,44.91688223595115,37.14977317593621,0.0),c(137.76709808171861,150.02238666807685,155.4225204299372,140.97813823284994),c(42.20610519266524,38.62851872291799,64.44348408070567,0.0),c(9.556099288905337,8.98337644719023,6.8234277261923655,0.0),c(31.057322688942346,27.84846698628971,22.744759087307884,0.0),c(58.132937340840805,29.64514227572776,39.424249084667,0.0),c(47.78049644452669,56.59527161729845,34.875297267205426,0.0),c(73.26342788160758,60.18862219617454,60.652690899487695,0.0),c(59.72562055565836,67.37532335392673,93.25351225796233,0.0),c(27.075614651898455,58.39194690673649,25.77739363228227,0.0),c(36.63171394080379,23.3567787626946,19.7121245423335,0.0),c(42.20610519266524,61.08695984089356,48.52215271959015,131.36599244424653),c(75.65245270383392,76.35869980111696,92.49535362171873,0.0),c(17.51951536299312,15.27173996022339,15.921331361115518,0.0),c(28.668297866716014,28.746804631008736,37.907931812179804,0.0),c(38.22439715562135,28.746804631008736,47.76399408334656,0.0),c(62.91098698529347,39.52685636763701,84.91376725928276,0.0),c(125.02563236317816,104.20716678740666,94.76982953044951,432.5465604871532),c(32.650005903759904,46.7135575253892,34.875297267205426,0.0),c(23.890248222263345,28.746804631008736,40.1824077209106,0.0),c(23.093906614854564,14.373402315504368,52.31294590080813,0.0),c(40.613421977847686,49.40857045954626,62.92716680821848,217.87530454167717),c(40.613421977847686,30.54347992044678,28.05186954101306,0.0),c(31.853664296351127,26.95012934157069,25.77739363228227,0.0),c(30.26098108153357,20.66176582853753,17.437648633602713,0.0),c(115.46953307427283,182.36254187796166,140.2593477050653,406.91417171754415),c(101.13538414091482,80.85038802471207,106.14220907410346,217.87530454167717),c(25.4829314370809,26.051791696851666,35.63345590344902,3.204048596201135),c(53.35488769638813,54.7985963278604,23.50291772355148,403.710123121343),c(10.352440896314116,9.881714091909252,3.0326345449743846,0.0),c(3.1853664296351125,6.288363513033161,21.986600451064287,0.0),c(27.871956259307236,17.068415249661438,12.130538179897538,0.0),c(59.72562055565836,79.05371273527402,78.848498169334,240.3036447150851),c(45.39147162230035,25.153454052132645,12.130538179897538,0.0),c(28.668297866716014,27.84846698628971,25.019234996038673,0.0),c(28.668297866716014,22.458441117975575,22.744759087307884,0.0),c(11.148782503722893,11.6783893813473,14.405014088628327,0.0),c(25.4829314370809,32.34015520988483,38.666090448423404,0.0),c(109.0988002150026,106.00384207684472,94.01167089420592,0.0),c(39.02073876303013,44.91688223595115,40.1824077209106,0.0),c(66.09635341492859,82.64706331415012,109.17484361907785,0.0),c(33.44634751116868,65.57864806448868,49.280311355833746,0.0),c(35.835372333395014,8.085038802471207,12.888696816141135,0.0),c(52.558546088979355,51.20524574898431,55.34558044578252,0.0),c(45.39147162230035,61.985297485612584,47.00583544710296,108.93765227083858),c(7.167074466679003,33.23849285460385,22.744759087307884,0.0),c(61.318303770475914,76.35869980111696,55.34558044578252,214.67125594547605),c(3.1853664296351125,1.796675289438046,0.0,0.0),c(139.35978129653617,140.1406725761676,131.16144407014212,57.672874731620425),c(6.370732859270225,21.560103473256554,14.405014088628327,0.0),c(31.853664296351127,35.0351681440419,31.08450408598744,0.0),c(24.686589829672123,41.32353165707506,40.94056635715419,0.0),c(51.76220448157058,70.0703362880838,46.24767681085937,0.0),c(56.54025412602325,62.88363513033161,87.94640180425715,0.0),c(14.334148933358007,16.170077604942414,6.8234277261923655,0.0),c(22.297565007445787,35.93350578876092,9.097903634923153,0.0),c(16.72317375558434,11.6783893813473,8.339744998679558,0.0),c(50.9658628741618,27.84846698628971,33.35897999471823,0.0),c(101.9317257483236,106.90217972156374,86.43008453176996,0.0),c(112.28416664463772,116.78389381347299,111.44931952780863,182.6307699834647),c(57.33659573343203,45.81521988067017,34.875297267205426,0.0),c(45.39147162230035,44.91688223595115,15.921331361115518,0.0),c(50.16952126675302,79.05371273527402,52.31294590080813,6.40809719240227),c(86.00489360014804,107.80051736628276,95.52798816669312,0.0),c(19.112198577810673,19.763428183818505,23.50291772355148,0.0),c(39.81708037043891,39.52685636763701,19.7121245423335,0.0),c(65.30001180751981,56.59527161729845,54.587421809538924,0.0),c(27.871956259307236,21.560103473256554,39.424249084667,0.0),c(27.075614651898455,30.54347992044678,59.894532263244095,0.0),c(25.4829314370809,32.34015520988483,21.986600451064287,0.0),c(65.30001180751981,68.27366099864575,81.12297407806479,44.85668034681589),c(24.686589829672123,25.153454052132645,26.535552268525866,121.75384665564313),c(63.707328592702254,74.56202451167891,54.587421809538924,0.0),c(163.25002951879952,152.7173996022339,144.05014088628326,349.2412969859237),c(52.558546088979355,40.42519401235604,47.76399408334656,0.0),c(39.81708037043891,32.34015520988483,35.63345590344902,0.0),c(11.945124111131673,2.695012934157069,13.646855452384731,0.0),c(116.26587468168161,124.8689326159442,93.25351225796233,0.0),c(24.686589829672123,39.52685636763701,20.470283178577095,0.0),c(12.74146571854045,8.085038802471207,11.372379543653942,0.0),c(105.11709217795871,94.32545269549742,102.35141589288548,698.4825939718475),c(27.871956259307236,34.136830499322876,26.535552268525866,0.0),c(37.42805554821257,37.73018107819897,28.810028177256655,0.0),c(32.650005903759904,27.84846698628971,49.280311355833746,0.0),c(95.56099288905338,62.88363513033161,84.15560862303917,281.9562764656999),c(49.373179659344245,59.29028455145552,59.1363736270005,0.0),c(28.668297866716014,43.12020694651311,32.60082135847463,0.0),c(36.63171394080379,54.7985963278604,32.60082135847463,0.0),c(51.76220448157058,89.8337644719023,70.50875317065444,240.3036447150851),c(19.112198577810673,34.136830499322876,61.41084953573129,0.0),c(54.15122930379691,31.441817565165806,67.47611862568006,307.58866523530895),c(11.148782503722893,24.25511640741362,12.130538179897538,0.0),c(74.05976948901636,97.9188032743735,59.894532263244095,67.28502052022384),c(19.112198577810673,22.458441117975575,24.261076359795076,0.0),c(15.926832148175563,7.186701157752184,3.0326345449743846,0.0),c(43.00244680007402,33.23849285460385,34.875297267205426,147.3862354252522),c(4.778049644452668,8.085038802471207,3.0326345449743846,0.0),c(43.798788407482796,42.22186930179408,37.907931812179804,0.0),c(19.112198577810673,13.475064670785345,13.646855452384731,0.0),c(81.22684395569537,71.86701157752184,92.49535362171873,0.0),c(20.704881792628232,33.23849285460385,22.744759087307884,0.0),c(156.08295505212052,162.59911369414317,128.12880952516775,0.0),c(12.74146571854045,14.373402315504368,22.744759087307884,0.0),c(58.92927894824958,26.051791696851666,38.666090448423404,0.0),c(23.093906614854564,50.30690810426529,54.587421809538924,0.0),c(33.44634751116868,44.91688223595115,48.52215271959015,0.0),c(19.908540185219454,18.865090539099484,9.097903634923153,0.0),c(23.890248222263345,29.64514227572776,15.163172724871924,0.0),c(42.20610519266524,53.90025868314138,37.14977317593621,0.0),c(134.5817316520835,104.20716678740666,94.76982953044951,0.0),c(2.389024822226334,8.98337644719023,3.790793181217981,0.0),c(95.56099288905338,45.81521988067017,77.33218089684681,0.0),c(19.908540185219454,18.865090539099484,28.810028177256655,0.0),c(101.13538414091482,106.00384207684472,87.94640180425715,0.0),c(0.7963416074087781,0.0,5.307110453705173,0.0),c(19.908540185219454,17.068415249661438,19.7121245423335,0.0),c(27.075614651898455,34.136830499322876,38.666090448423404,0.0),c(62.91098698529347,55.69693397257942,78.0903395330904,0.0),c(52.558546088979355,31.441817565165806,30.326345449743847,0.0),c(15.926832148175563,29.64514227572776,12.130538179897538,0.0),c(18.315856970401896,7.186701157752184,28.05186954101306,0.0),c(75.65245270383392,61.985297485612584,48.52215271959015,0.0),c(45.39147162230035,44.01854459123213,27.293710904769462,281.9562764656999),c(88.39391842237437,66.4769857092077,76.57402226060321,0.0),c(41.409763585256464,38.62851872291799,23.50291772355148,0.0),c(66.89269502233736,44.91688223595115,39.424249084667,0.0),c(86.80123520755681,104.20716678740666,72.78322907938522,365.2615399669294),c(15.926832148175563,44.01854459123213,25.019234996038673,118.549798059442),c(94.7646512816446,106.00384207684472,75.81586362435961,307.58866523530895),c(10.352440896314116,17.068415249661438,12.888696816141135,0.0),c(29.46463947412479,41.32353165707506,27.293710904769462,0.0),c(23.890248222263345,34.136830499322876,21.986600451064287,0.0),c(94.7646512816446,79.95205037999305,84.91376725928276,0.0),c(56.54025412602325,79.95205037999305,90.97903634923154,44.85668034681589),c(12.74146571854045,4.491688223595115,9.097903634923153,0.0),c(79.63416074087782,50.30690810426529,48.52215271959015,0.0),c(4.778049644452668,8.085038802471207,1.5163172724871923,0.0),c(13.537807325949228,16.170077604942414,26.535552268525866,163.4064784062579),c(5.574391251861447,6.288363513033161,14.405014088628327,0.0),c(27.871956259307236,35.0351681440419,56.10373908202612,0.0),c(18.315856970401896,17.96675289438046,15.921331361115518,0.0),c(51.76220448157058,26.051791696851666,43.973200902128575,0.0),c(80.4305023482866,102.41049149796862,73.54138771562883,0.0),c(12.74146571854045,21.560103473256554,18.953965906089902,0.0),c(11.945124111131673,10.780051736628277,15.163172724871924,0.0),c(58.132937340840805,48.51023281482724,38.666090448423404,0.0),c(36.63171394080379,20.66176582853753,28.810028177256655,0.0),c(19.908540185219454,26.95012934157069,28.05186954101306,205.05911015687263),c(48.57683805193547,42.22186930179408,37.907931812179804,0.0),c(55.74391251861447,65.57864806448868,65.95980135319286,35.244534558212486),c(19.908540185219454,16.170077604942414,8.339744998679558,0.0),c(116.26587468168161,105.10550443212568,122.82169907146258,0.0),c(35.835372333395014,33.23849285460385,61.41084953573129,131.36599244424653),c(10.352440896314116,3.593350578876092,12.888696816141135,0.0),c(84.41221038533048,44.91688223595115,59.1363736270005,865.0931209743064),c(15.130490540766784,9.881714091909252,4.548951817461576,0.0),c(17.51951536299312,15.27173996022339,3.790793181217981,108.93765227083858),c(23.093906614854564,15.27173996022339,37.14977317593621,0.0),c(147.32319737062394,153.61573724695293,104.62589180161626,38.44858315441362),c(57.33659573343203,57.49360926201747,79.6066568055776,0.0),c(84.41221038533048,61.08695984089356,97.8024640754239,0.0),c(16.72317375558434,15.27173996022339,12.130538179897538,0.0),c(95.56099288905338,94.32545269549742,65.20164271694927,0.0),c(75.65245270383392,83.54540095886914,68.23427726192365,32.040485962011346),c(3.1853664296351125,6.288363513033161,0.7581586362435961,0.0),c(10.352440896314116,14.373402315504368,19.7121245423335,0.0),c(53.35488769638813,66.4769857092077,40.94056635715419,0.0),c(136.97075647430984,173.37916543077145,132.67776134262934,692.0744967794451),c(7.963416074087782,6.288363513033161,15.163172724871924,0.0),c(97.95001771127971,142.83568551032465,97.8024640754239,458.1789492567623),c(37.42805554821257,23.3567787626946,53.829263173295324,0.0),c(48.57683805193547,49.40857045954626,59.1363736270005,166.610527002459),c(43.00244680007402,36.831843433479946,26.535552268525866,0.0),c(11.148782503722893,13.475064670785345,12.888696816141135,0.0),c(58.132937340840805,73.66368686695989,56.10373908202612,0.0),c(151.30490540766783,158.10742547054804,149.35725133998844,368.4655885631305),c(42.20610519266524,22.458441117975575,28.810028177256655,448.56680346815887),c(11.148782503722893,22.458441117975575,15.921331361115518,0.0),c(33.44634751116868,31.441817565165806,52.31294590080813,0.0),c(98.74635931868849,78.155375090555,97.8024640754239,0.0),c(35.835372333395014,23.3567787626946,35.63345590344902,0.0),c(57.33659573343203,88.93542682718328,122.06354043521898,0.0),c(23.890248222263345,36.831843433479946,34.875297267205426,0.0),c(50.9658628741618,35.93350578876092,22.744759087307884,0.0),c(34.24268911857746,37.73018107819897,20.470283178577095,0.0),c(17.51951536299312,23.3567787626946,15.921331361115518,0.0),c(86.80123520755681,47.61189517010822,41.69872499339779,0.0),c(93.17196806682703,69.17199864336477,93.25351225796233,0.0),c(23.890248222263345,14.373402315504368,15.921331361115518,0.0),c(27.075614651898455,42.22186930179408,33.35897999471823,0.0),c(53.35488769638813,55.69693397257942,62.92716680821848,0.0),c(15.130490540766784,25.153454052132645,28.05186954101306,0.0),c(4.778049644452668,7.186701157752184,20.470283178577095,0.0),c(84.41221038533048,70.96867393280282,63.68532544446207,0.0),c(61.318303770475914,61.08695984089356,59.894532263244095,86.50931209743064),c(15.926832148175563,20.66176582853753,31.08450408598744,0.0),c(61.318303770475914,78.155375090555,69.75059453441085,0.0),c(115.46953307427283,170.68415249661436,144.05014088628326,0.0),c(12.74146571854045,12.576727026066322,21.22844181482069,0.0),c(93.17196806682703,60.18862219617454,78.848498169334,0.0),c(62.11464537788469,70.96867393280282,61.41084953573129,0.0),c(88.39391842237437,75.46036215639793,64.44348408070567,96.12145788603405),c(6.370732859270225,1.796675289438046,18.195807269846306,0.0),c(100.33904253350605,107.80051736628276,105.38405043785987,233.89554752268285),c(74.05976948901636,35.93350578876092,37.907931812179804,0.0),c(31.057322688942346,43.12020694651311,53.07110453705173,0.0),c(75.65245270383392,72.76534922224086,91.73719498547513,124.95789525184426),c(1.5926832148175563,3.593350578876092,0.0,0.0),c(9.556099288905337,4.491688223595115,3.0326345449743846,0.0),c(81.22684395569537,117.682231458192,50.79662862832094,83.3052635012295),c(26.279273044489678,26.95012934157069,29.56818681350025,0.0),c(50.16952126675302,51.20524574898431,69.75059453441085,0.0),c(43.00244680007402,43.12020694651311,41.69872499339779,0.0),c(6.370732859270225,8.085038802471207,12.130538179897538,0.0),c(66.89269502233736,54.7985963278604,52.31294590080813,0.0),c(102.72806735573238,121.2755820370681,83.39744998679558,0.0),c(34.24268911857746,39.52685636763701,26.535552268525866,0.0),c(11.945124111131673,21.560103473256554,10.614220907410346,0.0),c(36.63171394080379,22.458441117975575,27.293710904769462,0.0),c(32.650005903759904,57.49360926201747,28.810028177256655,3.204048596201135),c(35.835372333395014,37.73018107819897,42.45688362964138,0.0),c(37.42805554821257,20.66176582853753,43.21504226588498,0.0),c(46.18781322970913,35.93350578876092,28.05186954101306,0.0),c(2.389024822226334,7.186701157752184,7.581586362435962,0.0),c(12.74146571854045,26.051791696851666,6.065269089948769,365.2615399669294),c(119.45124111131672,90.73210211662132,110.69116089156503,0.0),c(21.50122340003701,17.96675289438046,25.019234996038673,83.3052635012295),c(27.871956259307236,31.441817565165806,31.08450408598744,0.0),c(12.74146571854045,13.475064670785345,1.5163172724871923,0.0),c(19.112198577810673,18.865090539099484,7.581586362435962,0.0),c(22.297565007445787,31.441817565165806,38.666090448423404,0.0),c(65.30001180751981,42.22186930179408,31.842662722231037,0.0),c(23.093906614854564,29.64514227572776,19.7121245423335,60.876923327821565),c(41.409763585256464,41.32353165707506,33.35897999471823,0.0),c(39.02073876303013,48.51023281482724,46.24767681085937,0.0),c(58.92927894824958,43.12020694651311,58.3782149907569,0.0),c(25.4829314370809,5.390025868314138,6.8234277261923655,0.0),c(136.97075647430984,91.63043976134034,137.9848717963345,0.0),c(3.981708037043891,8.085038802471207,1.5163172724871923,0.0),c(31.853664296351127,41.32353165707506,40.94056635715419,67.28502052022384),c(48.57683805193547,39.52685636763701,25.77739363228227,435.75060908335433),c(8.75975768149656,22.458441117975575,15.163172724871924,0.0),c(27.075614651898455,35.0351681440419,46.24767681085937,0.0),c(15.926832148175563,14.373402315504368,27.293710904769462,217.87530454167717),c(119.45124111131672,81.7487256694311,93.25351225796233,0.0),c(0.0,0.0,0.0,0.0),c(25.4829314370809,25.153454052132645,61.41084953573129,0.0),c(18.315856970401896,23.3567787626946,14.405014088628327,0.0),c(50.16952126675302,52.10358339370333,43.973200902128575,0.0),c(82.81952717051293,86.24041389302621,57.62005635451331,0.0),c(12.74146571854045,25.153454052132645,14.405014088628327,12.81619438480454),c(11.945124111131673,22.458441117975575,28.05186954101306,0.0),c(79.63416074087782,106.90217972156374,94.01167089420592,0.0),c(20.704881792628232,52.10358339370333,40.1824077209106,105.73360367463745),c(64.50367020011103,47.61189517010822,56.86189771826971,89.71336069363178),c(19.908540185219454,8.085038802471207,11.372379543653942,0.0),c(86.80123520755681,123.97059497122517,85.67192589552636,0.0),c(16.72317375558434,18.865090539099484,18.953965906089902,0.0),c(7.167074466679003,4.491688223595115,11.372379543653942,0.0),c(48.57683805193547,38.62851872291799,58.3782149907569,0.0),c(96.35733449646216,92.52877740605936,92.49535362171873,0.0),c(31.853664296351127,18.865090539099484,13.646855452384731,96.12145788603405),c(33.44634751116868,44.91688223595115,29.56818681350025,525.4639697769861),c(0.0,0.0,0.0,0.0),c(93.96830967423583,90.73210211662132,78.0903395330904,0.0),c(27.075614651898455,33.23849285460385,34.875297267205426,0.0),c(58.92927894824958,31.441817565165806,62.92716680821848,0.0),c(38.22439715562135,35.93350578876092,18.195807269846306,0.0),c(10.352440896314116,0.898337644719023,1.5163172724871923,0.0),c(48.57683805193547,21.560103473256554,31.842662722231037,0.0),c(17.51951536299312,29.64514227572776,19.7121245423335,0.0),c(35.03903072598624,38.62851872291799,51.55478726456454,0.0),c(27.871956259307236,50.30690810426529,58.3782149907569,92.91740928983292),c(23.093906614854564,23.3567787626946,36.39161453969261,0.0),c(37.42805554821257,87.13875153774524,62.16900817197488,0.0),c(26.279273044489678,24.25511640741362,20.470283178577095,269.14008208089535),c(15.926832148175563,15.27173996022339,27.293710904769462,0.0),c(26.279273044489678,39.52685636763701,30.326345449743847,0.0),c(108.30245860759382,90.73210211662132,69.75059453441085,0.0),c(19.112198577810673,15.27173996022339,8.339744998679558,0.0),c(80.4305023482866,104.20716678740666,91.73719498547513,506.2396781997793),c(20.704881792628232,25.153454052132645,32.60082135847463,0.0),c(25.4829314370809,23.3567787626946,28.810028177256655,0.0),c(58.92927894824958,44.01854459123213,47.76399408334656,0.0),c(81.22684395569537,74.56202451167891,28.810028177256655,0.0),c(31.853664296351127,51.20524574898431,32.60082135847463,25.63238876960908),c(13.537807325949228,14.373402315504368,14.405014088628327,0.0),c(36.63171394080379,25.153454052132645,34.875297267205426,0.0),c(70.87440305938125,56.59527161729845,67.47611862568006,0.0),c(22.297565007445787,16.170077604942414,31.08450408598744,0.0),c(35.835372333395014,14.373402315504368,23.50291772355148,0.0),c(33.44634751116868,26.051791696851666,17.437648633602713,0.0),c(46.98415483711791,53.00192103842236,37.907931812179804,0.0),c(46.18781322970913,71.86701157752184,71.26691180689804,0.0),c(49.373179659344245,39.52685636763701,30.326345449743847,0.0),c(14.334148933358007,8.085038802471207,16.679489997359116,0.0),c(43.00244680007402,70.96867393280282,66.71795998943647,0.0),c(5.574391251861447,30.54347992044678,18.953965906089902,0.0),c(18.315856970401896,19.763428183818505,26.535552268525866,0.0),c(19.908540185219454,29.64514227572776,27.293710904769462,0.0),c(45.39147162230035,27.84846698628971,50.038469992077346,0.0),c(21.50122340003701,8.085038802471207,28.810028177256655,0.0),c(99.54270092609727,74.56202451167891,101.59325725664188,3.204048596201135),c(1.5926832148175563,14.373402315504368,1.5163172724871923,57.672874731620425),c(6.370732859270225,12.576727026066322,2.274475908730788,0.0),c(19.112198577810673,35.0351681440419,27.293710904769462,0.0),c(24.686589829672123,50.30690810426529,53.07110453705173,0.0),c(59.72562055565836,61.08695984089356,49.280311355833746,0.0),c(10.352440896314116,27.84846698628971,28.810028177256655,96.12145788603405),c(25.4829314370809,18.865090539099484,28.05186954101306,0.0),c(7.167074466679003,34.136830499322876,30.326345449743847,0.0),c(20.704881792628232,17.068415249661438,34.875297267205426,0.0),c(9.556099288905337,49.40857045954626,21.22844181482069,0.0),c(82.81952717051293,96.12212798493546,59.1363736270005,0.0),c(24.686589829672123,25.153454052132645,35.63345590344902,0.0),c(54.94757091120569,35.0351681440419,38.666090448423404,60.876923327821565),c(37.42805554821257,44.91688223595115,49.280311355833746,0.0),c(70.07806145197247,74.56202451167891,63.68532544446207,0.0),c(23.093906614854564,26.051791696851666,28.810028177256655,0.0),c(94.7646512816446,128.4622831948203,143.29198225003967,160.20242981005674),c(20.704881792628232,17.068415249661438,1.5163172724871923,0.0),c(15.926832148175563,26.051791696851666,15.163172724871924,0.0),c(78.04147752606026,78.155375090555,62.16900817197488,0.0),c(31.853664296351127,22.458441117975575,20.470283178577095,121.75384665564313),c(45.39147162230035,40.42519401235604,45.48951817461577,0.0),c(70.07806145197247,74.56202451167891,112.20747816405223,0.0),c(23.890248222263345,34.136830499322876,27.293710904769462,0.0),c(23.890248222263345,44.01854459123213,30.326345449743847,0.0),c(28.668297866716014,14.373402315504368,25.019234996038673,0.0),c(22.297565007445787,21.560103473256554,36.39161453969261,0.0),c(15.926832148175563,43.12020694651311,19.7121245423335,0.0),c(94.7646512816446,96.12212798493546,78.848498169334,0.0),c(39.81708037043891,38.62851872291799,37.14977317593621,0.0),c(30.26098108153357,33.23849285460385,26.535552268525866,0.0),c(5.574391251861447,0.0,17.437648633602713,0.0),c(90.7829432446007,77.25703744583598,53.07110453705173,48.060728943017025),c(30.26098108153357,44.01854459123213,16.679489997359116,0.0),c(49.373179659344245,48.51023281482724,33.35897999471823,0.0),c(42.20610519266524,26.051791696851666,14.405014088628327,0.0),c(0.7963416074087781,7.186701157752184,3.0326345449743846,0.0),c(54.15122930379691,70.0703362880838,41.69872499339779,92.91740928983292),c(69.2817198445637,63.78197277505063,75.05770498811601,339.6291511973203),c(51.76220448157058,32.34015520988483,32.60082135847463,0.0),c(81.22684395569537,86.24041389302621,82.63929135055199,0.0),c(101.9317257483236,170.68415249661436,150.11540997623203,51.26477753921816),c(27.871956259307236,106.90217972156374,45.48951817461577,470.9951436415668),c(62.11464537788469,31.441817565165806,40.94056635715419,0.0),c(46.18781322970913,31.441817565165806,63.68532544446207,0.0),c(23.890248222263345,26.95012934157069,12.130538179897538,567.1166015276009),c(87.59757681496559,59.29028455145552,60.652690899487695,19.22429157720681),c(56.54025412602325,51.20524574898431,40.94056635715419,0.0),c(48.57683805193547,49.40857045954626,61.41084953573129,0.0),c(50.16952126675302,33.23849285460385,40.94056635715419,0.0),c(39.02073876303013,3.593350578876092,27.293710904769462,0.0),c(117.85855789649916,128.4622831948203,115.99827134527021,0.0),c(38.22439715562135,35.93350578876092,32.60082135847463,0.0),c(15.926832148175563,36.831843433479946,12.130538179897538,0.0),c(54.15122930379691,64.68031041976965,65.95980135319286,0.0),c(55.74391251861447,44.01854459123213,18.953965906089902,0.0),c(109.0988002150026,83.54540095886914,116.7564299815138,435.75060908335433),c(4.778049644452668,16.170077604942414,6.065269089948769,0.0),c(61.318303770475914,66.4769857092077,49.280311355833746,166.610527002459),c(50.16952126675302,17.96675289438046,26.535552268525866,0.0),c(74.05976948901636,44.91688223595115,51.55478726456454,0.0),c(11.945124111131673,25.153454052132645,15.163172724871924,60.876923327821565),c(36.63171394080379,36.831843433479946,37.907931812179804,0.0),c(79.63416074087782,129.3606208395393,94.01167089420592,150.59028402145333),c(35.03903072598624,44.01854459123213,31.842662722231037,0.0),c(36.63171394080379,30.54347992044678,28.05186954101306,0.0),c(31.853664296351127,20.66176582853753,47.76399408334656,0.0),c(74.05976948901636,81.7487256694311,63.68532544446207,0.0),c(8.75975768149656,2.695012934157069,3.0326345449743846,0.0),c(61.318303770475914,30.54347992044678,14.405014088628327,0.0),c(52.558546088979355,54.7985963278604,83.39744998679558,0.0),c(31.853664296351127,38.62851872291799,32.60082135847463,0.0),c(38.22439715562135,26.95012934157069,50.038469992077346,0.0),c(57.33659573343203,92.52877740605936,50.79662862832094,0.0),c(51.76220448157058,19.763428183818505,25.77739363228227,0.0),c(35.835372333395014,67.37532335392673,40.1824077209106,0.0),c(197.49271863737698,230.8727746927889,161.48778951988598,384.4858315441362),c(81.22684395569537,79.95205037999305,81.88113271430838,0.0),c(69.2817198445637,50.30690810426529,57.62005635451331,0.0),c(27.871956259307236,22.458441117975575,43.973200902128575,0.0),c(31.853664296351127,17.96675289438046,47.00583544710296,0.0),c(36.63171394080379,44.01854459123213,37.14977317593621,102.52955507843632),c(22.297565007445787,17.96675289438046,26.535552268525866,0.0),c(27.075614651898455,55.69693397257942,37.14977317593621,0.0),c(31.057322688942346,29.64514227572776,32.60082135847463,0.0),c(78.83781913346904,72.76534922224086,83.39744998679558,0.0),c(28.668297866716014,25.153454052132645,41.69872499339779,0.0),c(29.46463947412479,32.34015520988483,43.973200902128575,105.73360367463745),c(19.112198577810673,27.84846698628971,31.08450408598744,0.0),c(12.74146571854045,20.66176582853753,25.77739363228227,32.040485962011346),c(22.297565007445787,35.93350578876092,28.05186954101306,0.0),c(23.890248222263345,9.881714091909252,42.45688362964138,0.0),c(39.02073876303013,32.34015520988483,25.019234996038673,0.0),c(4.778049644452668,10.780051736628277,6.065269089948769,0.0),c(61.318303770475914,64.68031041976965,56.86189771826971,0.0),c(22.297565007445787,21.560103473256554,34.117138630961826,0.0),c(46.18781322970913,32.34015520988483,32.60082135847463,0.0),c(32.650005903759904,34.136830499322876,47.00583544710296,147.3862354252522),c(46.18781322970913,70.0703362880838,50.038469992077346,0.0),c(11.148782503722893,3.593350578876092,22.744759087307884,0.0),c(66.89269502233736,60.18862219617454,63.68532544446207,131.36599244424653),c(14.334148933358007,25.153454052132645,19.7121245423335,0.0),c(25.4829314370809,26.051791696851666,44.731359538372175,0.0),c(48.57683805193547,36.831843433479946,55.34558044578252,0.0),c(24.686589829672123,25.153454052132645,30.326345449743847,6.40809719240227),c(22.297565007445787,4.491688223595115,1.5163172724871923,0.0),c(13.537807325949228,6.288363513033161,17.437648633602713,0.0),c(17.51951536299312,22.458441117975575,15.921331361115518,0.0),c(34.24268911857746,31.441817565165806,34.117138630961826,192.2429157720681),c(11.148782503722893,24.25511640741362,13.646855452384731,0.0),c(19.908540185219454,26.051791696851666,13.646855452384731,0.0),c(28.668297866716014,50.30690810426529,27.293710904769462,0.0),c(20.704881792628232,35.0351681440419,28.05186954101306,6.40809719240227),c(75.65245270383392,65.57864806448868,61.41084953573129,185.83481857966584),c(27.075614651898455,27.84846698628971,34.875297267205426,0.0),c(93.96830967423583,120.37724439234908,119.0309058902446,57.672874731620425),c(2.389024822226334,31.441817565165806,8.339744998679558,0.0),c(33.44634751116868,17.068415249661438,37.907931812179804,0.0),c(27.871956259307236,14.373402315504368,20.470283178577095,0.0),c(19.908540185219454,42.22186930179408,33.35897999471823,0.0),c(7.963416074087782,25.153454052132645,17.437648633602713,0.0),c(52.558546088979355,83.54540095886914,77.33218089684681,67.28502052022384),c(36.63171394080379,34.136830499322876,59.1363736270005,41.65263175061475),c(36.63171394080379,27.84846698628971,26.535552268525866,0.0),c(30.26098108153357,17.96675289438046,18.953965906089902,163.4064784062579),c(76.4487943112427,73.66368686695989,81.88113271430838,0.0),c(10.352440896314116,6.288363513033161,6.065269089948769,0.0),c(150.50856380025905,135.64898435257248,159.9714722473988,0.0),c(24.686589829672123,37.73018107819897,23.50291772355148,0.0),c(25.4829314370809,26.95012934157069,28.05186954101306,0.0),c(16.72317375558434,27.84846698628971,37.14977317593621,0.0),c(12.74146571854045,17.96675289438046,31.842662722231037,0.0),c(63.707328592702254,43.12020694651311,58.3782149907569,0.0),c(32.650005903759904,62.88363513033161,65.95980135319286,0.0),c(130.60002361503962,203.92264535121822,134.19407861511652,0.0),c(1.5926832148175563,1.796675289438046,5.307110453705173,0.0),c(15.130490540766784,15.27173996022339,5.307110453705173,0.0),c(27.075614651898455,18.865090539099484,53.829263173295324,0.0),c(35.835372333395014,39.52685636763701,27.293710904769462,0.0),c(11.148782503722893,11.6783893813473,19.7121245423335,0.0),c(11.148782503722893,11.6783893813473,10.614220907410346,0.0),c(50.16952126675302,44.01854459123213,28.810028177256655,0.0),c(7.963416074087782,15.27173996022339,32.60082135847463,0.0),c(18.315856970401896,8.98337644719023,6.8234277261923655,0.0),c(3.1853664296351125,14.373402315504368,3.790793181217981,0.0),c(54.15122930379691,40.42519401235604,53.07110453705173,281.9562764656999),c(98.74635931868849,86.24041389302621,95.52798816669312,0.0),c(84.41221038533048,114.08888087931592,77.33218089684681,0.0),c(37.42805554821257,36.831843433479946,60.652690899487695,0.0),c(15.130490540766784,36.831843433479946,44.731359538372175,0.0),c(25.4829314370809,6.288363513033161,6.8234277261923655,323.6089082163146),c(21.50122340003701,10.780051736628277,14.405014088628327,0.0),c(27.871956259307236,36.831843433479946,27.293710904769462,0.0),c(29.46463947412479,13.475064670785345,18.953965906089902,189.03886717586695),c(38.22439715562135,56.59527161729845,67.47611862568006,0.0),c(42.20610519266524,67.37532335392673,77.33218089684681,0.0),c(32.650005903759904,21.560103473256554,25.77739363228227,0.0),c(15.130490540766784,11.6783893813473,20.470283178577095,0.0),c(88.39391842237437,79.05371273527402,59.1363736270005,0.0),c(39.81708037043891,26.95012934157069,45.48951817461577,0.0),c(101.9317257483236,97.9188032743735,89.46271907674435,0.0),c(79.63416074087782,95.22379034021644,112.20747816405223,0.0),c(110.69148342982017,93.4271150507784,87.18824316801356,0.0),c(31.057322688942346,44.91688223595115,40.1824077209106,0.0),c(54.15122930379691,26.95012934157069,40.1824077209106,0.0),c(83.6158687779217,92.52877740605936,78.0903395330904,86.50931209743064),c(50.9658628741618,45.81521988067017,53.07110453705173,262.73198488849306),c(58.92927894824958,40.42519401235604,61.41084953573129,0.0),c(50.9658628741618,49.40857045954626,25.77739363228227,0.0),c(23.890248222263345,27.84846698628971,39.424249084667,0.0),c(58.92927894824958,72.76534922224086,47.00583544710296,0.0),c(14.334148933358007,43.12020694651311,12.888696816141135,0.0),c(101.13538414091482,103.30882914268764,84.15560862303917,195.44696436826922),c(20.704881792628232,17.068415249661438,13.646855452384731,0.0),c(26.279273044489678,39.52685636763701,47.00583544710296,0.0),c(45.39147162230035,17.96675289438046,49.280311355833746,0.0),c(31.853664296351127,35.93350578876092,27.293710904769462,0.0),c(129.80368200763084,133.8523090631344,112.96563680029583,416.52631750614756),c(160.8610046965732,87.13875153774524,79.6066568055776,0.0),c(27.871956259307236,35.0351681440419,25.77739363228227,0.0),c(23.093906614854564,19.763428183818505,33.35897999471823,147.3862354252522),c(129.00734040022206,114.08888087931592,86.43008453176996,0.0),c(41.409763585256464,55.69693397257942,28.05186954101306,0.0),c(57.33659573343203,47.61189517010822,58.3782149907569,0.0),c(23.093906614854564,43.12020694651311,37.14977317593621,0.0),c(19.908540185219454,1.796675289438046,4.548951817461576,0.0),c(55.74391251861447,53.00192103842236,91.73719498547513,0.0),c(36.63171394080379,23.3567787626946,13.646855452384731,0.0),c(43.798788407482796,11.6783893813473,17.437648633602713,0.0),c(38.22439715562135,19.763428183818505,28.810028177256655,0.0),c(117.06221628909039,119.47890674763006,133.43591997887293,0.0),c(0.7963416074087781,0.0,17.437648633602713,0.0),c(12.74146571854045,17.068415249661438,10.614220907410346,0.0),c(34.24268911857746,26.95012934157069,40.94056635715419,0.0),c(3.1853664296351125,6.288363513033161,15.163172724871924,0.0),c(7.167074466679003,19.763428183818505,21.986600451064287,0.0),c(31.057322688942346,35.0351681440419,16.679489997359116,0.0),c(20.704881792628232,27.84846698628971,40.94056635715419,32.040485962011346),c(29.46463947412479,30.54347992044678,37.907931812179804,0.0),c(32.650005903759904,34.136830499322876,37.14977317593621,0.0),c(35.03903072598624,42.22186930179408,18.953965906089902,0.0),c(21.50122340003701,29.64514227572776,29.56818681350025,0.0),c(32.650005903759904,23.3567787626946,28.05186954101306,0.0),c(59.72562055565836,64.68031041976965,33.35897999471823,0.0),c(53.35488769638813,83.54540095886914,62.92716680821848,0.0),c(19.112198577810673,10.780051736628277,12.888696816141135,0.0),c(45.39147162230035,61.985297485612584,24.261076359795076,0.0),c(48.57683805193547,26.051791696851666,22.744759087307884,57.672874731620425),c(28.668297866716014,19.763428183818505,28.05186954101306,0.0),c(57.33659573343203,44.91688223595115,47.76399408334656,0.0),c(41.409763585256464,34.136830499322876,28.810028177256655,214.67125594547605),c(28.668297866716014,26.95012934157069,16.679489997359116,0.0),c(23.093906614854564,23.3567787626946,17.437648633602713,0.0),c(43.798788407482796,29.64514227572776,40.1824077209106,0.0),c(8.75975768149656,6.288363513033161,8.339744998679558,0.0),c(27.075614651898455,19.763428183818505,17.437648633602713,0.0),c(89.98660163719192,63.78197277505063,59.894532263244095,0.0),c(39.02073876303013,50.30690810426529,28.05186954101306,0.0),c(29.46463947412479,11.6783893813473,7.581586362435962,0.0),c(35.03903072598624,19.763428183818505,24.261076359795076,0.0),c(35.835372333395014,28.746804631008736,44.731359538372175,0.0),c(19.112198577810673,39.52685636763701,28.810028177256655,0.0),c(23.093906614854564,13.475064670785345,13.646855452384731,0.0),c(54.15122930379691,48.51023281482724,21.986600451064287,0.0),c(11.148782503722893,11.6783893813473,3.790793181217981,0.0),c(24.686589829672123,21.560103473256554,24.261076359795076,0.0),c(36.63171394080379,36.831843433479946,36.39161453969261,221.07935313787831),c(20.704881792628232,17.96675289438046,35.63345590344902,0.0),c(25.4829314370809,17.96675289438046,14.405014088628327,189.03886717586695),c(25.4829314370809,15.27173996022339,22.744759087307884,0.0),c(19.908540185219454,17.068415249661438,22.744759087307884,150.59028402145333),c(30.26098108153357,47.61189517010822,34.875297267205426,0.0),c(19.908540185219454,44.01854459123213,75.81586362435961,0.0),c(46.98415483711791,39.52685636763701,45.48951817461577,0.0),c(79.63416074087782,113.1905432345969,40.1824077209106,0.0),c(15.926832148175563,27.84846698628971,28.05186954101306,0.0),c(27.075614651898455,22.458441117975575,25.77739363228227,0.0),c(7.963416074087782,11.6783893813473,11.372379543653942,0.0),c(39.81708037043891,26.051791696851666,15.921331361115518,0.0),c(38.22439715562135,61.08695984089356,47.00583544710296,0.0),c(23.890248222263345,19.763428183818505,15.921331361115518,0.0),c(34.24268911857746,23.3567787626946,25.77739363228227,0.0),c(43.798788407482796,55.69693397257942,78.0903395330904,0.0),c(30.26098108153357,20.66176582853753,50.79662862832094,246.71174190748738),c(71.67074466679003,74.56202451167891,31.842662722231037,102.52955507843632),c(89.98660163719192,97.02046562965448,87.94640180425715,307.58866523530895),c(23.093906614854564,13.475064670785345,14.405014088628327,0.0),c(66.89269502233736,52.10358339370333,39.424249084667,208.26315875307378),c(31.057322688942346,21.560103473256554,40.1824077209106,0.0),c(33.44634751116868,31.441817565165806,25.77739363228227,0.0),c(50.9658628741618,44.01854459123213,44.731359538372175,0.0),c(22.297565007445787,51.20524574898431,28.05186954101306,0.0),c(6.370732859270225,17.068415249661438,9.85606227116675,0.0),c(17.51951536299312,29.64514227572776,21.986600451064287,0.0),c(17.51951536299312,14.373402315504368,5.307110453705173,0.0),c(41.409763585256464,53.90025868314138,29.56818681350025,57.672874731620425),c(62.91098698529347,91.63043976134034,104.62589180161626,0.0),c(7.167074466679003,0.898337644719023,6.065269089948769,0.0),c(39.81708037043891,40.42519401235604,53.829263173295324,265.9360334846942),c(42.20610519266524,40.42519401235604,81.88113271430838,0.0),c(29.46463947412479,36.831843433479946,52.31294590080813,0.0),c(8.75975768149656,13.475064670785345,10.614220907410346,0.0),c(68.48537823715492,70.0703362880838,55.34558044578252,240.3036447150851),c(11.945124111131673,17.068415249661438,15.163172724871924,0.0),c(31.853664296351127,11.6783893813473,20.470283178577095,0.0),c(38.22439715562135,20.66176582853753,27.293710904769462,0.0),c(183.95491131142774,197.63428183818505,128.12880952516775,0.0),c(25.4829314370809,13.475064670785345,29.56818681350025,0.0),c(22.297565007445787,17.96675289438046,15.921331361115518,259.52793629229194),c(35.835372333395014,44.91688223595115,39.424249084667,0.0),c(52.558546088979355,64.68031041976965,40.1824077209106,262.73198488849306),c(14.334148933358007,19.763428183818505,6.065269089948769,0.0),c(135.37807325949228,100.61381620853058,112.20747816405223,275.5481792732976),c(14.334148933358007,23.3567787626946,17.437648633602713,0.0),c(40.613421977847686,33.23849285460385,21.22844181482069,0.0),c(4.778049644452668,15.27173996022339,16.679489997359116,0.0),c(32.650005903759904,47.61189517010822,52.31294590080813,22.428340173407946),c(86.80123520755681,96.12212798493546,103.10957452912908,0.0),c(5.574391251861447,2.695012934157069,11.372379543653942,0.0),c(36.63171394080379,57.49360926201747,49.280311355833746,0.0),c(7.167074466679003,28.746804631008736,11.372379543653942,0.0),c(15.130490540766784,7.186701157752184,4.548951817461576,0.0),c(7.167074466679003,7.186701157752184,6.8234277261923655,0.0),c(141.7488061187625,128.4622831948203,97.8024640754239,467.7910950453657),c(54.94757091120569,26.95012934157069,44.731359538372175,57.672874731620425),c(82.81952717051293,101.5121538532496,72.02507044314163,102.52955507843632),c(47.78049644452669,37.73018107819897,37.14977317593621,0.0),c(16.72317375558434,23.3567787626946,35.63345590344902,0.0),c(48.57683805193547,45.81521988067017,56.10373908202612,0.0),c(7.963416074087782,15.27173996022339,10.614220907410346,0.0),c(110.69148342982017,111.39386794515885,114.48195407278301,0.0),c(129.80368200763084,146.42903608920074,88.70456044050074,0.0),c(29.46463947412479,16.170077604942414,25.019234996038673,0.0),c(49.373179659344245,48.51023281482724,53.07110453705173,0.0),c(23.093906614854564,64.68031041976965,28.810028177256655,0.0),c(26.279273044489678,23.3567787626946,40.94056635715419,0.0),c(12.74146571854045,26.051791696851666,15.921331361115518,0.0),c(7.167074466679003,16.170077604942414,33.35897999471823,0.0),c(10.352440896314116,4.491688223595115,17.437648633602713,0.0),c(42.20610519266524,37.73018107819897,37.14977317593621,0.0),c(39.02073876303013,39.52685636763701,53.07110453705173,0.0),c(26.279273044489678,20.66176582853753,21.986600451064287,156.99838121385562),c(25.4829314370809,14.373402315504368,36.39161453969261,0.0),c(63.707328592702254,36.831843433479946,63.68532544446207,0.0),c(7.963416074087782,17.068415249661438,15.921331361115518,0.0),c(46.98415483711791,43.12020694651311,50.038469992077346,788.1959546654792),c(92.37562645941826,69.17199864336477,75.81586362435961,32.040485962011346),c(89.98660163719192,88.03708918246426,109.17484361907785,0.0),c(15.130490540766784,15.27173996022339,12.130538179897538,0.0),c(15.130490540766784,8.085038802471207,9.097903634923153,0.0),c(70.87440305938125,105.10550443212568,80.3648154418212,0.0),c(38.22439715562135,44.01854459123213,33.35897999471823,0.0),c(8.75975768149656,6.288363513033161,13.646855452384731,0.0),c(7.963416074087782,28.746804631008736,28.05186954101306,0.0),c(35.835372333395014,20.66176582853753,43.21504226588498,0.0),c(95.56099288905338,86.24041389302621,108.41668498283425,9.612145788603405),c(44.59513001489157,45.81521988067017,70.50875317065444,0.0),c(48.57683805193547,43.12020694651311,38.666090448423404,121.75384665564313),c(26.279273044489678,25.153454052132645,23.50291772355148,0.0),c(13.537807325949228,26.051791696851666,55.34558044578252,0.0),c(11.148782503722893,16.170077604942414,21.22844181482069,0.0),c(50.16952126675302,58.39194690673649,43.973200902128575,99.32550648223518),c(66.89269502233736,121.2755820370681,101.59325725664188,0.0),c(34.24268911857746,37.73018107819897,52.31294590080813,140.97813823284994),c(27.075614651898455,33.23849285460385,36.39161453969261,0.0),c(34.24268911857746,38.62851872291799,25.019234996038673,0.0),c(66.09635341492859,38.62851872291799,43.21504226588498,0.0),c(8.75975768149656,3.593350578876092,4.548951817461576,0.0),c(107.50611700018504,106.90217972156374,101.59325725664188,0.0),c(45.39147162230035,36.831843433479946,43.21504226588498,0.0),c(86.00489360014804,121.2755820370681,81.88113271430838,246.71174190748738),c(15.130490540766784,8.085038802471207,30.326345449743847,0.0),c(70.07806145197247,82.64706331415012,80.3648154418212,0.0),c(46.98415483711791,56.59527161729845,98.56062271166749,0.0),c(28.668297866716014,27.84846698628971,34.117138630961826,105.73360367463745),c(78.04147752606026,41.32353165707506,90.22087771298794,0.0),c(47.78049644452669,49.40857045954626,52.31294590080813,0.0),c(16.72317375558434,22.458441117975575,17.437648633602713,0.0),c(39.81708037043891,42.22186930179408,35.63345590344902,0.0),c(57.33659573343203,48.51023281482724,75.81586362435961,12.81619438480454),c(53.35488769638813,34.136830499322876,59.1363736270005,0.0),c(39.81708037043891,44.01854459123213,35.63345590344902,211.4672073492749),c(62.11464537788469,61.08695984089356,43.21504226588498,0.0),c(9.556099288905337,17.96675289438046,23.50291772355148,0.0),c(50.16952126675302,22.458441117975575,19.7121245423335,0.0),c(23.093906614854564,24.25511640741362,43.21504226588498,0.0),c(43.00244680007402,19.763428183818505,48.52215271959015,0.0),c(93.17196806682703,82.64706331415012,112.20747816405223,0.0),c(44.59513001489157,40.42519401235604,32.60082135847463,0.0),c(18.315856970401896,53.90025868314138,24.261076359795076,0.0),c(35.03903072598624,55.69693397257942,67.47611862568006,0.0),c(61.318303770475914,63.78197277505063,45.48951817461577,0.0),c(38.22439715562135,49.40857045954626,66.71795998943647,0.0),c(16.72317375558434,10.780051736628277,8.339744998679558,0.0),c(41.409763585256464,61.08695984089356,62.16900817197488,0.0),c(39.81708037043891,22.458441117975575,18.953965906089902,0.0),c(7.167074466679003,10.780051736628277,16.679489997359116,0.0),c(69.2817198445637,50.30690810426529,88.70456044050074,0.0),c(90.7829432446007,112.29220558987788,70.50875317065444,0.0),c(144.9341725483976,123.97059497122517,103.86773316537267,0.0),c(46.18781322970913,61.08695984089356,47.00583544710296,89.71336069363178),c(17.51951536299312,17.068415249661438,17.437648633602713,0.0),c(72.4670862741988,81.7487256694311,85.67192589552636,0.0),c(7.167074466679003,1.796675289438046,0.7581586362435961,0.0),c(68.48537823715492,62.88363513033161,59.894532263244095,217.87530454167717),c(36.63171394080379,31.441817565165806,29.56818681350025,0.0),c(82.81952717051293,30.54347992044678,49.280311355833746,0.0),c(87.59757681496559,75.46036215639793,45.48951817461577,0.0),c(16.72317375558434,41.32353165707506,15.921331361115518,881.1133639553121),c(15.130490540766784,13.475064670785345,10.614220907410346,0.0),c(15.926832148175563,11.6783893813473,15.921331361115518,0.0),c(31.057322688942346,28.746804631008736,13.646855452384731,0.0),c(11.148782503722893,17.96675289438046,14.405014088628327,1050.9279395539722),c(66.09635341492859,58.39194690673649,56.86189771826971,0.0),c(35.03903072598624,24.25511640741362,12.130538179897538,0.0),c(15.130490540766784,9.881714091909252,13.646855452384731,0.0),c(92.37562645941826,87.13875153774524,117.5145886177574,0.0),c(58.92927894824958,86.24041389302621,57.62005635451331,182.6307699834647),c(26.279273044489678,26.95012934157069,40.1824077209106,0.0),c(9.556099288905337,22.458441117975575,21.22844181482069,0.0),c(99.54270092609727,108.69885501100178,109.93300225532144,0.0),c(21.50122340003701,24.25511640741362,24.261076359795076,102.52955507843632),c(12.74146571854045,35.93350578876092,15.163172724871924,0.0),c(28.668297866716014,70.0703362880838,70.50875317065444,0.0),c(16.72317375558434,19.763428183818505,21.986600451064287,0.0),c(16.72317375558434,8.98337644719023,16.679489997359116,0.0),c(82.81952717051293,79.95205037999305,115.24011270902662,0.0),c(12.74146571854045,0.0,15.921331361115518,0.0),c(50.9658628741618,38.62851872291799,24.261076359795076,0.0),c(46.98415483711791,22.458441117975575,28.05186954101306,0.0),c(9.556099288905337,8.085038802471207,7.581586362435962,0.0),c(1.5926832148175563,6.288363513033161,4.548951817461576,0.0),c(61.318303770475914,64.68031041976965,47.76399408334656,0.0),c(70.07806145197247,86.24041389302621,58.3782149907569,304.38461663910783),c(99.54270092609727,93.4271150507784,112.20747816405223,422.9344146985498),c(12.74146571854045,0.0,13.646855452384731,0.0),c(15.926832148175563,8.085038802471207,25.019234996038673,0.0),c(141.7488061187625,114.98721852403494,131.91960270638572,0.0),c(104.32075057054993,77.25703744583598,81.12297407806479,0.0),c(65.30001180751981,49.40857045954626,44.731359538372175,208.26315875307378),c(149.71222219285028,132.05563377369637,161.48778951988598,124.95789525184426),c(17.51951536299312,19.763428183818505,36.39161453969261,0.0),c(20.704881792628232,35.0351681440419,24.261076359795076,0.0),c(20.704881792628232,23.3567787626946,22.744759087307884,0.0),c(142.54514772617128,139.24233493144857,103.86773316537267,76.89716630882724),c(67.68903662974614,35.0351681440419,56.10373908202612,0.0),c(38.22439715562135,47.61189517010822,21.22844181482069,0.0),c(39.02073876303013,26.95012934157069,54.587421809538924,3.204048596201135),c(26.279273044489678,38.62851872291799,37.907931812179804,0.0),c(65.30001180751981,53.90025868314138,39.424249084667,0.0),c(56.54025412602325,47.61189517010822,34.117138630961826,0.0),c(37.42805554821257,28.746804631008736,63.68532544446207,0.0),c(53.35488769638813,14.373402315504368,21.22844181482069,70.48906911642497),c(21.50122340003701,13.475064670785345,20.470283178577095,0.0),c(62.91098698529347,61.08695984089356,57.62005635451331,25.63238876960908),c(20.704881792628232,22.458441117975575,27.293710904769462,134.57004104044768),c(35.835372333395014,16.170077604942414,28.810028177256655,346.03724838972255),c(27.075614651898455,20.66176582853753,31.842662722231037,426.1384632947509),c(50.9658628741618,23.3567787626946,36.39161453969261,0.0),c(63.707328592702254,53.90025868314138,56.10373908202612,0.0),c(93.96830967423583,108.69885501100178,159.9714722473988,464.5870464491646),c(11.945124111131673,15.27173996022339,19.7121245423335,0.0),c(27.871956259307236,44.01854459123213,36.39161453969261,0.0),c(68.48537823715492,53.00192103842236,60.652690899487695,0.0),c(14.334148933358007,20.66176582853753,25.019234996038673,0.0),c(41.409763585256464,45.81521988067017,15.163172724871924,0.0),c(9.556099288905337,20.66176582853753,19.7121245423335,51.26477753921816),c(26.279273044489678,32.34015520988483,27.293710904769462,0.0),c(53.35488769638813,53.00192103842236,58.3782149907569,0.0),c(28.668297866716014,47.61189517010822,32.60082135847463,0.0),c(10.352440896314116,18.865090539099484,29.56818681350025,0.0),c(35.03903072598624,24.25511640741362,18.195807269846306,0.0),c(15.926832148175563,13.475064670785345,3.790793181217981,35.244534558212486),c(39.02073876303013,10.780051736628277,21.986600451064287,0.0),c(27.075614651898455,32.34015520988483,20.470283178577095,0.0),c(132.19270682985717,105.10550443212568,141.77566497755248,144.18218682905106),c(74.05976948901636,30.54347992044678,42.45688362964138,173.01862419486127),c(46.98415483711791,38.62851872291799,37.14977317593621,0.0),c(98.74635931868849,135.64898435257248,109.17484361907785,0.0),c(0.0,7.186701157752184,8.339744998679558,166.610527002459),c(7.963416074087782,17.96675289438046,0.7581586362435961,0.0),c(43.00244680007402,47.61189517010822,47.76399408334656,128.16194384804538),c(98.74635931868849,100.61381620853058,103.86773316537267,0.0),c(16.72317375558434,17.068415249661438,15.921331361115518,0.0),c(14.334148933358007,2.695012934157069,10.614220907410346,0.0),c(23.890248222263345,14.373402315504368,44.731359538372175,0.0),c(51.76220448157058,48.51023281482724,59.894532263244095,0.0),c(11.945124111131673,3.593350578876092,15.163172724871924,0.0),c(141.7488061187625,131.15729612897735,132.67776134262934,0.0),c(25.4829314370809,18.865090539099484,13.646855452384731,0.0),c(54.15122930379691,52.10358339370333,31.842662722231037,0.0),c(24.686589829672123,21.560103473256554,28.810028177256655,0.0),c(26.279273044489678,51.20524574898431,44.731359538372175,0.0),c(23.093906614854564,17.068415249661438,17.437648633602713,0.0),c(70.87440305938125,68.27366099864575,50.79662862832094,0.0),c(43.00244680007402,75.46036215639793,82.63929135055199,0.0),c(105.91343378536749,79.95205037999305,69.75059453441085,0.0),c(19.908540185219454,23.3567787626946,25.77739363228227,0.0),c(33.44634751116868,33.23849285460385,19.7121245423335,0.0),c(66.09635341492859,47.61189517010822,59.894532263244095,0.0),c(18.315856970401896,14.373402315504368,23.50291772355148,0.0),c(91.57928485200948,79.95205037999305,77.33218089684681,0.0),c(50.16952126675302,54.7985963278604,65.95980135319286,140.97813823284994),c(41.409763585256464,32.34015520988483,37.907931812179804,0.0),c(54.15122930379691,38.62851872291799,54.587421809538924,0.0),c(34.24268911857746,28.746804631008736,30.326345449743847,0.0),c(2.389024822226334,0.0,6.8234277261923655,0.0),c(68.48537823715492,70.96867393280282,35.63345590344902,0.0),c(31.853664296351127,44.91688223595115,44.731359538372175,0.0),c(10.352440896314116,7.186701157752184,13.646855452384731,0.0),c(99.54270092609727,98.81714091909252,131.91960270638572,211.4672073492749),c(83.6158687779217,53.90025868314138,86.43008453176996,160.20242981005674),c(86.80123520755681,127.56394555010127,112.20747816405223,0.0),c(5.574391251861447,4.491688223595115,10.614220907410346,0.0),c(77.24513591865148,55.69693397257942,55.34558044578252,0.0),c(66.89269502233736,42.22186930179408,72.02507044314163,0.0),c(17.51951536299312,35.0351681440419,12.888696816141135,0.0),c(11.148782503722893,8.085038802471207,4.548951817461576,0.0),c(27.075614651898455,35.0351681440419,24.261076359795076,160.20242981005674),c(13.537807325949228,6.288363513033161,11.372379543653942,0.0),c(0.0,0.0,0.0,0.0),c(103.52440896314116,109.5971926557208,120.54722316273178,73.6931177126261),c(53.35488769638813,21.560103473256554,31.842662722231037,0.0),c(46.18781322970913,86.24041389302621,70.50875317065444,0.0),c(10.352440896314116,4.491688223595115,25.019234996038673,0.0),c(83.6158687779217,106.90217972156374,63.68532544446207,0.0),c(0.7963416074087781,0.898337644719023,3.790793181217981,0.0),c(136.97075647430984,150.02238666807685,120.54722316273178,397.30202592894074),c(49.373179659344245,46.7135575253892,52.31294590080813,0.0),c(31.853664296351127,21.560103473256554,32.60082135847463,0.0),c(39.81708037043891,12.576727026066322,22.744759087307884,0.0),c(25.4829314370809,35.0351681440419,21.22844181482069,0.0),c(26.279273044489678,45.81521988067017,41.69872499339779,0.0),c(60.52196216306714,61.985297485612584,77.33218089684681,259.52793629229194),c(50.9658628741618,22.458441117975575,43.973200902128575,0.0),c(49.373179659344245,42.22186930179408,44.731359538372175,0.0),c(21.50122340003701,30.54347992044678,20.470283178577095,205.05911015687263),c(35.835372333395014,23.3567787626946,29.56818681350025,0.0),c(92.37562645941826,87.13875153774524,84.91376725928276,0.0),c(67.68903662974614,91.63043976134034,72.02507044314163,288.3643736581021),c(49.373179659344245,77.25703744583598,54.587421809538924,294.7724708505044),c(24.686589829672123,17.96675289438046,11.372379543653942,0.0),c(3.981708037043891,17.068415249661438,18.195807269846306,0.0),c(59.72562055565836,56.59527161729845,76.57402226060321,0.0),c(170.41710398547852,129.3606208395393,142.53382361379607,0.0),c(38.22439715562135,32.34015520988483,32.60082135847463,134.57004104044768),c(26.279273044489678,17.96675289438046,15.921331361115518,0.0),c(31.853664296351127,53.00192103842236,25.019234996038673,0.0),c(19.908540185219454,17.96675289438046,16.679489997359116,0.0),c(71.67074466679003,80.85038802471207,63.68532544446207,0.0),c(53.35488769638813,79.05371273527402,70.50875317065444,118.549798059442),c(54.94757091120569,42.22186930179408,40.94056635715419,0.0),c(8.75975768149656,10.780051736628277,6.8234277261923655,0.0),c(44.59513001489157,23.3567787626946,60.652690899487695,0.0),c(17.51951536299312,45.81521988067017,39.424249084667,0.0),c(74.85611109642514,82.64706331415012,81.12297407806479,0.0),c(34.24268911857746,24.25511640741362,35.63345590344902,0.0),c(35.03903072598624,40.42519401235604,29.56818681350025,0.0),c(126.61831557799572,112.29220558987788,135.7103958876037,0.0),c(44.59513001489157,56.59527161729845,28.810028177256655,0.0),c(48.57683805193547,32.34015520988483,40.94056635715419,0.0),c(93.17196806682703,69.17199864336477,85.67192589552636,0.0),c(4.778049644452668,14.373402315504368,3.0326345449743846,0.0),c(37.42805554821257,59.29028455145552,33.35897999471823,644.0137678364281),c(35.03903072598624,25.153454052132645,49.280311355833746,0.0),c(16.72317375558434,44.01854459123213,35.63345590344902,0.0),c(11.148782503722893,17.068415249661438,13.646855452384731,0.0),c(20.704881792628232,17.96675289438046,31.842662722231037,0.0),c(17.51951536299312,9.881714091909252,14.405014088628327,0.0),c(10.352440896314116,8.085038802471207,3.0326345449743846,0.0),c(12.74146571854045,15.27173996022339,16.679489997359116,0.0),c(4.778049644452668,26.051791696851666,9.85606227116675,0.0),c(123.4329491483606,139.24233493144857,95.52798816669312,0.0),c(70.87440305938125,63.78197277505063,52.31294590080813,0.0),c(99.54270092609727,74.56202451167891,95.52798816669312,144.18218682905106),c(85.20855199273926,102.41049149796862,112.96563680029583,0.0),c(44.59513001489157,14.373402315504368,19.7121245423335,0.0),c(43.798788407482796,52.10358339370333,60.652690899487695,0.0),c(85.20855199273926,51.20524574898431,66.71795998943647,0.0),c(4.778049644452668,9.881714091909252,14.405014088628327,118.549798059442),c(24.686589829672123,7.186701157752184,20.470283178577095,0.0),c(8.75975768149656,18.865090539099484,18.195807269846306,0.0),c(49.373179659344245,39.52685636763701,35.63345590344902,0.0),c(19.112198577810673,26.051791696851666,7.581586362435962,0.0),c(1.5926832148175563,3.593350578876092,0.0,0.0),c(19.908540185219454,43.12020694651311,27.293710904769462,0.0),c(40.613421977847686,49.40857045954626,29.56818681350025,781.7878574730769),c(47.78049644452669,47.61189517010822,56.86189771826971,0.0),c(119.45124111131672,105.10550443212568,100.83509862039828,0.0),c(16.72317375558434,20.66176582853753,15.163172724871924,0.0),c(35.03903072598624,75.46036215639793,45.48951817461577,0.0),c(15.926832148175563,10.780051736628277,9.85606227116675,0.0),c(7.167074466679003,27.84846698628971,12.888696816141135,0.0),c(6.370732859270225,4.491688223595115,0.0,0.0),c(46.98415483711791,5.390025868314138,40.94056635715419,0.0),c(49.373179659344245,38.62851872291799,33.35897999471823,54.46882613541929),c(44.59513001489157,44.91688223595115,30.326345449743847,0.0),c(28.668297866716014,36.831843433479946,14.405014088628327,0.0),c(79.63416074087782,83.54540095886914,115.24011270902662,0.0),c(15.926832148175563,30.54347992044678,38.666090448423404,0.0),c(63.707328592702254,60.18862219617454,62.16900817197488,438.9546576795555),c(30.26098108153357,37.73018107819897,32.60082135847463,0.0),c(31.853664296351127,35.0351681440419,21.22844181482069,0.0),c(21.50122340003701,3.593350578876092,4.548951817461576,0.0),c(29.46463947412479,15.27173996022339,24.261076359795076,0.0),c(33.44634751116868,56.59527161729845,69.75059453441085,0.0),c(97.15367610387094,88.93542682718328,114.48195407278301,0.0),c(75.65245270383392,69.17199864336477,92.49535362171873,0.0),c(65.30001180751981,54.7985963278604,43.21504226588498,0.0),c(26.279273044489678,28.746804631008736,42.45688362964138,0.0),c(50.16952126675302,46.7135575253892,43.21504226588498,259.52793629229194),c(23.890248222263345,26.95012934157069,10.614220907410346,0.0),c(19.908540185219454,15.27173996022339,26.535552268525866,0.0),c(40.613421977847686,52.10358339370333,55.34558044578252,0.0),c(56.54025412602325,84.44373860358816,56.86189771826971,0.0),c(60.52196216306714,40.42519401235604,78.0903395330904,0.0),c(119.45124111131672,125.76727026066322,89.46271907674435,246.71174190748738),c(50.16952126675302,40.42519401235604,37.907931812179804,0.0),c(31.057322688942346,26.051791696851666,41.69872499339779,0.0),c(30.26098108153357,26.051791696851666,32.60082135847463,0.0),c(75.65245270383392,62.88363513033161,62.92716680821848,429.3425118909521),c(27.075614651898455,37.73018107819897,27.293710904769462,0.0),c(61.318303770475914,56.59527161729845,65.20164271694927,0.0),c(10.352440896314116,8.98337644719023,0.0,0.0),c(14.334148933358007,24.25511640741362,19.7121245423335,0.0),c(56.54025412602325,55.69693397257942,44.731359538372175,541.4842127579918),c(12.74146571854045,26.95012934157069,12.130538179897538,0.0),c(22.297565007445787,26.051791696851666,36.39161453969261,0.0),c(59.72562055565836,66.4769857092077,77.33218089684681,0.0),c(20.704881792628232,46.7135575253892,31.842662722231037,0.0),c(42.20610519266524,35.0351681440419,18.953965906089902,0.0),c(10.352440896314116,5.390025868314138,9.097903634923153,0.0),c(31.853664296351127,45.81521988067017,40.94056635715419,73.6931177126261),c(129.00734040022206,139.24233493144857,136.4685545238473,0.0),c(38.22439715562135,68.27366099864575,56.10373908202612,0.0),c(78.04147752606026,61.985297485612584,43.973200902128575,0.0),c(68.48537823715492,99.71547856381156,52.31294590080813,38.44858315441362),c(89.19026002978315,52.10358339370333,39.424249084667,16.020242981005673),c(9.556099288905337,9.881714091909252,11.372379543653942,0.0),c(44.59513001489157,81.7487256694311,43.973200902128575,0.0),c(78.83781913346904,69.17199864336477,62.92716680821848,201.8550615606715),c(9.556099288905337,11.6783893813473,18.953965906089902,0.0),c(34.24268911857746,35.0351681440419,42.45688362964138,0.0),c(4.778049644452668,23.3567787626946,14.405014088628327,0.0),c(53.35488769638813,21.560103473256554,37.907931812179804,0.0),c(52.558546088979355,26.051791696851666,34.875297267205426,519.0558725845839),c(11.148782503722893,13.475064670785345,6.8234277261923655,0.0),c(78.83781913346904,97.02046562965448,62.92716680821848,0.0),c(36.63171394080379,9.881714091909252,25.019234996038673,60.876923327821565),c(19.908540185219454,15.27173996022339,25.77739363228227,0.0),c(34.24268911857746,36.831843433479946,60.652690899487695,64.08097192402269),c(89.98660163719192,100.61381620853058,73.54138771562883,0.0),c(53.35488769638813,28.746804631008736,75.81586362435961,0.0),c(56.54025412602325,44.91688223595115,74.29954635187242,0.0),c(22.297565007445787,32.34015520988483,28.05186954101306,0.0),c(54.15122930379691,58.39194690673649,53.829263173295324,0.0),c(11.945124111131673,19.763428183818505,14.405014088628327,0.0),c(23.890248222263345,1.796675289438046,4.548951817461576,0.0),c(44.59513001489157,30.54347992044678,21.22844181482069,195.44696436826922),c(27.871956259307236,40.42519401235604,55.34558044578252,0.0),c(2.389024822226334,15.27173996022339,4.548951817461576,0.0),c(44.59513001489157,35.0351681440419,49.280311355833746,0.0),c(18.315856970401896,46.7135575253892,26.535552268525866,0.0),c(56.54025412602325,78.155375090555,83.39744998679558,0.0),c(49.373179659344245,26.95012934157069,57.62005635451331,0.0),c(61.318303770475914,63.78197277505063,53.07110453705173,108.93765227083858),c(57.33659573343203,26.95012934157069,24.261076359795076,1118.2129600741962),c(16.72317375558434,26.95012934157069,37.907931812179804,0.0),c(15.926832148175563,18.865090539099484,22.744759087307884,0.0),c(27.075614651898455,39.52685636763701,35.63345590344902,96.12145788603405),c(62.91098698529347,74.56202451167891,71.26691180689804,0.0),c(27.075614651898455,25.153454052132645,42.45688362964138,0.0),c(70.07806145197247,53.00192103842236,52.31294590080813,0.0),c(63.707328592702254,88.93542682718328,75.81586362435961,0.0),c(11.148782503722893,13.475064670785345,14.405014088628327,0.0),c(9.556099288905337,17.96675289438046,11.372379543653942,0.0),c(37.42805554821257,33.23849285460385,37.907931812179804,0.0),c(11.148782503722893,34.136830499322876,36.39161453969261,262.73198488849306),c(148.9158805854415,123.97059497122517,143.29198225003967,695.2785453756463),c(60.52196216306714,35.0351681440419,22.744759087307884,0.0),c(101.9317257483236,99.71547856381156,113.72379543653942,0.0),c(3.1853664296351125,11.6783893813473,10.614220907410346,0.0),c(74.05976948901636,42.22186930179408,36.39161453969261,0.0),c(9.556099288905337,32.34015520988483,23.50291772355148,0.0),c(69.2817198445637,88.03708918246426,37.907931812179804,0.0),c(37.42805554821257,30.54347992044678,30.326345449743847,0.0),c(18.315856970401896,11.6783893813473,12.888696816141135,0.0),c(43.798788407482796,34.136830499322876,32.60082135847463,0.0),c(105.91343378536749,85.34207624830718,97.0443054391803,76.89716630882724),c(67.68903662974614,47.61189517010822,34.117138630961826,0.0),c(11.945124111131673,1.796675289438046,6.8234277261923655,0.0),c(108.30245860759382,110.49553030043982,89.46271907674435,0.0),c(67.68903662974614,79.95205037999305,54.587421809538924,0.0),c(10.352440896314116,4.491688223595115,12.888696816141135,0.0),c(27.075614651898455,10.780051736628277,19.7121245423335,0.0),c(11.945124111131673,32.34015520988483,7.581586362435962,214.67125594547605),c(3.1853664296351125,9.881714091909252,15.163172724871924,0.0),c(89.19026002978315,70.0703362880838,95.52798816669312,297.97651944670554),c(28.668297866716014,26.95012934157069,33.35897999471823,0.0),c(18.315856970401896,47.61189517010822,40.1824077209106,0.0),c(18.315856970401896,13.475064670785345,8.339744998679558,0.0),c(3.981708037043891,8.085038802471207,18.195807269846306,0.0),c(40.613421977847686,31.441817565165806,25.019234996038673,0.0),c(48.57683805193547,21.560103473256554,50.79662862832094,221.07935313787831),c(21.50122340003701,21.560103473256554,17.437648633602713,0.0),c(11.945124111131673,27.84846698628971,19.7121245423335,0.0),c(31.057322688942346,17.96675289438046,18.195807269846306,0.0),c(4.778049644452668,5.390025868314138,3.0326345449743846,0.0),c(134.5817316520835,130.25895848425833,144.80829952252685,1502.6987916183323),c(36.63171394080379,18.865090539099484,18.195807269846306,0.0),c(26.279273044489678,20.66176582853753,23.50291772355148,67.28502052022384),c(94.7646512816446,63.78197277505063,81.12297407806479,192.2429157720681),c(73.26342788160758,67.37532335392673,78.848498169334,0.0),c(32.650005903759904,24.25511640741362,26.535552268525866,333.221054004918),c(30.26098108153357,43.12020694651311,12.130538179897538,0.0),c(35.03903072598624,40.42519401235604,28.05186954101306,0.0),c(15.130490540766784,9.881714091909252,17.437648633602713,0.0),c(78.04147752606026,36.831843433479946,95.52798816669312,0.0),c(87.59757681496559,71.86701157752184,119.0309058902446,0.0),c(70.07806145197247,61.985297485612584,110.69116089156503,44.85668034681589),c(25.4829314370809,37.73018107819897,21.986600451064287,0.0),c(22.297565007445787,45.81521988067017,33.35897999471823,0.0),c(41.409763585256464,43.12020694651311,32.60082135847463,0.0),c(38.22439715562135,42.22186930179408,39.424249084667,0.0),c(26.279273044489678,27.84846698628971,26.535552268525866,448.56680346815887),c(38.22439715562135,35.93350578876092,34.117138630961826,0.0),c(11.148782503722893,12.576727026066322,2.274475908730788,0.0),c(44.59513001489157,77.25703744583598,49.280311355833746,0.0),c(41.409763585256464,43.12020694651311,35.63345590344902,0.0),c(44.59513001489157,36.831843433479946,20.470283178577095,0.0),c(19.112198577810673,26.95012934157069,28.05186954101306,16.020242981005673),c(97.95001771127971,79.05371273527402,87.18824316801356,0.0),c(61.318303770475914,47.61189517010822,27.293710904769462,0.0),c(39.02073876303013,29.64514227572776,24.261076359795076,0.0),c(22.297565007445787,17.068415249661438,39.424249084667,0.0),c(82.81952717051293,93.4271150507784,101.59325725664188,0.0),c(8.75975768149656,26.95012934157069,26.535552268525866,48.060728943017025),c(70.07806145197247,61.08695984089356,90.97903634923154,0.0),c(105.11709217795871,75.46036215639793,106.90036771034706,0.0),c(7.963416074087782,12.576727026066322,1.5163172724871923,0.0),c(41.409763585256464,60.18862219617454,51.55478726456454,0.0),c(16.72317375558434,19.763428183818505,21.22844181482069,0.0),c(36.63171394080379,24.25511640741362,54.587421809538924,0.0),c(22.297565007445787,37.73018107819897,50.79662862832094,0.0),c(1.5926832148175563,3.593350578876092,15.921331361115518,0.0),c(58.132937340840805,55.69693397257942,59.1363736270005,0.0),c(93.96830967423583,80.85038802471207,117.5145886177574,0.0),c(34.24268911857746,22.458441117975575,33.35897999471823,76.89716630882724),c(24.686589829672123,38.62851872291799,28.810028177256655,0.0),c(22.297565007445787,26.95012934157069,20.470283178577095,0.0),c(90.7829432446007,105.10550443212568,109.93300225532144,0.0),c(84.41221038533048,88.03708918246426,90.97903634923154,0.0),c(54.15122930379691,34.136830499322876,40.1824077209106,124.95789525184426),c(56.54025412602325,46.7135575253892,43.973200902128575,0.0),c(24.686589829672123,11.6783893813473,17.437648633602713,205.05911015687263),c(31.853664296351127,36.831843433479946,37.14977317593621,0.0),c(15.130490540766784,8.085038802471207,19.7121245423335,0.0),c(24.686589829672123,20.66176582853753,28.05186954101306,0.0),c(10.352440896314116,11.6783893813473,18.195807269846306,0.0),c(49.373179659344245,71.86701157752184,99.3187813479111,0.0),c(80.4305023482866,72.76534922224086,59.1363736270005,0.0),c(73.26342788160758,39.52685636763701,41.69872499339779,0.0),c(24.686589829672123,17.96675289438046,21.986600451064287,0.0),c(13.537807325949228,18.865090539099484,18.195807269846306,352.44534558212484),c(13.537807325949228,27.84846698628971,26.535552268525866,0.0),c(2.389024822226334,5.390025868314138,6.065269089948769,0.0),c(30.26098108153357,51.20524574898431,14.405014088628327,0.0),c(19.112198577810673,14.373402315504368,35.63345590344902,0.0),c(37.42805554821257,28.746804631008736,25.77739363228227,0.0),c(7.963416074087782,15.27173996022339,15.921331361115518,0.0),c(9.556099288905337,20.66176582853753,18.195807269846306,0.0),c(7.963416074087782,17.068415249661438,22.744759087307884,0.0),c(54.94757091120569,36.831843433479946,34.117138630961826,0.0),c(31.057322688942346,32.34015520988483,55.34558044578252,0.0),c(121.04392432613427,149.12404902335783,114.48195407278301,0.0),c(3.1853664296351125,0.898337644719023,0.0,0.0),c(17.51951536299312,35.93350578876092,28.05186954101306,0.0),c(19.908540185219454,14.373402315504368,14.405014088628327,0.0),c(16.72317375558434,11.6783893813473,7.581586362435962,307.58866523530895),c(20.704881792628232,35.0351681440419,11.372379543653942,0.0),c(41.409763585256464,24.25511640741362,43.973200902128575,35.244534558212486),c(61.318303770475914,42.22186930179408,50.038469992077346,0.0),c(20.704881792628232,17.96675289438046,27.293710904769462,0.0),c(23.093906614854564,16.170077604942414,22.744759087307884,0.0),c(13.537807325949228,11.6783893813473,18.953965906089902,0.0),c(42.20610519266524,53.90025868314138,65.20164271694927,0.0),c(29.46463947412479,21.560103473256554,25.77739363228227,0.0),c(30.26098108153357,26.95012934157069,12.130538179897538,0.0),c(46.18781322970913,51.20524574898431,60.652690899487695,0.0),c(102.72806735573238,92.52877740605936,106.90036771034706,490.21943521877364),c(121.04392432613427,113.1905432345969,117.5145886177574,477.4032408339691),c(26.279273044489678,30.54347992044678,10.614220907410346,0.0),c(60.52196216306714,55.69693397257942,38.666090448423404,0.0),c(34.24268911857746,29.64514227572776,35.63345590344902,115.34574946324085),c(3.981708037043891,17.96675289438046,11.372379543653942,336.4251026011192),c(57.33659573343203,71.86701157752184,72.02507044314163,0.0),c(6.370732859270225,14.373402315504368,18.953965906089902,0.0),c(123.4329491483606,129.3606208395393,140.2593477050653,727.3190313376576),c(25.4829314370809,60.18862219617454,45.48951817461577,0.0),c(88.39391842237437,44.91688223595115,77.33218089684681,217.87530454167717),c(73.26342788160758,75.46036215639793,87.18824316801356,0.0),c(13.537807325949228,26.95012934157069,15.921331361115518,0.0),c(23.890248222263345,13.475064670785345,20.470283178577095,0.0),c(30.26098108153357,30.54347992044678,9.097903634923153,0.0),c(27.075614651898455,35.93350578876092,67.47611862568006,0.0),c(17.51951536299312,16.170077604942414,15.921331361115518,0.0),c(29.46463947412479,24.25511640741362,34.875297267205426,352.44534558212484),c(46.98415483711791,43.12020694651311,53.07110453705173,0.0),c(74.85611109642514,69.17199864336477,51.55478726456454,86.50931209743064),c(23.890248222263345,35.0351681440419,25.019234996038673,0.0),c(29.46463947412479,17.96675289438046,33.35897999471823,0.0),c(47.78049644452669,39.52685636763701,40.1824077209106,342.83319979352143),c(86.00489360014804,139.24233493144857,109.93300225532144,0.0),c(7.167074466679003,9.881714091909252,16.679489997359116,0.0),c(42.20610519266524,45.81521988067017,41.69872499339779,0.0),c(23.093906614854564,8.98337644719023,30.326345449743847,608.7692332782157),c(3.1853664296351125,5.390025868314138,7.581586362435962,0.0),c(144.9341725483976,94.32545269549742,112.96563680029583,330.0170054087169),c(66.09635341492859,35.93350578876092,39.424249084667,0.0),c(58.92927894824958,47.61189517010822,42.45688362964138,378.0777343517339),c(2.389024822226334,1.796675289438046,3.790793181217981,0.0),c(23.890248222263345,23.3567787626946,37.14977317593621,0.0),c(31.853664296351127,35.93350578876092,58.3782149907569,0.0),c(59.72562055565836,59.29028455145552,42.45688362964138,0.0),c(39.02073876303013,37.73018107819897,34.117138630961826,0.0),c(4.778049644452668,11.6783893813473,5.307110453705173,0.0),c(17.51951536299312,27.84846698628971,20.470283178577095,0.0),c(37.42805554821257,47.61189517010822,68.23427726192365,0.0),c(64.50367020011103,109.5971926557208,96.28614680293671,0.0),c(62.11464537788469,57.49360926201747,46.24767681085937,0.0),c(69.2817198445637,47.61189517010822,60.652690899487695,0.0),c(29.46463947412479,44.01854459123213,49.280311355833746,0.0),c(43.798788407482796,55.69693397257942,78.848498169334,0.0),c(28.668297866716014,61.985297485612584,62.92716680821848,67.28502052022384),c(39.81708037043891,34.136830499322876,46.24767681085937,0.0),c(23.890248222263345,26.051791696851666,25.77739363228227,0.0),c(47.78049644452669,50.30690810426529,18.953965906089902,0.0),c(152.1012470150766,153.61573724695293,137.2267131600909,0.0),c(11.148782503722893,7.186701157752184,12.888696816141135,0.0),c(49.373179659344245,60.18862219617454,53.829263173295324,0.0),c(27.075614651898455,17.96675289438046,19.7121245423335,0.0),c(26.279273044489678,20.66176582853753,21.986600451064287,0.0),c(3.1853664296351125,4.491688223595115,5.307110453705173,0.0),c(15.926832148175563,11.6783893813473,38.666090448423404,0.0),c(34.24268911857746,23.3567787626946,18.953965906089902,0.0),c(27.075614651898455,41.32353165707506,22.744759087307884,0.0),c(8.75975768149656,7.186701157752184,9.097903634923153,0.0),c(24.686589829672123,42.22186930179408,18.953965906089902,0.0),c(19.112198577810673,41.32353165707506,26.535552268525866,0.0),c(15.130490540766784,26.95012934157069,12.888696816141135,0.0),c(89.98660163719192,78.155375090555,79.6066568055776,0.0),c(32.650005903759904,36.831843433479946,13.646855452384731,70.48906911642497),c(20.704881792628232,17.96675289438046,33.35897999471823,0.0),c(67.68903662974614,58.39194690673649,81.12297407806479,0.0),c(48.57683805193547,43.12020694651311,49.280311355833746,0.0),c(19.112198577810673,15.27173996022339,4.548951817461576,0.0))
+targetgene="Dummy"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(341.63054957836584,270.3996310604259,297.1981854074897,0.0),c(137.76709808171861,161.70077604942415,130.40328543389853,262.73198488849306),c(207.8451595336911,225.48274882447478,296.4400267712461,820.2364406274905),c(74.05976948901636,62.88363513033161,46.24767681085937,948.398384475536),c(653.7964596826068,646.8031041976966,584.5403085438127,1659.6971728321878),c(106.70977539277627,127.56394555010127,92.49535362171873,0.0))
+targetgene="SAMHD1"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(269.163463304167,265.0096051921118,282.0350126826178,1874.368428777664),c(110.69148342982017,122.17391968178713,118.272747254001,0.0),c(588.496447875087,618.9546372114069,526.9202521892993,22.428340173407946),c(173.60247041511363,187.75256774627582,197.8794040595786,865.0931209743064),c(383.8366547710311,391.675213097494,322.97557903977196,1150.2534460362074),c(176.78783684474874,173.37916543077145,166.79489997359116,397.30202592894074))
+targetgene="AKAP17A"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(258.8110224078529,206.61765828537528,229.72206678180964,1858.3481857966583),c(227.75369971891055,249.7378652318884,253.2249845053611,454.97490066056116),c(746.9684277494339,736.6368686695988,856.7192589552636,1864.7562829890605),c(666.5379254011473,715.9751028410614,733.1394012475574,576.7287473162042),c(183.15856970401896,184.1592171673997,181.19991406221948,701.6866425680486),c(54.94757091120569,62.88363513033161,47.76399408334656,0.0))
+targetgene="OASL"
+collabel=c("T0_1","T0_2","T0_3","T1D_4")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+dev.off()
+Sweave("rra_T0vsT1D-4_summary.Rnw");
+library(tools);
+
+texi2dvi("rra_T0vsT1D-4_summary.tex",pdf=TRUE);
+
