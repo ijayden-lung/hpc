@@ -1,0 +1,31 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N GeneKO
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=24:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+#mkdir Renamed_rawdata
+#cat SampleRename.txt | while read line
+#do
+#    Newname=`echo $line | awk '{print $1}'`
+#    Oldname=`echo $line | awk '{print $2}'`
+#    mv ${Oldname}_R1_001.fastq.gz Renamed_rawdata/${Newname}_R1_001.fastq.gz
+#    mv ${Oldname}_R2_001.fastq.gz Renamed_rawdata/${Newname}_R2_001.fastq.gz
+#done
+
+fastqc -t 24 -o ./Renamed_rawdata/ ./Renamed_rawdata/*.fastq.gz
+
+mkdir trimmed_data
+for fq1 in ./Renamed_rawdata/*_R1_001.fastq.gz;do
+    fq2="./Renamed_rawdata/$(basename "$fq1" _R1_001.fastq.gz)_R2_001.fastq.gz"
+    if [ ! -f "fq2"]; then
+        printf 'Missing file "%s"\n' "$fq2"
+        continue
+    fi
+        /home/bio-longyk/Jun_test_RNA_seq/tools/TrimGalore-master/trim_galore --phred33 --fastqc -a AGATCGGAAGAGC --gzip --paired --length 30 -o ./trimmed_data $fq1 $fq2
+done
+
