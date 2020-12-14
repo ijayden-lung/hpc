@@ -30,4 +30,4 @@ cd $PBS_O_WORKDIR
 #done
 
 mkdir mapping_result
-STAR --runThreadN 12 --genomeDir /home/bio-longyk/Jun_test_RNA_seq/reference/human/genome_index/index --readFilesIn ./trimmed_data/${sampleID}_R1_001.fastq.gz ./trimmed_data/${sampleID}_R2_001.fastq.gz --readFilesCommand zcat --outFilterMultimapNmax 1 --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ./mapping_result/${sampleID}_
+STAR --runThreadN 12 --genomeDir /home/bio-longyk/Jun_test_RNA_seq/reference/human/genome_index/index --readFilesIn ./trimmed_data/${sampleID}_R1_001_val_1.fq.gz ./trimmed_data/${sampleID}_R2_001_val_2.fq.gz --readFilesCommand zcat --outFilterMultimapNmax 1 --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ./mapping_result/${sampleID}_
