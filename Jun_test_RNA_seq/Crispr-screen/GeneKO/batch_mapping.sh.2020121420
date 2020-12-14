@@ -1,0 +1,6 @@
+cat SampleRename.txt | while read line
+do
+    sampleID=`echo $line | awk '{print $1}'`
+    echo $sampleID
+    qsub -v sampleID=$sampleID GeneKO.sh
+done
