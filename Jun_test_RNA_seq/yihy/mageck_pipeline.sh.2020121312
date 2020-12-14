@@ -1,0 +1,33 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N mageck
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=48:00:00
+#PBS -V
+
+rawdir=/home/bio-longyk/Jun_test_RNA_seq/yihy/rawdata
+library=/home/bio-longyk/Jun_test_RNA_seq/yihy/HKO_NP-SEQ_lib.csv
+
+cd $rawdir
+fq1=''
+fq2=''
+samplelabel=''
+files=`ls *_R1.fastq`
+for file in $files
+do
+    base=`basename $file _R1.fastq`
+    fq1+=$file' '
+    fq2+=$base'_R2.fastq '
+    samplelabel+=$base','
+done
+
+outdir=/home/bio-longyk/Jun_test_RNA_seq/yihy/mageck_count
+mkdir -p $outdir
+fq1files=${fq1%,*}
+fq2files=${fq2%,*}
+samplelabels=${samplelabel%,*}
+echo $fq1files
+echo $fq2files
+
+mageck count -l $library --sample-label $samplelabels --fastq ${fq1files} --fastq-2 $fq2files --output-prefix $outdir --pdf-report
