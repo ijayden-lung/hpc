@@ -1,0 +1,11 @@
+#!/bin/bash 
+#PBS -q ser
+#PBS -N fastqSplit
+#PBS -l nodes=1:ppn=12
+#PBS -j oe
+#PBS -l walltime=10:00:00
+#PBS -V
+
+cd $PBS_O_WORKDIR
+
+/home/bio-longyk/Jun_test_RNA_seq/tools/subset-bam_linux --bam cellRange_GeneExpression/cellRange_GeneExpression/outs/possorted_genome_bam.bam --cell-barcodes AACCATGCACTGTTAG.csv --out-bam AACCATGCACTGTTAG.bam --cores 12
