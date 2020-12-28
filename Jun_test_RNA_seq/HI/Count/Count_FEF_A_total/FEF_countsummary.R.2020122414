@@ -1,0 +1,5 @@
+Sweave("FEF_countsummary.Rnw");
+library(tools);
+
+texi2dvi("FEF_countsummary.tex",pdf=TRUE);
+
