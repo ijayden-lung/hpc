@@ -1,0 +1,26 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N insert_length
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=10:00:00
+#PBS -V 
+
+cd $PBS_O_WORKDIR
+
+mkdir UMI_cellgene_1
+cat UMI_cellgenes_1_list.txt | while read line
+do
+    gene=`echo $line | awk -F"_" '{print $1}'`
+    cell=`echo $line | awk -F"_" '{print $2}'`
+    echo ${cell}
+    samtools view -@ 24 ../../bamsplit_qname/SplitedBam/${cell}_bwa_sorted.bam ${gene}:1-1000 | getinsertsize.py - > ./UMI_cellgene_1/output_${gene}_${cell}.txt
+done
+
+mkdir UMI_cellgene_2
+cat UMI_cellgenes_2_list.txt | while read line
+do 
+    gene=`echo $line | awk -F"_" '{print $1}'`
+    cell=`echo $line | awk -F"_" '{print $2}'`
+    samtools view -@ 24 ../../bamsplit_qname/SplitedBam/${cell}_bwa_sorted.bam ${gene}:1-1000 | getinsertsize.py - > ./UMI_cellgene_2/output_${gene}_${cell}.txt
+done
