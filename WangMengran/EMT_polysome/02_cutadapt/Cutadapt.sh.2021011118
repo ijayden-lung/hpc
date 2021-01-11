@@ -1,0 +1,18 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N fastQC
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=24:00:00
+#PBS -V
+cd $PBS_O_WORKDIR # inter the environment variable that PBS proveided
+
+rundir=/home/bio-longyk/WangMengran/EMT_polysome
+
+# mpirun -genv I_MPI_DEVICE rdssm -machinefile /tmp/nodefile.$$ -np 1 
+
+cutadapt --discard-trimmed -m 20 -q 20,20\
+-b file:adapter.fa -B file:adapter.fa\
+-o 
+fastqc -t 24 -o ${rundir}/01_fastQC/ ${rundir}/00_rawdata/*.fastq.gz
+# fastqc -t 24 -o ${rundir}/01_fastQC/ ${rundir}/00_rawdata/S292_sustc-A_NC-1_AHTNW7DSXY_S1_L004_R1_001.fastq.gz
