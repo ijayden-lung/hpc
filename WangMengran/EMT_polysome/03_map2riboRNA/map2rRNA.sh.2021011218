@@ -1,0 +1,13 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N map2rRNA
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=24:00:00
+#PBS -V
+cd $PBS_O_WORKDIR 
+
+rundir=/home/bio-longyk/WangMengran/EMT_polysome
+bowtie -v 2 -k 10 ${rundir}/03_map2riboRNA/rRNA/RNA45S5 -1 ${rundir}/02_cutadapt/${sampleID}_trimmed_R1.fastq.gz \
+-2 ${rundir}/02_cutadapt/${sampleID}_trimmed_R2.fastq.gz -S ${rundir}/03_map2riboRNA/${sampleID}_map2rRNA.sam \
+--un ${rundir}/03_map2riboRNA/${sampleID}_unmap2rRNA.sam

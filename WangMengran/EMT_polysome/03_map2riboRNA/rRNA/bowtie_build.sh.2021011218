@@ -1,0 +1,11 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N buildindex
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=24:00:00
+#PBS -V
+cd $PBS_O_WORKDIR 
+
+rundir=/home/bio-longyk/WangMengran/EMT_polysome
+bowtie-build ${rundir}/03_map2riboRNA/rRNA/RNA45S5.fa ${rundir}/03_map2riboRNA/rRNA/RNA45S5
