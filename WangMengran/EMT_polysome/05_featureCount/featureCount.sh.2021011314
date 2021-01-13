@@ -10,7 +10,7 @@ cd $PBS_O_WORKDIR
 rundir=/home/bio-longyk/WangMengran/EMT_polysome
 
 featureCounts -p -t exon -g gene_name -s 2 \
--a /home/bio-longyk/WangMengran/database/Human/Homo_sapiens.GRCh38.99.chr.gtf \
+-a /home/bio-longyk/WangMengran/database/Human/gencode.v36.basic.annotation.gtf \
 -o ${rundir}/05_featureCount/featureCounts.txt \
 ${rundir}/04_map2genome/S292_sustc-A_NC-1_AHTNW7DSXY_S1_L004_Aligned.sortedByCoord.out.bam \
 ${rundir}/04_map2genome/S293_sustc-A_NC-2_AHTNW7DSXY_S2_L004_Aligned.sortedByCoord.out.bam \
