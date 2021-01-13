@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N map2genome
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=24:00:00
+#PBS -V
+cd $PBS_O_WORKDIR 
+
+rundir=/home/bio-longyk/WangMengran/EMT_polysome
+
+STAR --runThreadN 12 --genomeDir /home/bio-longyk/Jun_test_RNA_seq/reference/human/genome_index/index \
+--readFilesIn ${rundir}/02_cutadapt/${sampleID}_trimmed_R1.fastq.gz ${rundir}/02_cutadapt/${sampleID}_trimmed_R2.fastq.gz \
+--readFilesCommand zcat --outFilterMultimapNmax 1 --outSAMtype BAM SortedByCoordinate \
+--outFileNamePrefix ${rundir}/04_map2genome/${sampleID}_
+
