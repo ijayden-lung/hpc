@@ -1,0 +1,6 @@
+for fileName in `ls /home/bio-longyk/WangMengran/Jun_test_replicate/00_rawdata/*_R1_*`
+do 
+	sampleID=`basename ${fileName%_R1_001.fastq.gz}`
+	echo $sampleID
+	qsub -v sampleID=$sampleID Cutadapt.sh
+done
