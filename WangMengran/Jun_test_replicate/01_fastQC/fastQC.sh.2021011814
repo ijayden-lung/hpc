@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N fastQC
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=24:00:00
+#PBS -V
+cd $PBS_O_WORKDIR # enter the PBS environment variable
+
+rundir=/home/bio-longyk/WangMengran/Jun_test_replicate
+
+fastqc -t 24 -o ${rundir}/01_fastQC/ ${rundir}/00_rawdata/HCT*fastq.gz
