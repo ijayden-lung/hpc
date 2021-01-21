@@ -1,0 +1,25 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N featureCount
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -l walltime=24:00:00
+#PBS -V
+cd $PBS_O_WORKDIR 
+
+rundir=/home/bio-longyk/WangMengran/Jun_test_replicate
+
+featureCounts -p -t exon -g gene_name -s 2 \
+-a /home/bio-longyk/WangMengran/database/Human/gencode.v36.basic.annotation.gtf \
+-o ${rundir}/04_featureCount/featureCounts.txt \
+${rundir}/03_map2genome/HCT116-DDX6-KO-gRNA2-1_Aligned.sortedByCoord.out.bam \
+${rundir}/03_map2genome/HCT116-DDX6-KO-gRNA2-2_Aligned.sortedByCoord.out.bam \
+${rundir}/03_map2genome/HCT116-DICER1-KO-gRNA2-1_Aligned.sortedByCoord.out.bam \
+${rundir}/03_map2genome/HCT116-DICER1-KO-gRNA2-2_Aligned.sortedByCoord.out.bam \
+${rundir}/03_map2genome/HCT116-EDC4-KO-gRNA1-2_Aligned.sortedByCoord.out.bam \
+${rundir}/03_map2genome/HCT116-gRNA-NC-1_Aligned.sortedByCoord.out.bam \
+${rundir}/03_map2genome/HCT116-gRNA-NC-2_Aligned.sortedByCoord.out.bam \
+${rundir}/03_map2genome/HCT116-SAM-shNC-1_Aligned.sortedByCoord.out.bam \
+${rundir}/03_map2genome/HCT116-SAM-shNC-2_Aligned.sortedByCoord.out.bam \
+${rundir}/03_map2genome/HCT116-SAM-shRNA1-1_Aligned.sortedByCoord.out.bam \
+${rundir}/03_map2genome/HCT116-SAM-shRNA1-2_Aligned.sortedByCoord.out.bam 
