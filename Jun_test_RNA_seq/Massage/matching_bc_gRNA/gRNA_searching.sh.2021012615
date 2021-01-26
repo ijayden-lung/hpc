@@ -1,0 +1,22 @@
+#!/bin/bash
+#PBS -q ser
+#PBS -N gRNA_barcode_searching
+#PBS -l nodes=1:ppn=24
+#PBS -j oe 
+#PBS -l walltime=10:00:00
+
+cd $PBS_O_WORKDIR
+
+#/home/bio-longyk/Jun_test_RNA_seq/tools/seqkit locate --degenerate --ignore-case --pattern-file 22gene_gRNA-tag.fasta /home/bio-longyk/Jun_test_RNA_seq/Massage/mutation_gRNA_lib/*_R1_001_extracted.fastq > gRNA_searching_fwd.txt
+#/home/bio-longyk/Jun_test_RNA_seq/tools/seqkit locate --degenerate --ignore-case --pattern-file 22gene_gRNA-tag_reverse.fasta /home/bio-longyk/Jun_test_RNA_seq/Massage/mutation_gRNA_lib/*_R2_001_extracted.fastq > gRNA_searching_rev.txt
+
+#cat gRNA_searching_fwd.txt gRNA_searching_rev.txt | cut -f 1-2 | sort | uniq > gRNA_searching_reads.txt
+
+#cat gRNA_searching_fwd.txt gRNA_searching_rev.txt | cut -f 1-2 | cut -d "_" -f 2-3 | sort -u > gRNA_barcode.txt
+
+cat gRNA_searching_reads.txt | awk -F"_" '{print $2,$3}' | sort | uniq -c > gRNA_ReadCount_perUMI.txt
+
+#cat gRNA_searching_reads.txt | awk -F"_" '{print $2,$3}' | sort | uniq | awk '{print $1,$2}' | sort | uniq -c > gRNA_UMI_calculation.txt
+
+##### how to add lines to top of multiple files #####
+sed -i '1s/^/>ADD\nADDDDD\n/' t*
